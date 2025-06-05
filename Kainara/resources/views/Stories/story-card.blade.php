@@ -2,14 +2,14 @@
 
 <div class="card h-100 shadow-sm story-card">
     <img src="{{ $image }}" class="card-img-top" alt="{{ $title }}">
-    <div class="card-body d-flex flex-column">
+    <div class="card-body d-flex flex-column position-relative">
         <h3 class="card-title">{{ $title }}</h3>
         <p class="card-text">{{ $description }}</p>
-        <div class="story-date mt-auto">{{ $date }}</div>
 
-        {{-- Added for hover effect --}}
-        <div class="hover-overlay">
-            <a href="#" class="btn btn-read-more">Read More</a>
-        </div>
+        <!-- Tanggal yang disembunyikan saat hover -->
+        <div class="story-date mt-auto original-date">{{ $date }}</div>
+
+        <!-- Read More muncul saat hover -->
+        <div class="read-more-hover mt-auto text-center">Read More</div>
     </div>
 </div>

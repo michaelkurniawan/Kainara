@@ -7,4 +7,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/stories', [StoriesController::class, 'index'])->name('stories.index');
+Route::get('/stories', [StoriesController::class, 'index']);

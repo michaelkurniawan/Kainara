@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Article;
 
 class StoriesController extends Controller
 {
@@ -13,12 +14,9 @@ class StoriesController extends Controller
      */
     public function index()
     {
-        // In a real application, you would fetch data from a database here, e.g.:
-        // $stories = Story::all();
-        // return view('ListStories', compact('stories'));
+        $articles = Article::all(); // Ambil semua data dari tabel 'articles'
 
-        // For now, since the Blade file is hardcoded with example data,
-        // we'll just return the view directly.
-        return view('Stories\ListStories');
+        // Kirim data ke view
+        return view('Stories.ListStories', compact('articles'));
     }
 }
