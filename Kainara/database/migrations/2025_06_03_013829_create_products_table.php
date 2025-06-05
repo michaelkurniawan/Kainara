@@ -17,10 +17,10 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('origin');
+            $table->string('type');
             $table->text('description');
             $table->decimal('price', 12, 2);
             $table->string('image');
-            $table->string('material')->nullable();
             $table->timestamps();
         });
 
