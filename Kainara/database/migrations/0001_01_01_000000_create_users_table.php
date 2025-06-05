@@ -27,12 +27,12 @@ return new class extends Migration
 
         Schema::create('user_addresses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('label');
             $table->string('recipient_name');
             $table->string('phone');
             $table->text('address');
-            $table->string('country');
+            $table->string('country')->nullable();
             $table->string('city');
             $table->string('province');
             $table->string('postal_code');
