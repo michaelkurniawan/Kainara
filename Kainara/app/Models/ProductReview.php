@@ -16,7 +16,7 @@ class ProductReview extends Model
      */
     protected $fillable = [
         'product_id',
-        'user_id', // Pastikan Anda juga punya model User
+        'user_id',
         'rating',
         'comment',
     ];
@@ -34,7 +34,6 @@ class ProductReview extends Model
      */
     public function user()
     {
-        // Asumsi Anda memiliki model User di App\Models\User
         return $this->belongsTo(User::class);
     }
 }

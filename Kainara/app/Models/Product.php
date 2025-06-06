@@ -18,11 +18,11 @@ class Product extends Model
         'category_id',
         'name',
         'slug',
+        'origin', 
         'description',
-        'sku',
         'price',
-        'stock_quantity',
-        'is_active',
+        'image', 
+        'material', 
     ];
 
     /**
