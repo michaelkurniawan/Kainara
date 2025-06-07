@@ -167,7 +167,7 @@
         @foreach ($articles as $story)
             <div class="col">
                 {{-- Bungkus seluruh story-card dengan link --}}
-                <a href="{{ route('stories.show', $story->id) }}" class="text-decoration-none text-dark">
+                <a href="{{ route('Stories.DetailStories', $story->id) }}" class="text-decoration-none text-dark">
                     <div class="story-card h-100">
                         {{-- Pastikan path gambar benar, biasanya public/storage/images/ --}}
                         <img src="{{ asset('storage/' . $story->thumbnail) }}" alt="Story Image" class="img-fluid rounded-top" />
