@@ -8,3 +8,5 @@ Route::get('/', function () {
 });
 
 Route::get('/stories', [StoriesController::class, 'index']);
+
+Route::get('/stories/{id}', [StoriesController::class, 'show'])->name('Stories.DetailStories');

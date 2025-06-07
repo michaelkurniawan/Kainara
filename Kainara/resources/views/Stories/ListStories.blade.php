@@ -20,7 +20,7 @@
             padding-left: 15px;
             padding-right: 15px;
             margin: 0 auto;
-            overflow-x: hidden; /* Optional untuk jaga-jaga */
+            overflow-x: hidden; 
         }
 
         header {
@@ -32,8 +32,8 @@
             justify-content: center;
             align-items: center;
             gap: 1.3vh;
-            flex-wrap: nowrap; /* 🟢 Tambahkan ini */
-            overflow-x: hidden; /* Optional untuk jaga-jaga */
+            flex-wrap: nowrap; 
+            overflow-x: hidden; 
         }
 
         /* Cloud gambar di kiri dan kanan */
@@ -48,11 +48,10 @@
             font-size: 5.5vw;
             color: #333;
             line-height: 1.2;
-            /* white-space: nowrap; */ /* ❌ Matikan ini */
             font-style: italic;
             font-family: 'Ancizar Serif';
             letter-spacing: 0.5vw;
-            word-break: break-word; /* Optional */
+            word-break: break-word; 
             text-align: center;
         }
 
@@ -79,7 +78,7 @@
             background-color: #B6B09F;
         }
 
-        story-card img {
+        .story-card img {
             width: 100%;
             max-width: 100%;
             height: 200px;
@@ -164,23 +163,29 @@
 
         <!-- Story Grid -->
         <main>
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 py-4">
-                @foreach ($articles as $story)
-                    <div class="col">
-                        <div class="story-card h-100">
-                            <img src="{{ asset('storage/' . $story->thumbnail) }}" alt="Story Image" />
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">{{ $story->title }}</h5>
-                                <p class="card-text">{{ Str::limit(strip_tags($story->content), 100) }}</p>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 py-4">
+        @foreach ($articles as $story)
+            <div class="col">
+                {{-- Bungkus seluruh story-card dengan link --}}
+                <a href="{{ route('stories.show', $story->id) }}" class="text-decoration-none text-dark">
+                    <div class="story-card h-100">
+                        {{-- Pastikan path gambar benar, biasanya public/storage/images/ --}}
+                        <img src="{{ asset('storage/' . $story->thumbnail) }}" alt="Story Image" class="img-fluid rounded-top" />
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ $story->title }}</h5>
+                            {{-- Gunakan strip_tags untuk membersihkan HTML dari konten sebelum membatasi teks --}}
+                            <p class="card-text">{{ Str::limit(strip_tags($story->content), 100) }}</p>
 
-                                <p class="story-date mt-auto">{{ $story->created_at->format('F j, Y') }}</p>
-                                <p class="read-more-hover mt-auto text-end">Read More</p>
-                            </div>
+                            <p class="story-date mt-auto">{{ $story->created_at->format('F j, Y') }}</p>
+                            <p class="read-more-hover mt-auto text-end">Read More</p>
                         </div>
                     </div>
-                @endforeach
+                </a>
             </div>
-        </main>
+        @endforeach
+    </div>
+</main>
+
     </div>
 
     <!-- Bootstrap JS -->
