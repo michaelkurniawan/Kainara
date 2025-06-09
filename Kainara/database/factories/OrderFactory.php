@@ -33,7 +33,7 @@ class OrderFactory extends Factory
             'subtotal' => 0,
             'is_completed' => fake()->boolean(30),
             'auto_complete_at' => null,
-            'original_user_name' => $user->name,
+            'original_user_name' => $user->first_name . ' ' . $user->last_name,
             'original_user_email' => $user->email,
             'shipping_label' => $userAddress->label,
             'shipping_recipient_name' => $userAddress->recipient_name,
