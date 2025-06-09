@@ -21,7 +21,7 @@ Kainara provides a rich set of functionalities across its pages:
 ### 🛍️ Nusantara Fabric Marketplace
 -   Comprehensive fabric catalog with product info
 -   Advanced filtering (type, region, color, motif philosophy)
--   "Ready Stock" labels (Pre-order removed)
+-   "Ready Stock" labels
 -   Curation & rating system
 
 ### 📜 Story Behind the Fabric (Product Detail)
@@ -64,7 +64,6 @@ Before running this project, ensure you have the following installed:
 
 -   [PHP >= 8.2](https://www.php.net/downloads.php) (Laravel 11 requires PHP 8.2 or higher)
 -   [Composer](https://getcomposer.org/download/)
--   [Node.js & npm](https://nodejs.org/en/download/) (for frontend asset compilation with Laravel Mix/Vite if applicable)
 -   MySQL Server
 
 ### Installation Steps
