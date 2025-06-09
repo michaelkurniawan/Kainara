@@ -6,11 +6,10 @@ This project was developed as part of the **Web Programming** and **Agile Develo
 
 ## 🛠️ Technologies Used
 
-- **Framework**: [Laravel 11](https://laravel.com/)
-- **Frontend Styling**:
-  - [Bootstrap](https://getbootstrap.com/)
-  - [Tailwind CSS](https://tailwindcss.com/)
-- **Database**: MySQL
+[![Laravel 11](https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com/)
+[![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
 
 ## 🚀 How to Run This Project
 
