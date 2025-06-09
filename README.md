@@ -38,7 +38,7 @@ This project was developed as part of the **Web Programming** and **Agile Develo
     ```
 
 ## 👥 Contributors
-<div align="center"> <img src="README-assets/team-photo.png" alt="Team Kainara" width="400"/> <p><i>Group 3 (AFAMYS) - BINUS University</i></p> </div>
+<div align="center"> <img src="README-assets/team-photo.jpg" alt="Team Kainara" width="400"/> <p><i>Group 3 (AFAMYS) - BINUS University</i></p> </div>
 
 - Angelina Joyvina C. S. — 2702363733
 - Arya Maulana Shodiqi — 2702363746
