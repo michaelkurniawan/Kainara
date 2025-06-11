@@ -49,7 +49,7 @@
             color: #333;
             line-height: 1.2;
             font-style: italic;
-            font-family: 'Ancizar Serif';
+            font-family: 'AncizarSerif', serif;
             letter-spacing: 0.5vw;
             word-break: break-word; 
             text-align: center;
@@ -60,7 +60,7 @@
             color: #666;
             font-style: italic;
             font-weight: 100;
-            font-family: 'Ancizar Serif';
+            font-family: 'AncizarSerif', serif;
         }
 
         /* Story card styles */

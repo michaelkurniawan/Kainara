@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ $story->title ?? "Kainara's Story" }}</title>
-
+    <link rel="stylesheet" href="{{ asset('css/fonts.css') }}">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
@@ -27,6 +27,7 @@
             color: black;        /* Warna tulisan hitam */
             text-decoration: none; /* Hilangkan underline */
             transition: all 0.3s ease; /* Animasi halus saat hover */
+            font-family: 'AncizarSerif', serif;
         }
 
         a.nav-link-custom:hover {
