@@ -58,7 +58,7 @@
     </style>
 </head>
 <body>
-<!-- Motif Batik kiri bawah -->
+    <!-- Motif Batik kiri bawah -->
     <img src="{{ asset('images/Detail_BatikKiri.png') }}" alt="Batik Motif Left" class="batik-left" />
 
     <!-- Motif Batik kanan atas -->
@@ -70,21 +70,23 @@
 
                 <!-- Header -->
                 <header class="text-center mb-5">
-                    <h1 class="fs-2 fw-bold text-dark">{{ $story->title }}</h1>
-                    <p class="text-secondary small">{{ $story->created_at->format('F j, Y') }}</p>
+                    <h1 class="fs-1 fw-bold text-dark">{{ $story->title }}</h1>
+                    <p class="text-secondary medium">{{ $story->created_at->format('F j, Y') }}</p>
                 </header>
-
+                
                 <!-- Image -->
                 <div class="text-center mb-4">
+                    @php
+                        $imagePath = 'HardCode_KainSongket.jpeg';
+                        $imageTitle = pathinfo($imagePath, PATHINFO_FILENAME);
+                    @endphp
                     {{-- MASIH HARDCODE UNTUK IMAGE --}}
-                    <img src="{{ asset('images/HardCode_KainSongket.jpeg') }}" class="img-fluid rounded shadow-sm mb-2" alt="{{ $story->image_alt ?? 'Story Image' }}">
-                    @if (!empty($story->image_caption))
-                        <p class="text-muted small">{{ $story->image_caption }}</p>
-                    @endif
+                    <img src="{{ asset('images/HardCode_KainSongket.jpeg') }}" class="img-fluid rounded shadow-sm mb-2 w-75" alt="{{ $story->image_alt ?? 'Story Image' }}">
+                    <p class="text-muted small">{{ $imageTitle }}</p>
                 </div>
 
                 <!-- Content -->
-                <div class="text-justify lh-lg">
+                <div class="text-justify lh-lg fs-5">
                     {!! $story->content !!}
                 </div>
 
