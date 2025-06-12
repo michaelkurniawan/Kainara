@@ -19,22 +19,6 @@
 --}}
 
 <style>
-    /* Deklarasi Font Kustom Ancizar Serif */
-    @font-face {
-        font-family: 'Ancizar Serif';
-        src: url('{{ asset('fonts/AncizarSerif-Regular.woff2') }}') format('woff2');
-        font-weight: normal;
-        font-style: normal;
-        font-display: swap;
-    }
-    @font-face {
-        font-family: 'Ancizar Serif';
-        src: url('{{ asset('fonts/AncizarSerif-Bold.woff2') }}') format('woff2');
-        font-weight: bold;
-        font-style: normal;
-        font-display: swap;
-    }
-
     /* Overlay untuk menutupi seluruh layar */
     .notification-card-overlay {
         position: fixed;
@@ -96,6 +80,7 @@
         /* flex-shrink: 0 sudah diatur di .notification-icon-column */
         background: #EAE4D5;
         padding: 0.5rem 0.3rem 0.3rem 0.3rem;
+        border-radius: 0.5rem;
     }
 
     /* Kolom Kanan: Wrapper untuk Judul, Pesan, dan Tombol */

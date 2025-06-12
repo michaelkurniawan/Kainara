@@ -14,9 +14,10 @@ class StoriesController extends Controller
      */
     public function index()
     {
-        $articles = Article::all(); // Ambil semua data dari tabel 'articles'
+        $articles = Article::select('id', 'title', 'thumbnail', 'content', 'created_at')
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(8); // Ganti sesuai jumlah yang kamu mau per halaman
 
-        // Kirim data ke view
         return view('Stories.ListStories', compact('articles'));
     }
 

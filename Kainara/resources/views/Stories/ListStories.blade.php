@@ -163,29 +163,30 @@
 
         <!-- Story Grid -->
         <main>
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 py-4">
-        @foreach ($articles as $story)
-            <div class="col">
-                {{-- Bungkus seluruh story-card dengan link --}}
-                <a href="{{ route('Stories.DetailStories', $story->id) }}" class="text-decoration-none text-dark">
-                    <div class="story-card h-100">
-                        {{-- Pastikan path gambar benar, biasanya public/storage/images/ --}}
-                        <img src="{{ asset('storage/' . $story->thumbnail) }}" alt="Story Image" class="img-fluid rounded-top" />
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">{{ $story->title }}</h5>
-                            {{-- Gunakan strip_tags untuk membersihkan HTML dari konten sebelum membatasi teks --}}
-                            <p class="card-text">{{ Str::limit(strip_tags($story->content), 100) }}</p>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 py-4">
+                @foreach ($articles as $story)
+                    <div class="col">
+                        {{-- Bungkus seluruh story-card dengan link --}}
+                        <a href="{{ route('Stories.DetailStories', $story->id) }}" class="text-decoration-none text-dark">
+                            <div class="story-card h-100">
+                                {{-- Pastikan path gambar benar, biasanya public/storage/images/ --}}
+                                <img src="{{ asset('storage/' . $story->thumbnail) }}" alt="Story Image" class="img-fluid rounded-top" />
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">{{ $story->title }}</h5>
+                                    {{-- Gunakan strip_tags untuk membersihkan HTML dari konten sebelum membatasi teks --}}
+                                    <p class="card-text">{{ Str::limit(strip_tags($story->content), 100) }}</p>
 
-                            <p class="story-date mt-auto">{{ $story->created_at->format('F j, Y') }}</p>
-                            <p class="read-more-hover mt-auto text-end">Read More</p>
-                        </div>
+                                    <p class="story-date mt-auto">{{ $story->created_at->format('F j, Y') }}</p>
+                                    <p class="read-more-hover mt-auto text-end">Read More</p>
+                                </div>
+                            </div>
+                        </a>
                     </div>
-                </a>
+                @endforeach
             </div>
-        @endforeach
-    </div>
-</main>
 
+            @include('Pagination.pagination-components', ['paginator' => $articles])
+        </main>
     </div>
 
     <!-- Bootstrap JS -->
