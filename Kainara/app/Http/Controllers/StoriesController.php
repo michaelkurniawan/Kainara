@@ -14,7 +14,7 @@ class StoriesController extends Controller
      */
     public function index()
     {
-        $articles = Article::select('id', 'title', 'thumbnail', 'content', 'created_at')
+        $articles = Article::select('id', 'slug', 'title', 'thumbnail', 'content', 'created_at')
                     ->orderBy('created_at', 'desc')
                     ->paginate(8); // Ganti sesuai jumlah yang kamu mau per halaman
 
@@ -27,9 +27,9 @@ class StoriesController extends Controller
      * @param  int  $id  The ID of the article
      * @return \Illuminate\View\View
      */
-    public function show($id)
+    public function show($slug)
     {
-        $story = Article::findOrFail($id);
+        $story = Article::where('slug', $slug)->firstOrFail();
 
         $previousStory = Article::where('id', '<', $story->id)
                                 ->orderBy('id', 'desc')
@@ -41,5 +41,4 @@ class StoriesController extends Controller
 
         return view('Stories.DetailStories', compact('story', 'previousStory', 'nextStory'));
     }
-
 }

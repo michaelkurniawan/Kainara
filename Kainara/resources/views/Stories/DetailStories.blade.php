@@ -76,7 +76,8 @@
 
                 <!-- Image -->
                 <div class="text-center mb-4">
-                    <img src="{{ asset('storage/' . $story->image_path) }}" class="img-fluid rounded shadow-sm mb-2" alt="{{ $story->image_alt ?? 'Story Image' }}">
+                    {{-- MASIH HARDCODE UNTUK IMAGE --}}
+                    <img src="{{ asset('images/HardCode_KainSongket.jpeg') }}" class="img-fluid rounded shadow-sm mb-2" alt="{{ $story->image_alt ?? 'Story Image' }}">
                     @if (!empty($story->image_caption))
                         <p class="text-muted small">{{ $story->image_caption }}</p>
                     @endif
@@ -91,14 +92,14 @@
                 <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
                     <div>
                         @if ($previousStory)
-                            ← <a href="{{ route('Stories.DetailStories', $previousStory->id) }}" class="nav-link-custom">
-                                Previous Page</a>
+                            <a href="{{ route('Stories.DetailStories', $previousStory->slug) }}" class="nav-link-custom">
+                                ← Previous Page</a>
                         @endif
                     </div>
                     <div>
                         @if ($nextStory)
-                            <a href="{{ route('Stories.DetailStories', $nextStory->id) }}" class="nav-link-custom">
-                                Next Page</a> →
+                            <a href="{{ route('Stories.DetailStories', $nextStory->slug) }}" class="nav-link-custom">
+                                Next Page →</a>
                         @endif
                     </div>
                 </nav>

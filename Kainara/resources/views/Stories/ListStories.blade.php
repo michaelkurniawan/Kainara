@@ -167,10 +167,10 @@
                 @foreach ($articles as $story)
                     <div class="col">
                         {{-- Bungkus seluruh story-card dengan link --}}
-                        <a href="{{ route('Stories.DetailStories', $story->id) }}" class="text-decoration-none text-dark">
+                        <a href="{{ route('Stories.DetailStories', $story->slug) }}" class="text-decoration-none text-dark">
                             <div class="story-card h-100">
-                                {{-- Pastikan path gambar benar, biasanya public/storage/images/ --}}
-                                <img src="{{ asset('storage/' . $story->thumbnail) }}" alt="Story Image" class="img-fluid rounded-top" />
+                                {{-- Pastikan path gambar benar, biasanya public/storage/images/, MASIH HARDCODE UNTUK IMAGE --}}
+                                <img src="{{ asset('images/HardCode_KainSongket.jpeg') }}" alt="Story Image" class="img-fluid rounded-top" />
                                 <div class="card-body d-flex flex-column">
                                     <h5 class="card-title">{{ $story->title }}</h5>
                                     {{-- Gunakan strip_tags untuk membersihkan HTML dari konten sebelum membatasi teks --}}
