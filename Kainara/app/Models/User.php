@@ -6,24 +6,31 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasOne; // Pastikan ini diimpor
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
+     * Atribut yang dapat diisi secara massal.
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
+        'dob', // Menambahkan 'dob' ke fillable
+        'role', // Penting: Menambahkan 'role' ke fillable agar bisa diisi
+        'email_verified_at',
+        'last_login',
     ];
 
+
     /**
-     * The attributes that should be hidden for serialization.
+     * Atribut yang harus disembunyikan untuk serialisasi.
      *
      * @var array<int, string>
      */
@@ -33,7 +40,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Mendapatkan atribut yang harus dicasting.
      *
      * @return array<string, string>
      */
@@ -42,6 +49,16 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_login' => 'datetime', // Casting last_login sebagai datetime
+            'dob' => 'date', // Casting dob sebagai date
         ];
+    }
+
+    /**
+     * Mendapatkan keranjang belanja yang terkait dengan pengguna.
+     */
+    public function cart(): HasOne
+    {
+        return $this->hasOne(Cart::class);
     }
 }

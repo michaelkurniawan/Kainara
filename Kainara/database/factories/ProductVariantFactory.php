@@ -2,42 +2,31 @@
 
 namespace Database\Factories;
 
-use App\Models\Product;
-use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\ProductVariant;
+use App\Models\Product;
 
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ProductVariant>
+ */
 class ProductVariantFactory extends Factory
 {
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
     protected $model = ProductVariant::class;
-
+    
     public function definition(): array
     {
         return [
-            'product_id' => Product::factory(), // default, akan di-override
-            'size' => $this->faker->randomElement(['S', 'M', 'L', 'XL']),
-            'color' => 'Black', // default warna
-            'stock' => $this->faker->numberBetween(5, 50),
-            'price' => null,
+            'product_id' => Product::factory(),
+            'size' => fake()->word(),
+            'color' => fake()->colorName(),
+            'stock' => fake()->numberBetween(0, 100),
+            'sleeve' => fake()->boolean(50) ? fake()->randomElement(['long', 'short']) : null,
+            'price' => fake()->boolean(30) ? fake()->randomFloat(2, 10000, 5000000) : null,
         ];
     }
-
-    public function withColorByIndex(int $index)
-    {
-        $colors = [
-            'Brown',  // batik1
-            'Red',    // batik2
-            'Brown',  // batik3
-            'Blue',   // batik4
-            'Blue',   // batik5
-            'Blue',   // batik6
-            'Grey',   // batik7
-            'Beige',  // batik8
-            'Yellow', // batik9
-        ];
-
-        $color = $colors[$index] ?? 'Black';
-
-        return $this->state(fn () => ['color' => $color]);
-    }
-
 }

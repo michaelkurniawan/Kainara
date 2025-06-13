@@ -17,10 +17,10 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('origin');
-            $table->string('type');
             $table->text('description');
             $table->decimal('price', 12, 2);
             $table->string('image');
+            $table->enum('gender', ['men', 'women', 'unisex']);
             $table->timestamps();
         });
 
@@ -30,6 +30,7 @@ return new class extends Migration
             $table->string('size');
             $table->string('color');
             $table->integer('stock');
+            $table->string('sleeve')->nullable();
             $table->decimal('price', 12, 2)->nullable();
             $table->timestamps();
         });

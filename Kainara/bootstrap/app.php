@@ -11,7 +11,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // Daftarkan middleware Anda di sini
+        // Ini setara dengan $routeMiddleware di Kernel.php versi lama
+        $middleware->alias([
+            'is_admin' => \App\Http\Middleware\AdminMiddleware::class,
+        ]);
+
+        // Anda juga bisa mendaftarkan middleware global atau kelompok di sini jika diperlukan.
+        // Contoh: $middleware->web(append: [
+        //     \App\Http\Middleware\LastLoginMiddleware::class,
+        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
