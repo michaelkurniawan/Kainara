@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminUserController; // Controller admin pengguna
 use App\Http\Controllers\Admin\AdminDashboardController; // Controller admin dashboard (dari setup sebelumnya)
 use App\Http\Controllers\Admin\AdminCategoryController; // Controller admin kategori (dari setup sebelumnya, jika digunakan)
 use App\Http\Controllers\Admin\AdminArticlesController; // Controller admin articles (dari setup sebelumnya, jika digunakan)
+use App\Http\Controllers\StoriesController;
 
 // Rute umum untuk halaman utama (welcome)
 Route::get('/', function () {
@@ -63,3 +64,10 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(
 
 // Memuat rute autentikasi Laravel (dari vendor seperti Breeze/Jetstream)
 require __DIR__.'/auth.php';
+Route::get('/stories', [StoriesController::class, 'index'])->name('Stories.ListStories');
+
+Route::get('/stories/{slug}', [StoriesController::class, 'show'])->name('Stories.DetailStories');
+
+Route::get('/trynotif', function () {
+    return view('Notification.try-notif'); // Ini akan me-load view 'demo.blade.php'
+});
