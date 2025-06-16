@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('address_id')->nullable()->constrained('user_addresses')->onDelete('set null');
-            $table->enum('status', ['Awaiting Payment', 'Order Confirmed', 'Awaiting Shipment', 'Shipped', 'Delivered', 'Canceled', 'Returned', 'Refunded']);
+            $table->enum('status', ['Awaiting Payment', 'Order Confirmed', 'Awaiting Shipment', 'Shipped', 'Delivered', 'Canceled', 'Returned', 'Refunded', 'Completed']);
             $table->decimal('shipping_cost', 10, 2);
             $table->decimal('subtotal', 12, 2);
             $table->boolean('is_completed')->default(false);

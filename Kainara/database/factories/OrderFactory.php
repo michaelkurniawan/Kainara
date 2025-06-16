@@ -28,7 +28,7 @@ class OrderFactory extends Factory
         return [
             'user_id' => $user->id,
             'address_id' => $userAddress->id,
-            'status' => fake()->randomElement(['Awaiting Payment', 'Order Confirmed', 'Awaiting Shipment', 'Shipped', 'Delivered', 'Canceled', 'Returned', 'Refunded']),
+            'status' => fake()->randomElement(['Awaiting Payment', 'Order Confirmed', 'Awaiting Shipment', 'Shipped', 'Delivered', 'Canceled', 'Returned', 'Refunded', 'Completed']),
             'shipping_cost' => fake()->randomFloat(2, 10000, 50000),
             'subtotal' => 0,
             'is_completed' => fake()->boolean(30),
