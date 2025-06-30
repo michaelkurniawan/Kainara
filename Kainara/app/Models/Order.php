@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Order extends Model
 {
@@ -41,23 +43,23 @@ class Order extends Model
     /**
      * Get the user that owns the order.
      */
-    public function user()
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
      * Get the user address associated with the order.
      */
-    public function userAddress() // Renamed for clarity to match user_addresses table
+    public function userAddress(): BelongsTo
     {
-        return $this->belongsTo(UserAddress::class, 'address_id'); // Specify foreign key if it's not 'user_address_id'
+        return $this->belongsTo(UserAddress::class, 'address_id');
     }
 
     /**
      * Get the order items for the order.
      */
-    public function orderItems()
+    public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }

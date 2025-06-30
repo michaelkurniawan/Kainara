@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -49,5 +50,10 @@ class User extends Authenticatable
     public function cart(): HasOne 
     {
         return $this->hasOne(Cart::class);
+    }
+
+    public function articles(): HasMany
+    {
+        return $this->hasMany(Article::class, 'admin_id');
     }
 }

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
@@ -28,15 +30,15 @@ class Product extends Model
     /**
      * Get the category that owns the product.
      */
-    public function category()
+    public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
     /**
      * Get the product variants for the product.
      */
-    public function variants()
+    public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
     }
@@ -44,7 +46,7 @@ class Product extends Model
     /**
      * Get the product reviews for the product.
      */
-    public function reviews()
+    public function reviews(): HasMany
     {
         return $this->hasMany(ProductReview::class);
     }

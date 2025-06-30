@@ -38,6 +38,6 @@ class Refund extends Model
      */
     public function payment(): BelongsTo
     {
-        return $this->belongsTo(Payment::class);
+        return $this->belongsTo(Payment::class, 'payment_id');
     }
 }
