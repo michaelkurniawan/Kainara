@@ -85,7 +85,7 @@
                                             <a href="{{ route('admin.users.edit', $user) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 mr-2">
                                                 {{ __('Edit') }}
                                             </a>
-                                            <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline-block">
+                                            <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline-block">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200" onclick="return confirm('Apakah Anda yakin ingin menghapus pengguna ini?');">

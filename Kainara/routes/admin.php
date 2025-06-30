@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\Auth\AdminSessionController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminProductsController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -42,6 +43,9 @@ Route::prefix('admin')->name('admin.')->group(function (){
         // Admin User Management Route
         Route::resource('users', AdminUserController::class);
 
+        // Admin Products Management Route
+        Route::resource('products', AdminProductsController::class);
+        
         Route::put('password', [PasswordController::class, 'update'])->name('password.update'); 
         // Admin Logout Route
         Route::post('logout', [AdminSessionController::class, 'destroy'])->name('logout');

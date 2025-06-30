@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules; // Tambahkan baris ini!
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules;
+use App\Models\User; // Pastikan ini juga sudah ada
 
-class AdminUserUpdateRequest extends FormRequest
+class AdminUserEditRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rules; // Tambahkan baris ini!
+use App\Models\User; // Pastikan ini juga sudah ada
 
 class AdminUserStoreRequest extends FormRequest
 {
@@ -27,7 +28,7 @@ class AdminUserStoreRequest extends FormRequest
             'last_name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'dob' => ['nullable', 'date'], 
+            'profile_picture' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'role' => ['required', 'in:user,admin'],
         ];
     }
