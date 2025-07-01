@@ -32,8 +32,6 @@ class ProductFactory extends Factory
             'origin' => fake()->country(),
             'description' => fake()->paragraphs(rand(3, 7), true),
             'price' => fake()->randomFloat(2, 10000, 5000000),
-            'image' => 'product_placeholder_' . rand(1, 10) . '.jpg',
-            'gender' => fake()->randomElement(['men', 'women', 'unisex']),    
         ];
     }
 }

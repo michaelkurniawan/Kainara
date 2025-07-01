@@ -17,12 +17,10 @@ class Product extends Model
     protected $fillable = [
         'category_id',
         'name',
-        'slug',
-        'origin', 
+        'slug', // Slug is mass assignable
+        'origin',
         'description',
         'price',
-        'image', 
-        'gender', 
     ];
 
     /**

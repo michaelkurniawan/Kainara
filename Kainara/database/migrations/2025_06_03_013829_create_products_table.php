@@ -19,8 +19,6 @@ return new class extends Migration
             $table->string('origin');
             $table->text('description');
             $table->decimal('price', 12, 2);
-            $table->string('image');
-            $table->enum('gender', ['men', 'women', 'unisex']);
             $table->timestamps();
         });
 

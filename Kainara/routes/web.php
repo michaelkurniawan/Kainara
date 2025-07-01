@@ -13,7 +13,7 @@ use App\Http\Controllers\StoriesController;
 // Rute umum untuk halaman utama (welcome)
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('home');
 
 // Rute untuk pengguna - Menampilkan produk
 Route::get('/products', [ProductController::class, 'index'])->name('products.index'); // Halaman beranda user menampilkan semua produk

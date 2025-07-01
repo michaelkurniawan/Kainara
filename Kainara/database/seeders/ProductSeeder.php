@@ -28,29 +28,20 @@ class ProductSeeder extends Seeder
 
         $categories->each(function (Category $category) use ($sizes, $oneSize, $colors, $sleeves) {
 
-            // Generate produk secara manual agar bisa atur gender berdasarkan category_id
             for ($i = 0; $i < rand(10, 20); $i++) {
-
-                // Tentukan gender berdasarkan category_id
-                $gender = match ($category->id) {
-                    1 => fake()->randomElement(['men', 'women']),
-                    2 => 'unisex',
-                    default => fake()->randomElement(['men', 'women', 'unisex']),
-                };
 
                 $product = Product::factory()->create([
                     'category_id' => $category->id,
-                    'gender' => $gender,
                 ]);
 
-                // Logika product variant
                 if ($category->id === 1) {
+
                     $numColors = rand(1, 4);
                     $productColors = fake()->randomElements($colors, $numColors);
 
                     foreach ($productColors as $color) {
                         foreach ($sizes as $size) {
-                            if ($product->gender === 'men') {
+                            if (in_array($category->name, ['T-shirt', 'Shirt', 'Jacket'])) {
                                 foreach ($sleeves as $sleeve) {
                                     ProductVariant::factory()->create([
                                         'product_id' => $product->id,
@@ -84,7 +75,7 @@ class ProductSeeder extends Seeder
                     ]);
                 }
 
-            } // End for
+            }
         });
     }
 }
