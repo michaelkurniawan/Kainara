@@ -12,8 +12,15 @@
       color: #333;
     }
 
-    .btn-gold{
-        color: #B39C59 ;
+    .btn-gold {
+      background-color:rgb(0, 0, 0); /* warna emas */
+      color: white;
+      border: none;
+    }
+
+    .btn-gold:hover {
+      background-color:#d4af37; /* warna hover */
+      color: white;
     }
 
     .img-shoppingcart-title {
@@ -55,6 +62,23 @@
   <section>
     <img src="css/shoppingcart.png" alt="Shopping Cart Title" class="img-shoppingcart-title">
   </section>
+      
+  <section>
+    <div class="container mt-2">
+      <div class="row">
+        <!-- Kolom kiri (produk) -->
+        <div class="col-md-8">
+          <!-- isi produk -->
+          <div class=" mb-2 p-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div style="margin-left: 6rem; color:rgb(136, 139, 142);">Product name</div>
+              <div style="margin-left: 18rem; color:rgb(136, 139, 142);">Price</div>
+              <div style="margin-left: 1rem; color:rgb(136, 139, 142);">Quantity</div>
+              <div style="margin-right: 2rem; color:rgb(136, 139, 142);">Total price</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section>
     <div class="container">
@@ -82,7 +106,7 @@
               <div class="text-end me-3">
                 <p class="mb-0">IDR 500.000</p>
               </div>
-              <i class="bi bi-trash"></i>
+              <i class="bi bi-trash" style ="cursor: pointer;"></i>
             </div>
           </div>
 
@@ -106,7 +130,7 @@
               <div class="text-end me-3">
                 <p class="mb-0">IDR 500.000</p>
               </div>
-              <i class="bi bi-trash"></i>
+              <i class="bi bi-trash" style ="cursor: pointer;"></i>
             </div>
           </div>
 
@@ -130,7 +154,7 @@
               <div class="text-end me-3">
                 <p class="mb-0">IDR 500.000</p>
               </div>
-              <i class="bi bi-trash"></i>
+              <i class="bi bi-trash" style ="cursor: pointer;"></i>
             </div>
           </div>
 
@@ -144,7 +168,7 @@
             <p class="text-muted small mb-1">Includes Taxes</p>
             <hr>
             <h5 class="fw-bold">IDR 1.500.000</h5>
-            <button class="btn btn-gold w-100 text-white mt-3">Checkout</button>
+            <button class="btn btn-gold w-100 mt-3">Checkout</button>
             <button class="btn btn-outline-dark w-100 mt-2">Continue Shopping</button>
           </div>
         </div>
