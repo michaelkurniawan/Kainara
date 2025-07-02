@@ -58,4 +58,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Article::class, 'admin_id');
     }
+
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
 }

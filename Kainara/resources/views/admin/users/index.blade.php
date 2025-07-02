@@ -32,9 +32,9 @@
                     {{-- Search Bar --}}
                     <div class="mb-4">
                         <form action="{{ route('admin.users.index') }}" method="GET" class="flex items-center space-x-2">
-                            <x-text-input type="text" name="search" placeholder="{{ __('Cari berdasarkan nama...') }}" value="{{ request('search') }}" class="flex-1" />
+                            <x-text-input type="text" name="search" placeholder="{{ __('Find user based on name') }}" value="{{ request('search') }}" class="flex-1" />
                             <x-primary-button class="bg-[#B39C59] hover:bg-[#AD9D6D]">
-                                {{ __('Cari') }}
+                                {{ __('Find') }}
                             </x-primary-button>
                             @if(request('search')) {{-- Tampilkan tombol reset jika ada query pencarian --}}
                                 <a href="{{ route('admin.users.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition ease-in-out duration-150">

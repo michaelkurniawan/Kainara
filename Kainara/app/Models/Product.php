@@ -50,4 +50,9 @@ class Product extends Model
     {
         return $this->hasMany(ProductReview::class);
     }
+
+    public function getTotalStockAttribute(): int
+    {
+        return $this->variants->sum('stock');
+    }
 }

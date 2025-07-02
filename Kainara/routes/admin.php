@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminProductsController;
+use App\Http\Controllers\Admin\AdminArticlesController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -22,7 +23,7 @@ Route::prefix('admin')->name('admin.')->group(function (){
         Route::post('login', [AdminSessionController::class, 'store']);
     });
 
-    Route::middleware(['auth', 'admin'])->group(function () {
+    Route::middleware(['adminAuth'])->group(function () {
         // Admin Dashboard Routes
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
@@ -45,6 +46,9 @@ Route::prefix('admin')->name('admin.')->group(function (){
 
         // Admin Products Management Route
         Route::resource('products', AdminProductsController::class);
+
+        // Admin Articles Management Route
+        Route::resource('articles', AdminArticlesController::class);
         
         Route::put('password', [PasswordController::class, 'update'])->name('password.update'); 
         // Admin Logout Route
