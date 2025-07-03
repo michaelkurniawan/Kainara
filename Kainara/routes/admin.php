@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminProductsController;
 use App\Http\Controllers\Admin\AdminArticlesController;
+use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -49,6 +50,10 @@ Route::prefix('admin')->name('admin.')->group(function (){
 
         // Admin Articles Management Route
         Route::resource('articles', AdminArticlesController::class);
+
+        // Admin Order Management Route
+        Route::resource('orders', AdminOrderController::class);
+        Route::get('orders/{order}/download-label', [AdminOrderController::class, 'downloadShippingLabel'])->name('orders.download-label');
         
         Route::put('password', [PasswordController::class, 'update'])->name('password.update'); 
         // Admin Logout Route

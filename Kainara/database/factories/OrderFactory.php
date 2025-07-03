@@ -35,7 +35,7 @@ class OrderFactory extends Factory
             'auto_complete_at' => null,
             'original_user_name' => $user->first_name . ' ' . $user->last_name,
             'original_user_email' => $user->email,
-            'shipping_label' => $userAddress->label,
+            'shipping_label' => null,
             'shipping_recipient_name' => $userAddress->recipient_name,
             'shipping_phone' => $userAddress->phone,
             'shipping_address' => $userAddress->address,
@@ -44,6 +44,16 @@ class OrderFactory extends Factory
             'shipping_province' => $userAddress->province,
             'shipping_postal_code' => $userAddress->postal_code,
         ];
+    }
+
+    /**
+     * Indicate that the order is confirmed.
+     */
+    public function confirmed(): Factory
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'Order Confirmed',
+        ]);
     }
 
     public function configure(): static

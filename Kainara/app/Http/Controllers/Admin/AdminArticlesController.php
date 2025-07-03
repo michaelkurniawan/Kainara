@@ -38,6 +38,7 @@ class AdminArticlesController extends Controller
         $validatedData = $request->validated();
 
         $thumbnailPath = null;
+
         if ($request->hasFile('thumbnail')) {
             $thumbnailPath = $request->file('thumbnail')->store('article_thumbnails', 'public');
         }
@@ -50,17 +51,20 @@ class AdminArticlesController extends Controller
         }
 
         try {
-            // Membuat artikel di database
             Article::create([
                 'title' => $validatedData['title'],
                 'slug' => $slug,
                 'content' => $validatedData['content'],
                 'thumbnail' => $thumbnailPath,
-                'admin_id' => Auth::id(), // Mengisi admin_id secara otomatis dengan ID user yang sedang login
+                'admin_id' => Auth::id(),
             ]);
 
             return redirect()->route('admin.articles.index')->with('success', 'Artikel berhasil dibuat.');
         } catch (\Exception $e) {
+            if ($thumbnailPath && Storage::disk('public')->exists($thumbnailPath)) {
+                Storage::disk('public')->delete($thumbnailPath);
+            }
+
             return redirect()->back()->withInput()->withErrors(['error' => 'Gagal membuat artikel. Silakan coba lagi.']);
         }
     }
@@ -88,13 +92,11 @@ class AdminArticlesController extends Controller
     {
         $validatedData = $request->validated();
 
-        $thumbnailPath = $article->thumbnail;
-        if ($request->hasFile('thumbnail')) {
-            if ($article->thumbnail && Storage::disk('public')->exists($article->thumbnail)) {
-                Storage::disk('public')->delete($article->thumbnail);
-            }
+        $oldThumbnail = $article->thumbnail;
+        $newThumbnail = $oldThumbnail;
 
-            $thumbnailPath = $request->file('thumbnail')->store('article_thumbnail', 'public');
+        if ($request->hasFile('thumbnail')) {
+            $newThumbnail = $request->file('thumbnail')->store('article_thumbnail', 'public');
         }
 
         $slug = $article->slug;
@@ -112,15 +114,24 @@ class AdminArticlesController extends Controller
                 'title' => $validatedData['title'],
                 'slug' => $slug,
                 'content' => $validatedData['content'],
-                'thumbnail' => $thumbnailPath,
+                'thumbnail' => $newThumbnail,
                 'admin_id' => $article->admin_id,
             ]);
-    
-            return redirect()->route('admin.articles.index')->with('sucess', 'Article updated successfully');
+
+            // Jika berhasil dan ada thumbnail baru, hapus thumbnail lama
+            if ($request->hasFile('thumbnail') && $oldThumbnail && Storage::disk('public')->exists($oldThumbnail)) {
+                Storage::disk('public')->delete($oldThumbnail);
+            }
+
+            return redirect()->route('admin.articles.index')->with('success', 'Article updated successfully');
         } catch (\Exception $e) {
+            // Hapus file baru jika gagal update
+            if ($request->hasFile('thumbnail') && $newThumbnail && $newThumbnail !== $oldThumbnail) {
+                Storage::disk('public')->delete($newThumbnail);
+            }
+
             return redirect()->back()->withInput()->withErrors(['error' => 'Failed to update article. Please try again']);
         }
-
     }
 
     /**

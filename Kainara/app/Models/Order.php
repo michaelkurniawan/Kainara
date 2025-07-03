@@ -40,6 +40,12 @@ class Order extends Model
         'shipping_postal_code',
     ];
 
+    protected $casts = [
+        'completed_at' => 'datetime',
+        'auto_complete_at' => 'datetime',
+        'is_completed' => 'boolean',
+    ];
+
     /**
      * Get the user that owns the order.
      */
@@ -51,7 +57,7 @@ class Order extends Model
     /**
      * Get the user address associated with the order.
      */
-    public function userAddress(): BelongsTo
+    public function address(): BelongsTo
     {
         return $this->belongsTo(UserAddress::class, 'address_id');
     }
@@ -78,5 +84,10 @@ class Order extends Model
     public function delivery(): HasOne
     {
         return $this->hasOne(Delivery::class);
+    }
+
+    public function getTotalAmountAttribute(): float
+    {
+        return $this->subtotal + $this->shipping_cost;
     }
 }

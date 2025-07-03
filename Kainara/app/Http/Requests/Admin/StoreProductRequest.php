@@ -33,9 +33,7 @@ class StoreProductRequest extends FormRequest
 
             // Rules for variants array
             'variants' => ['required', 'array', 'min:1'],
-            // Untuk input teks 'color', 'required' dan 'min:1' sudah cukup
             'variants.*.color' => ['required', 'string', 'max:255', 'min:1'],
-            // Untuk select 'size', gunakan 'required' dan 'not_in:' untuk menolak string kosong
             'variants.*.size' => ['required', 'string', 'max:255', 'not_in:'], // Diperbarui menjadi 'not_in:'
             'variants.*.stock' => ['required', 'integer', 'min:0'],
             'variants.*.price' => ['nullable', 'numeric', 'min:0'],
