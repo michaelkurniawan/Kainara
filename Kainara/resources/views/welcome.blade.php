@@ -211,7 +211,7 @@
     }
 
     .story-video-section-overlay .video-text-content-overlay h2 {
-        font-family: var(--font-primary, 'Playfair Display', serif);
+        font-family: var(--font-primary, 'Ancizar Serif', serif);
         text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.75); /* Shadow lebih tebal */
         font-size: 3.5rem; /* Dari desain Anda */
         font-weight: 700;  /* Bootstrap fw-bolder */
@@ -526,7 +526,7 @@
                 </div>
             </div>
             <div class="join-button-motif-wrapper text-center position-relative mt-4">
-                <a href="#" class="btn btn-join-artisan">Join as Artisan</a>
+                <a href="{{ route('artisan.register') }}" class="btn btn-join-artisan">Join as Artisan</a>  
             </div>
         </div>
         <div class="decorative-motif motif-latest-top-left">
