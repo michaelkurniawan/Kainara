@@ -15,24 +15,24 @@ class ProductController extends Controller
         $sortOption = $request->query('sort');
 
         $products = Product::query()
-            ->when($originFilter, function ($query, $origin) {
-                return $query->whereIn('origin', (array) $origin);
-            })
-            ->when($colorFilter, function ($query, $colors) {
-                return $query->whereHas('variants', function ($q) use ($colors) {
-                    $q->whereIn('color', (array) $colors);
-                });
-            })
-            ->when($sortOption, function ($query, $sortOption) {
-                return match ($sortOption) {
-                    'az' => $query->orderBy('name', 'asc'),
-                    'za' => $query->orderBy('name', 'desc'),
-                    'price_low' => $query->orderBy('price', 'asc'),
-                    'price_high' => $query->orderBy('price', 'desc'),
-                    default => $query,
-                };
-            })
-            ->get();
+        ->when($originFilter, function ($query, $origin) {
+            return $query->whereIn('origin', (array) $origin);
+        })
+        ->when($colorFilter, function ($query, $colors) {
+            return $query->whereHas('variants', function ($q) use ($colors) {
+                $q->whereIn('color', (array) $colors);
+            });
+        })
+        ->when($sortOption, function ($query, $sortOption) {
+            return match ($sortOption) {
+                'az' => $query->orderBy('name', 'asc'),
+                'za' => $query->orderBy('name', 'desc'),
+                'price_low' => $query->orderBy('price', 'asc'),
+                'price_high' => $query->orderBy('price', 'desc'),
+                default => $query,
+            };
+        })
+        ->paginate(9);
 
         $availableOrigins = Product::select('origin')->distinct()->pluck('origin')->toArray();
         $availableColors = ProductVariant::select('color')->distinct()->pluck('color')->toArray();

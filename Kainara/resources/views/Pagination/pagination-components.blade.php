@@ -14,12 +14,13 @@
     }
 
     .custom-pagination ul.pagination li.page-item a.page-link:hover {
-        background-color: #B6B09F;
-        color: white;
+        background-color: #EAE4D5;
+        color: #333;
     }
 
     .custom-pagination ul.pagination li.page-item.active span.page-link {
-        background-color: #333;
+        background-color: #AD9D6C;
+        border-color: #AD9D6C;
         color: white;
         font-weight: bold;
         border-radius: 10px;
