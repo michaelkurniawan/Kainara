@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\AdminDashboardController; // Controller admin das
 use App\Http\Controllers\Admin\AdminCategoryController; // Controller admin kategori (dari setup sebelumnya, jika digunakan)
 use App\Http\Controllers\Admin\AdminArticlesController; // Controller admin articles (dari setup sebelumnya, jika digunakan)
 use App\Http\Controllers\StoriesController;
+use App\Http\Controllers\CheckoutController;
 
 // Rute umum untuk halaman utama (welcome)
 Route::get('/', function () {
@@ -71,3 +72,6 @@ Route::get('/stories/{slug}', [StoriesController::class, 'show'])->name('Stories
 Route::get('/trynotif', function () {
     return view('Notification.try-notif'); // Ini akan me-load view 'demo.blade.php'
 });
+
+//testing untuk melihat halaman pembelian
+Route::get('/checkout', [CheckoutController::class, 'showCheckoutPage'])->name('checkout.show');
