@@ -7,10 +7,11 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\ProductVariant;
-use App\Http\Requests\Admin\StoreProductRequest;
-use App\Http\Requests\Admin\UpdateProductRequest;
+use App\Http\Requests\Admin\StoreProductRequest; // Assuming you have this request
+use App\Http\Requests\Admin\UpdateProductRequest; // Assuming you have this request
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB; // Added for potential future DB queries
 
 class AdminProductsController extends Controller
 {
@@ -19,17 +20,38 @@ class AdminProductsController extends Controller
      */
     public function index(Request $request)
     {
-        $categoryId = $request->input('category_id'); // Dapatkan category_id dari request
+        // Start with a base query for Product
+        $query = Product::query();
 
-        $products = Product::when($categoryId, function ($query, $categoryId) {
-            $query->where('category_id', $categoryId);
-        })
-        ->with('category')
-        ->withSum('variants', 'stock') // Ini akan membuat atribut $product->variants_sum_stock
-        ->orderBy('created_at', 'desc')
-        ->paginate(10);
+        // Filter by category_id if provided
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->input('category_id'));
+        }
 
-        // Ambil semua kategori untuk dropdown filter
+        // Search logic (similar to AdminUserController for consistency)
+        if ($request->has('search') && $request->search != '') {
+            $search = strtolower($request->input('search'));
+
+            $query->where(function($q) use ($search) {
+                $q->where(DB::raw('LOWER(name)'), 'like', '%' . $search . '%')
+                  ->orWhere(DB::raw('LOWER(description)'), 'like', '%' . $search . '%')
+                  ->orWhere(DB::raw('LOWER(origin)'), 'like', '%' . $search . '%')
+                  ->orWhereHas('category', function ($sq) use ($search) {
+                      $sq->where(DB::raw('LOWER(name)'), 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
+        // Load relationships and sum stock
+        $products = $query->with('category')
+                          ->withSum('variants', 'stock')
+                          ->orderBy('created_at', 'desc')
+                          ->paginate(10);
+
+        // Append all request query parameters to the pagination links
+        $products->appends($request->query());
+
+        // Fetch all categories for the filter dropdown, ordered by name
         $categories = Category::orderBy('name')->get();
 
         return view('admin.products.index', compact('products', 'categories'));
@@ -40,6 +62,7 @@ class AdminProductsController extends Controller
      */
     public function create()
     {
+        // Fetch all categories for the dropdown, ordered by name
         $categories = Category::orderBy('name')->get();
         return view('admin.products.create', compact('categories'));
     }
@@ -51,37 +74,42 @@ class AdminProductsController extends Controller
     {
         $validatedData = $request->validated();
 
-        // Save image if provided
         $imagePath = null;
-        if ($validatedData->hasFile('image')) {
-            $imagePath = $validatedData->file('image')->store('product_images', 'public');
+        // Check if an image file was uploaded
+        if ($request->hasFile('image')) {
+            // Store the image and get its path
+            $imagePath = $request->file('image')->store('product_images', 'public');
         }
-        
-        // Generate a unique slug
-        $slug = Str::slug($validatedData->name);
+
+        // Generate a unique slug for the product name
+        $slug = Str::slug($validatedData['name']);
         $originalSlug = $slug;
         $count = 1;
 
+        // Ensure the slug is unique, appending a counter if necessary
         while (Product::where('slug', $slug)->exists()) {
             $slug = $originalSlug . '-' . $count++;
         }
 
         try {
+            // Create the product record in the database
             $product = Product::create([
-                'category_id' => $validatedData->category_id,
-                'name' => $validatedData->name,
-                'origin' => $validatedData->origin,
-                'description' => $validatedData->description,
-                'price' => $validatedData->price,
+                'category_id' => $validatedData['category_id'],
+                'name' => $validatedData['name'],
+                'origin' => $validatedData['origin'],
+                'description' => $validatedData['description'],
+                'price' => $validatedData['price'],
                 'image' => $imagePath,
-                'material' => $validatedData->material,
-                'slug' => $slug, 
+                'material' => $validatedData['material'] ?? null, // Use null coalesce for optional fields
+                'slug' => $slug,
             ]);
 
-            if (is_array($validatedData->variants) && count($validatedData->variants) > 0) {
-                foreach ($validatedData->variants as $variantData) {  
-                    $variantPrice = $variantData['price'] ?? $validatedData->price;
-    
+            // Handle product variants if they exist in the validated data
+            if (isset($validatedData['variants']) && is_array($validatedData['variants']) && count($validatedData['variants']) > 0) {
+                foreach ($validatedData['variants'] as $variantData) {
+                    // Use the variant's price if provided, otherwise use the product's base price
+                    $variantPrice = $variantData['price'] ?? $validatedData['price'];
+
                     $product->variants()->create([
                         'color' => $variantData['color'],
                         'size' => $variantData['size'],
@@ -91,10 +119,14 @@ class AdminProductsController extends Controller
                 }
             }
 
-            return redirect()->route('admin.products.index')->with('success', 'Product created successfully');
+            return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
         } catch (\Exception $e) {
-            Storage::disk('public')->delete($imagePath);
-            return redirect()->back()->withInput()->withErrors('error', 'Failed to create new product');
+            // If an error occurs during product creation, delete the uploaded image
+            if ($imagePath) {
+                Storage::disk('public')->delete($imagePath);
+            }
+            // Redirect back with input and an error message
+            return redirect()->back()->withInput()->with('error', 'Failed to create new product: ' . $e->getMessage());
         }
     }
 
@@ -103,6 +135,7 @@ class AdminProductsController extends Controller
      */
     public function show(Product $product)
     {
+        // Eager load category, variants, and reviews for the product
         $product->load('category', 'variants', 'reviews');
         return view('admin.products.show', compact('product'));
     }
@@ -112,7 +145,8 @@ class AdminProductsController extends Controller
      */
     public function edit(Product $product)
     {
-        $categories = Category::all();
+        // Fetch all categories for the dropdown
+        $categories = Category::orderBy('name')->get();
         return view('admin.products.update', compact('product', 'categories'));
     }
 
@@ -123,27 +157,29 @@ class AdminProductsController extends Controller
     {
         $validatedData = $request->validated();
 
-        $oldImage = $product->image;
-        $newImage = $oldImage;
+        $oldImage = $product->image; // Store the current image path
+        $newImage = $oldImage; // Initialize new image path with the old one
 
+        // Check if a new image file was uploaded
         if ($request->hasFile('image')) {
             $newImage = $request->file('image')->store('product_images', 'public');
         }
 
-        // Slug generation
+        // Slug generation: only regenerate if the product name has changed
         $slug = $product->slug;
         if ($product->name !== $validatedData['name']) {
             $slug = Str::slug($validatedData['name']);
             $originalSlug = $slug;
             $count = 1;
 
+            // Ensure the new slug is unique, excluding the current product's ID
             while (Product::where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
                 $slug = $originalSlug . '-' . $count++;
             }
         }
 
         try {
-            // Update product
+            // Update the product record
             $product->update([
                 'category_id' => $validatedData['category_id'],
                 'name' => $validatedData['name'],
@@ -155,12 +191,13 @@ class AdminProductsController extends Controller
                 'slug' => $slug,
             ]);
 
-            // Handle variants
-            $submittedVariants = [];
+            $submittedVariantIds = [];
 
+            // Handle updating and creating product variants
             if (isset($validatedData['variants']) && is_array($validatedData['variants'])) {
                 foreach ($validatedData['variants'] as $variantData) {
-                    if (!empty($variantData['id'])) {
+                    if (isset($variantData['id']) && !empty($variantData['id'])) {
+                        // Find existing variant and update it
                         $variant = ProductVariant::find($variantData['id']);
                         if ($variant && $variant->product_id === $product->id) {
                             $variant->update([
@@ -169,41 +206,37 @@ class AdminProductsController extends Controller
                                 'stock' => $variantData['stock'],
                                 'price' => $variantData['price'] ?? $validatedData['price'],
                             ]);
-                            $submittedVariants[] = $variant->id;
+                            $submittedVariantIds[] = $variant->id; // Add updated variant's ID
                         }
                     } else {
+                        // Create a new variant
                         $newVariant = $product->variants()->create([
                             'color' => $variantData['color'],
                             'size' => $variantData['size'],
                             'stock' => $variantData['stock'],
                             'price' => $variantData['price'] ?? $validatedData['price'],
                         ]);
-                        $submittedVariants[] = $newVariant->id;
+                        $submittedVariantIds[] = $newVariant->id; // Add new variant's ID
                     }
                 }
             }
 
-            // Delete unsubmitted variants
-            $currentVariantIds = $product->variants->pluck('id')->toArray();
-            $variantsToDelete = array_diff($currentVariantIds, $submittedVariants);
+            // Delete variants that were not submitted (removed by the user)
+            $product->variants()->whereNotIn('id', $submittedVariantIds)->delete();
 
-            if (!empty($variantsToDelete)) {
-                $product->variants()->whereIn('id', $variantsToDelete)->delete();
-            }
-
-            // Delete old image if new image was uploaded
-            if ($request->hasFile('image') && $oldImage && $oldImage !== $newImage) {
+            // Delete the old image only if a new one was successfully uploaded and it's different
+            if ($request->hasFile('image') && $oldImage && $oldImage !== $newImage && Storage::disk('public')->exists($oldImage)) {
                 Storage::disk('public')->delete($oldImage);
             }
 
             return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
         } catch (\Exception $e) {
-            // Delete new image if update failed
+            // If an error occurs during update, delete the newly uploaded image
             if ($request->hasFile('image') && $newImage && $newImage !== $oldImage) {
                 Storage::disk('public')->delete($newImage);
             }
-
-            return redirect()->back()->withErrors(['product' => 'Failed to update product. Error: ' . $e->getMessage()]);
+            // Redirect back with input and an error message
+            return redirect()->back()->withInput()->with('error', 'Failed to update product: ' . $e->getMessage());
         }
     }
 
@@ -212,12 +245,18 @@ class AdminProductsController extends Controller
      */
     public function destroy(Product $product)
     {
-        if ($product->image && Storage::disk('public')->exists($product->image)) {
-            Storage::disk('public')->delete($product->image);
+        try {
+            // Delete associated image if it exists and is not the default
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
+            }
+
+            // Delete the product (variants will be deleted via cascade if set up in migration)
+            $product->delete();
+
+            return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete product: ' . $e->getMessage());
         }
-
-        $product->delete(); // Variant => On Delete Cascade
-
-        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil dihapus.');
     }
 }
