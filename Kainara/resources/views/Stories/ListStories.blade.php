@@ -95,10 +95,9 @@
 @endpush
 
 @section('content')
-    <div class="container-fluid py-4 px-5">
-
+    <div class="container-fluid py-5 px-5">
         <x-bangga title="Kainara's Stories" subtitle="Bangga Pakai Karya UMKM" />
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 py-4">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 py-5">
             @forelse ($articles as $story)
                 <div class="col">
                     <a href="{{ route('Stories.DetailStories', $story->slug) }}" class="text-decoration-none text-dark">

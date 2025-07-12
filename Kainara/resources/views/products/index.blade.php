@@ -143,9 +143,9 @@
 @endpush
 
 @section('content')
-    <div class="container-fluid py-4 px-5">
+    <div class="container-fluid py-5 px-5">
         <x-bangga title="Kainara's Products" subtitle="Bangga Pakai Karya UMKM" />
-        <div class="filter-header d-flex mb-4">
+        <div class="filter-header d-flex mt-4">
             <div class="d-flex justify-content-end mb-1">
                 <div class="filter-group position-relative me-4">
                     <div class="dropdown">
@@ -302,16 +302,6 @@
                             <input type="hidden" name="colors[]" value="{{ $color }}">
                         @endforeach
 
-                        {{-- If we want to clear the sort filter, we don't include the 'sort' input --}}
-                        {{-- To actually clear it when the button is clicked, we'd need to modify the form action
-                           or remove the hidden input for 'sort' when this particular button is clicked.
-                           For simplicity here, this form will re-apply existing filters *except* for the sort when this button is clicked.
-                           To explicitly remove sort, you might change the 'action' or add a hidden input that clears it.
-                           Let's assume the button removes the sort, so we explicitly *don't* include it in the hidden inputs.
-                        --}}
-                        {{-- Remove the hidden sort input here to truly clear it on button click --}}
-                        {{-- <input type="hidden" name="sort" value=""> --}}
-
                         <button type="submit" class="btn border d-flex align-items-center px-3 py-2"
                             style="font-size: 1.1rem;">
                             <span class="me-3">{{ $sortLabel[$sort] }}</span>
@@ -320,7 +310,6 @@
                     </form>
                 @endif
 
-                {{-- Clear All (paling kanan) --}}
                 <div class="ms-auto">
                     <a href="{{ route('products.index') }}" class="btn btn-outline-danger px-4 py-1"
                         style="font-size: 1.25rem;">Clear All</a>
@@ -328,10 +317,10 @@
             </div>
         @endif
 
-        <div class="row g-5 ">
+        <div class="row g-4 py-4 mb-4">
             @forelse ($products as $product)
                 <div class="col-12 col-sm-6 col-md-4">
-                    <a href="{{ url('products/' . $product->id) }}" class="text-decoration-none text-dark">
+                    <a href="{{ route('products.show', $product->slug) }}" class="text-decoration-none text-dark">
                         <div class="product-container card h-100">
                             <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="img-fluid" />
                             <div class="product-card">

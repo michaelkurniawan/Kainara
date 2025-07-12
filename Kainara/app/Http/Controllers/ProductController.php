@@ -47,9 +47,16 @@ class ProductController extends Controller
         ));
     }
 
-    public function show($id)
+    /**
+     * Display the specified product using its slug.
+     *
+     * @param  string  $slug The slug of the product
+     * @return \Illuminate\View\View
+     */
+    public function show($slug)
     {
-        $product = Product::with('variants')->findOrFail($id);
+        // Use where('slug', $slug) instead of findOrFail($id)
+        $product = Product::with('variants')->where('slug', $slug)->firstOrFail();
         return view('products.detail', compact('product'));
     }
 }

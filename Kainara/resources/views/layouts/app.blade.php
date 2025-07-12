@@ -4,15 +4,21 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Kainara - @yield('title', 'Welcome')</title>
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ancizar+Serif:ital,wght@0,300..900;1,300..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Bootstrap Icons CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
         :root {
-            --logo-height-medium: 250px; 
+            /* Variabel untuk ukuran logo yang berputar (digunakan oleh kelas .logo-size-*) */
+            --logo-height-medium: 250px;  /* Contoh ukuran sedang */
             --logo-height-large: 170px;   /* Contoh ukuran besar */
 
             --target-icon-size: 24px;
@@ -300,19 +306,19 @@
         ];
     @endphp
 
-    <header class="flex-grow-1 position-relative">
-        <div class="container-fluid px-5 py-4"> 
+    <header>
+        <div class="container-fluid px-5">
             <div class="nav-group-left">
-                <div class="dropdown header-dropdown"> {{-- Tambah kelas .header-dropdown --}}
+                <div class="dropdown header-dropdown me-3"> 
                     <a class="nav-link fw-bold dropdown-toggle" href="#" role="button" id="storeDropdown" data-bs-toggle="dropdown" aria-expanded="false">Store</a>
                     <ul class="dropdown-menu" aria-labelledby="storeDropdown">
                         <li><a class="dropdown-item" href="{{ route('products.index') }}">Men</a></li>
-                        <li><a class="dropdown-item" href="#">Women</a></li> {{-- Ganti urutan/nama jika perlu --}}
+                        <li><a class="dropdown-item" href="#">Women</a></li>
                         <li><a class="dropdown-item" href="#">Fabric</a></li>
                     </ul>
                 </div>
-                <a href="{{ route('Stories.ListStories') }}" class="nav-link fw-bold">Stories</a>
-                <a href="#" class="nav-link fw-bold">My Order</a>
+                <a href="{{ route('Stories.ListStories') }}" class="nav-link fw-bold me-3">Stories</a>
+                <a href="#" class="nav-link fw-bold me-3">My Order</a>
                 <a href="#" class="nav-link fw-bold">About Us</a>
             </div>
 
@@ -321,23 +327,20 @@
                     <img id="rotating-logo-current"
                         src="{{ $logosData[0]['src'] }}"
                         alt="Kainara Logo"
-                        class="{{ $logosData[0]['class'] }} logo-image active">
+                        class="{{ $logosData[0]['class'] }} logo-image active"> 
 
                     <img id="rotating-logo-next"
-                        src=""
+                        src="" 
                         alt="Kainara Logo"
                         class="logo-image">
                 </a>
             </div>
 
-            {{-- Grup Ikon Kanan --}}
             <div class="icon-group-right">
                 <a href="#" class="nav-icon-link">
                     <img src="{{ asset('images/icons/icon-cart.png') }}" alt="Cart" class="header-icon">
                 </a>
-                {{-- Dropdown untuk Ikon Profil --}}
-                {{-- Ikon Profil (Tanpa Dropdown) --}}
-                <a href="#" class="nav-icon-link" title="My Account"> {{-- Tambahkan title untuk aksesibilitas atau href ke halaman profil --}}
+                <a href="#" class="nav-icon-link" title="My Account"> 
                     <img src="{{ asset('images/icons/icon-account.png') }}" alt="Account" class="header-icon">
                 </a>
             </div>
@@ -348,16 +351,13 @@
         @yield('content')
     </main>
 
-    <!-- Footer -->
     <footer class="site-footer flex-grow-1 position-relative">
-        <div class="container-fluid py-4 px-5">
-            <div class="row gy-4 justify-content-between mt-3"> {{-- Tambah justify-content-between --}}
-                {{-- Kolom Logo --}}
+        <div class="container-fluid px-5 py-4">
+            <div class="row gy-4 justify-content-between mt-3">
                 <div class="col-lg-3 col-md-12 text-center text-lg-start footer-logo-section mb-4 mb-lg-0">
                     <img src="{{ asset('images/logofooter.png') }}" alt="Kainara Footer Logo" class="footer-logo">
                 </div>
 
-                {{-- Kolom Menu --}}
                 <div class="col-lg-2 col-md-3 col-6">
                     <h6 class="footer-heading">MENU</h6>
                     <ul class="list-unstyled footer-links">
@@ -369,7 +369,6 @@
                     </ul>
                 </div>
 
-                {{-- Kolom Socials --}}
                 <div class="col-lg-2 col-md-3 col-6">
                     <h6 class="footer-heading">SOCIALS</h6>
                     <ul class="list-unstyled footer-links">
@@ -379,7 +378,6 @@
                     </ul>
                 </div>
 
-                {{-- Kolom Alamat --}}
                 <div class="col-lg-4 col-md-6 footer-address-section"> {{-- Perbesar sedikit kolom alamat --}}
                     <h6 class="footer-heading">BCA LEARNING INSTITUTE</h6>
                     <p class="address-text mb-0">Sentul City, Jl. Pakuan No.3, Sumur Batu, Babakan Madang, Bogor Regency, West Java 16810</p>

@@ -12,7 +12,7 @@ Route::get('/', function () {
 })->name('welcome');
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index'); 
-Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
 Route::get('/stories', [StoriesController::class, 'index'])->name('Stories.ListStories');
 

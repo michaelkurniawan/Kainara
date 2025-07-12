@@ -212,7 +212,7 @@
     .join-movement-section-custom .section-title-join{
         font-family: var(--font-primary);
         color: var(--color-text-dark, #333);
-        font-size: 2.5rem;
+        font-size: 3rem;
         font-weight: 700;
         margin-top: 3.5rem;
     }
@@ -232,7 +232,7 @@
     }
 
     .join-movement-section-custom .feature-icon-join {
-        max-height: 200px;
+        max-height: 270px;
         margin-bottom: 1rem;
     }
 
@@ -260,7 +260,6 @@
     }
 
     .latest-stories-custom {
-        min-height: 80vh;
         background-color:rgb(255, 255, 255);
         padding-top: var(--section-padding-y, 4rem);
         position: relative;
@@ -394,187 +393,191 @@
         .story-video-section-overlay .video-text-content-overlay .text-top { padding-top: 8vh; }
         .story-video-section-overlay .video-text-content-overlay .text-bottom { padding-bottom: 8vh; }
     }
-
 </style>
 @endpush
 
-    <section class="hero-section-custom">
+{{-- Hero Section --}}
+<section class="hero-section-custom" style="padding-top:20px;">
+    {{-- Decorative Motifs for Hero Section --}}
+    <div class="decorative-motif motif-hero-top-left">
+        <img src="{{ asset('images/motif-batik.png') }}" alt="Motif Batik">
+    </div>
+    <div class="decorative-motif motif-hero-top-right">
+        <img src="{{ asset('images/motif-batik.png') }}" alt="Motif Batik">
+    </div>
+    <div class="decorative-motif motif-hero-bottom-left">
+        <img src="{{ asset('images/motif-batik.png') }}" alt="Motif Batik">
+    </div>
+    <div class="decorative-motif motif-hero-bottom-right">
+        <img src="{{ asset('images/motif-batik.png') }}" alt="Motif Batik">
+    </div>
 
-        <div class="decorative-motif motif-hero-top-left">
-            <img src="{{ asset('images/motif-batik.png') }}" alt="Motif Batik">
-        </div>
-        <div class="decorative-motif motif-hero-top-right">
-            <img src="{{ asset('images/motif-batik.png') }}" alt="Motif Batik">
-        </div>
-        <div class="decorative-motif motif-hero-bottom-left">
-            <img src="{{ asset('images/motif-batik.png') }}" alt="Motif Batik">
-        </div>
-        <div class="decorative-motif motif-hero-bottom-right">
-            <img src="{{ asset('images/motif-batik.png') }}" alt="Motif Batik">
-        </div>
-
-
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-5 col-md-6 hero-text-content order-md-1 order-2">
-                    <h1 class="fw-bold">
-                        <span class="hero-title-italic">Threads of</span> <span class="hero-title-bold-italic">Heritage,</span><br>
-                        <span class="hero-title-italic">Woven for the</span> <span class="hero-title-bold-italic">Future</span>
-                    </h1>
-                    <p class="lead fs-5">
-                        Bringing Indonesia's traditional fabrics to the world through
-                        innovation and artistry.
-                    </p>
-                    <div class="hero-button-wrapper">
-                        <a href="#" class="btn btn-kainara">Discover Our Collection</a>
-                    </div>
-                </div>
-
-
-                <div class="col-lg-7 col-md-6 hero-image-container text-center text-md-end order-md-2 order-1 mb-4 mb-md-0">
-                    <img src="{{ asset('images/batik-couple.png') }}" alt="Kainara Models" class="img-fluid hero-model-img">
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-    <section class="story-video-section-overlay">
-        <div class="video-bg-wrapper-overlay">
-            <video playsinline="playsinline" autoplay="autoplay" muted="muted" loop="loop" id="storyOverlayVideo">
-                <source src="{{ asset('videos/batik_story_video.mp4') }}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-            <div class="video-overlay-layer"></div>
-        </div>
-
-        <div class="video-text-content-overlay container d-flex flex-column">
-            <div class="text-top text-center">
-                <h2 class="display-5 fw-bolder">"Every Pattern Tells a Story"</h2>
-            </div>
-            <div class="text-bottom text-center mt-auto">
-                <p class="lead fs-5 mx-auto" style="max-width: 650px;">
-                    Go behind the scenes of Indonesian batik craftsmanship
-                    where heritage, patience, and passion are woven into every thread.
+    <div class="container">
+        <div class="row align-items-center">
+            {{-- Hero Text Content --}}
+            <div class="col-lg-5 col-md-6 hero-text-content order-md-1 order-2">
+                <h1 class="fw-bold">
+                    <span class="hero-title-italic">Threads of</span> <span class="hero-title-bold-italic">Heritage,</span><br>
+                    <span class="hero-title-italic">Woven for the</span> <span class="hero-title-bold-italic">Future</span>
+                </h1>
+                <p class="lead fs-5">
+                    Bringing Indonesia's traditional fabrics to the world through
+                    innovation and artistry.
                 </p>
-            </div>
-        </div>
-    </section>
-
-    <section class="join-movement-section-custom">
-        <div class="container">
-            <h2 class="section-title-join">
-                 <span class="join-title-bold-italic">Join the Movement.</span><span class="join-title-italic"> Share Your Craft with the World</span>
-            </h2>
-            <div class="row justify-content-center">
-                <div class="col-md-4 col-lg-3 feature-item-join">
-                    <img src="{{ asset('images/icon-signup.png') }}" alt="Sign Up Easily" class="img-fluid feature-icon-join">
-                    <h5 class="feature-title-join">Sign Up Easily</h5>
-                </div>
-                <div class="col-md-4 col-lg-3 feature-item-join">
-                    <img src="{{ asset('images/icon-preserve.png') }}" alt="Preserve Local Heritage" class="img-fluid feature-icon-join">
-                    <h5 class="feature-title-join">Preserve Local Heritage</h5>
-                </div>
-                <div class="col-md-4 col-lg-3 feature-item-join">
-                    <img src="{{ asset('images/icon-market.png') }}" alt="Reach a Wide Market" class="img-fluid feature-icon-join">
-                    <h5 class="feature-title-join">Reach a Wide Market</h5>
+                <div class="hero-button-wrapper">
+                    <a href="#" class="btn btn-kainara">Discover Our Collection</a>
                 </div>
             </div>
-            <div class="join-button-motif-wrapper text-center position-relative mt-4">
-                <a href="#" class="btn btn-join-artisan">Join as Artisan</a>
+
+            {{-- Hero Image Container --}}
+            <div class="col-lg-7 col-md-6 hero-image-container text-center text-md-end order-md-2 order-1">
+                <img src="{{ asset('images/batik-couple.png') }}" alt="Kainara Models" class="img-fluid hero-model-img">
             </div>
         </div>
-        <div class="decorative-motif motif-latest-top-left">
-            <img src="{{ asset('images/motif-batik.png') }}" alt="Motif Batik">
+    </div>
+</section>
+
+{{-- Story Video Section --}}
+<section class="story-video-section-overlay">
+    <div class="video-bg-wrapper-overlay">
+        <video playsinline="playsinline" autoplay="autoplay" muted="muted" loop="loop" id="storyOverlayVideo">
+            <source src="{{ asset('videos/batik_story_video.mp4') }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div class="video-overlay-layer"></div>
+    </div>
+
+    <div class="video-text-content-overlay container d-flex flex-column">
+        <div class="text-top text-center">
+            <h2 class="display-5 fw-bolder">"Every Pattern Tells a Story"</h2>
         </div>
-        <div class="decorative-motif motif-latest-top-right">
-            <img src="{{ asset('images/motif-batik.png') }}" alt="Motif Batik">
+        <div class="text-bottom text-center mt-auto">
+            <p class="lead fs-5 mx-auto" style="max-width: 650px;">
+                Go behind the scenes of Indonesian batik craftsmanship
+                where heritage, patience, and passion are woven into every thread.
+            </p>
         </div>
-    </section>
+    </div>
+</section>
 
+{{-- Join Movement Section --}}
+<section class="join-movement-section-custom">
+    <div class="container-fluid">
+        <h2 class="section-title-join mb-5">
+            <span class="join-title-bold-italic">Join the Movement.</span><span class="join-title-italic"> Share Your Craft with the World</span>
+        </h2>
+        <div class="row justify-content-center">
+            <div class="col-md-4 col-lg-3 feature-item-join">
+                <img src="{{ asset('images/icon-signup.png') }}" alt="Sign Up Easily" class="img-fluid feature-icon-join">
+                <h5 class="feature-title-join">Sign Up Easily</h5>
+            </div>
+            <div class="col-md-4 col-lg-3 feature-item-join">
+                <img src="{{ asset('images/icon-preserve.png') }}" alt="Preserve Local Heritage" class="img-fluid feature-icon-join">
+                <h5 class="feature-title-join">Preserve Local Heritage</h5>
+            </div>
+            <div class="col-md-4 col-lg-3 feature-item-join">
+                <img src="{{ asset('images/icon-market.png') }}" alt="Reach a Wide Market" class="img-fluid feature-icon-join">
+                <h5 class="feature-title-join">Reach a Wide Market</h5>
+            </div>
+        </div>
+        <div class="join-button-motif-wrapper text-center position-relative mt-4">
+            <a href="#" class="btn btn-join-artisan">Join as Artisan</a>
+        </div>
+    </div>
+    {{-- Decorative Motifs for Join Movement Section --}}
+    <div class="decorative-motif motif-latest-top-left">
+        <img src="{{ asset('images/motif-batik.png') }}" alt="Motif Batik">
+    </div>
+    <div class="decorative-motif motif-latest-top-right">
+        <img src="{{ asset('images/motif-batik.png') }}" alt="Motif Batik">
+    </div>
+</section>
 
-    <section class="latest-stories-custom">
+{{-- Latest Stories Section --}}
+<section class="latest-stories-custom">
+    <div class="container-fluid px-5 py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2">
+            <h2 class="section-title-stories">Latest Stories</h2>
+            <a href="#" class="link-styled-as-button-text">Read more articles!</a>
+        </div>
 
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center mb-4 pb-2">
-                <h2 class="section-title-stories">Latest Stories</h2>
-                <a href="#" class="link-styled-as-button-text">Read more articles!</a>
+        <div class="row">
+            {{-- Featured Article Card --}}
+            <div class="col-lg-7 mb-4 mb-lg-0">
+                <div class="card article-card-featured h-100">
+                    <a href="#">
+                        <img src="{{ asset('images/articles/article-featured.jpg') }}" class="card-img-top" alt="Featured Article Image">
+                    </a>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-2">
+                            <a href="#">The Gleaming Legacy: Songket, Indonesia's Golden Fabric</a>
+                        </h5>
+                        <p class="card-text text-muted small mb-3">21 May 2025</p>
+                        <p class="card-text article-excerpt mb-auto">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet...
+                        </p>
+                    </div>
+                </div>
             </div>
 
-            <div class="row">
-                <div class="col-lg-7 mb-4 mb-lg-0">
-                    <div class="card article-card-featured h-100">
-                        <a href="#">
-                            <img src="{{ asset('images/articles/article-featured.jpg') }}" class="card-img-top" alt="Featured Article Image">
-                        </a>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title mb-2">
-                                <a href="#">The Gleaming Legacy: Songket, Indonesia's Golden Fabric</a>
-                            </h5>
-                            <p class="card-text text-muted small mb-3">21 May 2025</p>
-                            <p class="card-text article-excerpt mb-auto">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet...
-                            </p>
+            <div class="col-lg-5">
+                <div class="card article-card-small mb-3">
+                    <div class="row g-0">
+                        <div class="col-4">
+                            <a href="#">
+                                <img src="{{ asset('images/articles/article-small-1.jpg') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 1">
+                            </a>
+                        </div>
+                        <div class="col-8">
+                            <div class="card-body">
+                                <h6 class="card-title mb-1">
+                                    <a href="#">The Gleaming Legacy: Songket, Indonesia's Golden Fabric</a>
+                                </h6>
+                                <p class="card-text text-muted small">21 May 2025</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-lg-5">
-                    <div class="card article-card-small mb-3">
-                        <div class="row g-0">
-                            <div class="col-4">
-                                <a href="#">
-                                    <img src="{{ asset('images/articles/article-small-1.jpg') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 1">
-                                </a>
-                            </div>
-                            <div class="col-8">
-                                <div class="card-body">
-                                    <h6 class="card-title mb-1">
-                                        <a href="#">The Gleaming Legacy: Songket, Indonesia's Golden Fabric</a>
-                                    </h6>
-                                    <p class="card-text text-muted small">21 May 2025</p>
-                                </div>
+                {{-- Small Article Card 2 --}}
+                <div class="card article-card-small mb-3">
+                    <div class="row g-0">
+                        <div class="col-4">
+                            <a href="#">
+                                <img src="{{ asset('images/articles/article-small-2.jpg') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 2">
+                            </a>
+                        </div>
+                        <div class="col-8">
+                            <div class="card-body">
+                                <h6 class="card-title mb-1">
+                                    <a href="#">The Gleaming Legacy: Songket, Indonesia's Golden Fabric</a>
+                                </h6>
+                                <p class="card-text text-muted small">20 May 2025</p>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="card article-card-small mb-3">
-                        <div class="row g-0">
-                            <div class="col-4">
-                                <a href="#">
-                                    <img src="{{ asset('images/articles/article-small-2.jpg') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 2">
-                                </a>
-                            </div>
-                            <div class="col-8">
-                                <div class="card-body">
-                                    <h6 class="card-title mb-1">
-                                        <a href="#">The Gleaming Legacy: Songket, Indonesia's Golden Fabric</a>
-                                    </h6>
-                                    <p class="card-text text-muted small">20 May 2025</p>
-                                </div>
-                            </div>
+                {{-- Small Article Card 3 --}}
+                <div class="card article-card-small">
+                    <div class="row g-0">
+                        <div class="col-4">
+                            <a href="#">
+                                <img src="{{ asset('images/articles/article-small-3.jpg') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 3">
+                            </a>
                         </div>
-                    </div>
-
-                    <div class="card article-card-small">
-                        <div class="row g-0">
-                            <div class="col-4">
-                                <a href="#">
-                                    <img src="{{ asset('images/articles/article-small-3.jpg') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 3">
-                                </a>
-                            </div>
-                            <div class="col-8">
-                                <div class="card-body">
-                                    <h6 class="card-title mb-1">
-                                        <a href="#">The Gleaming Legacy: Songket, Indonesia's Golden Fabric</a>
-                                    </h6>
-                                    <p class="card-text text-muted small">19 May 2025</p>
-                                </div>
+                        <div class="col-8">
+                            <div class="card-body">
+                                <h6 class="card-title mb-1">
+                                    <a href="#">The Gleaming Legacy: Songket, Indonesia's Golden Fabric</a>
+                                </h6>
+                                <p class="card-text text-muted small">19 May 2025</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 @endsection
