@@ -4,21 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Kainara - @yield('title', 'Welcome')</title>
-
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ancizar+Serif:ital,wght@0,300..900;1,300..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
-
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <!-- Bootstrap Icons CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
         :root {
-            /* Variabel untuk ukuran logo yang berputar (digunakan oleh kelas .logo-size-*) */
-            --logo-height-medium: 250px;  /* Contoh ukuran sedang */
+            --logo-height-medium: 250px; 
             --logo-height-large: 170px;   /* Contoh ukuran besar */
 
             --target-icon-size: 24px;
@@ -72,7 +66,7 @@
             align-items: center;
         }
 
-        header .container {
+        header .container-fluid {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -301,41 +295,39 @@
 <body>
     @php
         $logosData = [
-            ['src' => asset('storage/logo1.png'), 'class' => 'logo-size-medium'],
-            ['src' => asset('storage/logo2.png'), 'class' => 'logo-size-large'],
+            ['src' => asset('images/logonavbar1.png'), 'class' => 'logo-size-medium'],
+            ['src' => asset('images/logonavbar2.png'), 'class' => 'logo-size-large'],
         ];
     @endphp
 
-    <!-- Header -->
-    <header>
-        <div class="container"> {{-- Hapus kelas d-flex dll dari sini, sudah diatur oleh CSS header .container --}}
-            {{-- Grup Navigasi Kiri --}}
+    <header class="flex-grow-1 position-relative">
+        <div class="container-fluid px-5 py-4"> 
             <div class="nav-group-left">
                 <div class="dropdown header-dropdown"> {{-- Tambah kelas .header-dropdown --}}
                     <a class="nav-link fw-bold dropdown-toggle" href="#" role="button" id="storeDropdown" data-bs-toggle="dropdown" aria-expanded="false">Store</a>
                     <ul class="dropdown-menu" aria-labelledby="storeDropdown">
-                        <li><a class="dropdown-item" href="#">Men</a></li>
+                        <li><a class="dropdown-item" href="{{ route('products.index') }}">Men</a></li>
                         <li><a class="dropdown-item" href="#">Women</a></li> {{-- Ganti urutan/nama jika perlu --}}
                         <li><a class="dropdown-item" href="#">Fabric</a></li>
                     </ul>
                 </div>
-                <a href="#" class="nav-link fw-bold">Stories</a>
+                <a href="{{ route('Stories.ListStories') }}" class="nav-link fw-bold">Stories</a>
                 <a href="#" class="nav-link fw-bold">My Order</a>
                 <a href="#" class="nav-link fw-bold">About Us</a>
             </div>
 
             <div id="logo-rotator" class="text-center">
-                {{-- Gambar untuk logo saat ini --}}
-                <img id="rotating-logo-current"
-                    src="{{ $logosData[0]['src'] }}"
-                    alt="Kainara Logo"
-                    class="{{ $logosData[0]['class'] }} logo-image active"> {{-- Tambah kelas 'active' --}}
+                <a href="{{ route('welcome') }}">
+                    <img id="rotating-logo-current"
+                        src="{{ $logosData[0]['src'] }}"
+                        alt="Kainara Logo"
+                        class="{{ $logosData[0]['class'] }} logo-image active">
 
-                {{-- Gambar untuk logo berikutnya (awalnya tersembunyi) --}}
-                <img id="rotating-logo-next"
-                    src="" {{-- Akan diisi oleh JavaScript --}}
-                    alt="Kainara Logo"
-                    class="logo-image"> {{-- Kelas umum untuk styling --}}
+                    <img id="rotating-logo-next"
+                        src=""
+                        alt="Kainara Logo"
+                        class="logo-image">
+                </a>
             </div>
 
             {{-- Grup Ikon Kanan --}}
@@ -352,17 +344,17 @@
         </div>
     </header>
 
-    <main class="py-4">
+    <main class="flex-grow-1 position-relative">
         @yield('content')
     </main>
 
     <!-- Footer -->
-    <footer class="site-footer">
-        <div class="container">
-            <div class="row gy-4 justify-content-between mt-3""> {{-- Tambah justify-content-between --}}
+    <footer class="site-footer flex-grow-1 position-relative">
+        <div class="container-fluid py-4 px-5">
+            <div class="row gy-4 justify-content-between mt-3"> {{-- Tambah justify-content-between --}}
                 {{-- Kolom Logo --}}
                 <div class="col-lg-3 col-md-12 text-center text-lg-start footer-logo-section mb-4 mb-lg-0">
-                    <img src="{{ asset('storage/logo3.png') }}" alt="Kainara Footer Logo" class="footer-logo">
+                    <img src="{{ asset('images/logofooter.png') }}" alt="Kainara Footer Logo" class="footer-logo">
                 </div>
 
                 {{-- Kolom Menu --}}

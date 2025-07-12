@@ -1,18 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Our Products</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ asset('css/fonts.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+@section('title', 'Our Products')
+
+{{-- You can push page-specific styles here if needed --}}
+@push('styles')
     <style>
-        body {
-            font-family: 'AncizarSerif', serif;
-        }
-
         .product-card {
             background-color: #e9dfcf;
             text-align: center;
@@ -54,7 +46,6 @@
             border-top: 1px solid #000;
         }
 
-
         .filter-header {
             display: flex;
             justify-content: space-between;
@@ -62,25 +53,21 @@
             position: relative;
         }
 
-        /* Origin dropdown */
         .origin-dropdown-menu {
             min-width: 92.5vw;
             max-width: 1382px;
         }
 
-        /* Color dropdown */
         .color-dropdown-menu {
             min-width: 85.2vw;
             max-width: 1277px;
         }
 
-        /* Filter dropdown */
         .filter-dropdown-menu {
             min-width: 78.7vw;
             max-width: 1179px;
         }
 
-        /* Responsiveness khusus */
         @media (max-width: 1200px) {
             .origin-dropdown-menu {
                 max-width: 98vw;
@@ -153,28 +140,11 @@
             color: white;
         }
     </style>
-</head>
+@endpush
 
-<body class="bg-white">
-    <main class="container-fluid py-5 px-5 flex-grow-1 position-relative">
-        <div class="container text-center">
-            <div class="header">
-                <div class="row align-items-center justify-content-center">
-                    <div class="col-md-3 d-none d-md-block">
-                        <img src="{{ asset('images/awan.png') }}" alt="cloud left" class="img-fluid cloud-image" />
-                    </div>
-                    <div class="col-md-6">
-                        <h1 class="display-5">Our Products</h1>
-                        <p class="text-muted lead">Bangga Pakai Karya UMKM</p>
-                    </div>
-                    <div class="col-md-3 d-none d-md-block">
-                        <img src="{{ asset('images/awankanan.png') }}" alt="cloud right"
-                            class="img-fluid cloud-image" />
-                    </div>
-                </div>
-            </div>
-        </div>
-
+@section('content')
+    <div class="container-fluid py-4 px-5">
+        <x-bangga title="Kainara's Products" subtitle="Bangga Pakai Karya UMKM" />
         <div class="filter-header d-flex mb-4">
             <div class="d-flex justify-content-end mb-1">
                 <div class="filter-group position-relative me-4">
@@ -251,18 +221,15 @@
                 </div>
             </div>
 
-            <!-- Filter Line -->
             <div class="w-100 position-absolute start-0" style="bottom: 0;">
                 <div class="filter-line"></div>
             </div>
         </div>
 
-        {{-- Selected Filters --}}
         @if (!empty($originFilter) || !empty($colorFilter) || request()->has('sort'))
             <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
                 <h4 class="me-1" style="font-size: 1.25rem;">Filtered by:</h4>
 
-                {{-- Origin Filters --}}
                 @foreach ((array) $originFilter as $selectedOrigin)
                     <form method="GET" action="{{ route('products.index') }}" class="d-inline">
                         @foreach ((array) $originFilter as $origin)
@@ -270,7 +237,6 @@
                                 <input type="hidden" name="origins[]" value="{{ $origin }}">
                             @endif
                         @endforeach
-                        {{-- Color harus tetap dipertahankan --}}
                         @foreach ((array) $colorFilter as $color)
                                 <input type="hidden" name="colors[]" value="{{ $color }}">
                         @endforeach
@@ -332,13 +298,19 @@
                             <input type="hidden" name="origins[]" value="{{ $origin }}">
                         @endforeach
 
-                        @foreach ((array) $originFilter as $origin)
-                            <input type="hidden" name="origins[]" value="{{ $origin }}">
+                        @foreach ((array) $colorFilter as $color)
+                            <input type="hidden" name="colors[]" value="{{ $color }}">
                         @endforeach
 
-                        @if (request()->has('sort'))
-                            <input type="hidden" name="sort" value="{{ is_array(request('sort')) ? request('sort')[0] : request('sort') }}">
-                        @endif
+                        {{-- If we want to clear the sort filter, we don't include the 'sort' input --}}
+                        {{-- To actually clear it when the button is clicked, we'd need to modify the form action
+                           or remove the hidden input for 'sort' when this particular button is clicked.
+                           For simplicity here, this form will re-apply existing filters *except* for the sort when this button is clicked.
+                           To explicitly remove sort, you might change the 'action' or add a hidden input that clears it.
+                           Let's assume the button removes the sort, so we explicitly *don't* include it in the hidden inputs.
+                        --}}
+                        {{-- Remove the hidden sort input here to truly clear it on button click --}}
+                        {{-- <input type="hidden" name="sort" value=""> --}}
 
                         <button type="submit" class="btn border d-flex align-items-center px-3 py-2"
                             style="font-size: 1.1rem;">
@@ -377,51 +349,68 @@
         </div>
 
         @include('Pagination.pagination-components', ['paginator' => $products])
-    </main>
+    </div>
 
     <form id="filterForm" method="GET" class="d-none">
+        {{-- These are for JavaScript to build the query parameters --}}
         @foreach($availableOrigins as $origin)
             <input type="hidden" name="origins[]" value="{{ $origin }}" disabled>
         @endforeach
         @foreach($availableColors as $color)
             <input type="hidden" name="colors[]" value="{{ $color }}" disabled>
         @endforeach
+        {{-- Add a hidden input for sort if it's currently active, so it can be preserved by JS --}}
+        @if (request()->has('sort'))
+            <input type="hidden" name="sort" value="{{ is_array(request('sort')) ? request('sort')[0] : request('sort') }}" disabled>
+        @endif
     </form>
+@endsection
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{{-- Push page-specific scripts here --}}
+@push('scripts')
     <script>
         const form = document.getElementById('filterForm');
         const colorInputs = Array.from(form.querySelectorAll('input[name="colors[]"]'));
         const originInputs = Array.from(form.querySelectorAll('input[name="origins[]"]'));
 
-        // 🔄 Helper ambil parameter URL sekarang
+        // Helper to get current URL parameters
         function getUrlParams() {
             return new URLSearchParams(window.location.search);
         }
 
-        // 🔄 Helper untuk redirect dengan filter utuh
+        // Helper to redirect with intact filters
         function redirectWithFilters(updated = {}) {
             const params = getUrlParams();
 
-            // Bersihkan dulu filter yang akan di-update
+            // Clear parameters that will be updated
             Object.keys(updated).forEach(key => {
-                params.delete(`${key}[]`);
+                if (key === 'sort') {
+                    params.delete(key); // 'sort' is not an array parameter
+                } else {
+                    params.delete(`${key}[]`); // Array parameters
+                }
             });
 
-            // Tambahkan value baru tanpa duplikat
+            // Add new values without duplicates
             for (const [key, values] of Object.entries(updated)) {
-                [...new Set(values)].forEach(val => {
-                    params.append(`${key}[]`, val);
-                });
+                if (key === 'sort') {
+                    if (values[0]) { // Only append if there's a sort value
+                        params.append(key, values[0]);
+                    }
+                } else {
+                    [...new Set(values)].forEach(val => {
+                        params.append(`${key}[]`, val);
+                    });
+                }
             }
 
-            // Redirect dengan semua param utuh
+            // Redirect with all parameters intact
             const url = new URL(window.location.href);
             url.search = params.toString();
             window.location.href = url.toString();
         }
 
-        // ✅ Tombol Apply Origin
+        // Apply Origin button handler
         document.querySelector('.apply-origin')?.addEventListener('click', () => {
             const selectedOrigins = Array.from(document.querySelectorAll('.origin-checkbox:checked'))
                 .map(cb => cb.dataset.origin);
@@ -430,7 +419,7 @@
                 origins: selectedOrigins
             };
 
-            // Pertahankan filter lain
+            // Preserve other filters
             const params = getUrlParams();
             if (params.has('colors[]')) {
                 updated.colors = params.getAll('colors[]');
@@ -442,7 +431,7 @@
             redirectWithFilters(updated);
         });
 
-        // ✅ Tombol Apply Color
+        // Apply Color button handler
         document.querySelector('.apply-color')?.addEventListener('click', () => {
             const selectedColors = Array.from(document.querySelectorAll('.color-checkbox:checked'))
                 .map(cb => cb.dataset.color);
@@ -451,7 +440,7 @@
                 colors: selectedColors
             };
 
-            // Pertahankan filter lain
+            // Preserve other filters
             const params = getUrlParams();
             if (params.has('origins[]')) {
                 updated.origins = params.getAll('origins[]');
@@ -463,27 +452,31 @@
             redirectWithFilters(updated);
         });
 
-
-        // ✅ Inisialisasi form hidden
+        // Initialize hidden form inputs based on current URL parameters
         window.addEventListener('load', () => {
+            // Disable all hidden inputs in the form first
             originInputs.forEach(i => i.disabled = true);
             colorInputs.forEach(i => i.disabled = true);
+            // Also handle the sort input if it exists
+            const sortInput = form.querySelector('input[name="sort"]');
+            if (sortInput) sortInput.disabled = true;
 
+            // Enable only the ones that are currently checked/active
             document.querySelectorAll('.origin-checkbox:checked').forEach(cb => {
                 const match = originInputs.find(i => i.value === cb.dataset.origin);
                 if (match) match.disabled = false;
             });
 
-            const selectedColors = Array.from(document.querySelectorAll('.color-option.selected'))
-                .map(el => el.dataset.color);
-            colorInputs.forEach(input => {
-                input.disabled = !selectedColors.includes(input.value);
+            document.querySelectorAll('.color-checkbox:checked').forEach(cb => {
+                const match = colorInputs.find(i => i.value === cb.dataset.color);
+                if (match) match.disabled = false;
             });
+
+            const currentSort = getUrlParams().get('sort');
+            if (sortInput && currentSort) {
+                sortInput.value = currentSort;
+                sortInput.disabled = false;
+            }
         });
     </script>
-
-
-
-</body>
-
-</html>
+@endpush

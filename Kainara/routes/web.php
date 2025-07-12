@@ -8,8 +8,8 @@ use App\Http\Controllers\StoriesController;
 use App\Http\Controllers\CheckoutController;
 
 Route::get('/', function () {
-    return view('user.home');
-})->name('home');
+    return view('welcome');
+})->name('welcome');
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index'); 
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
