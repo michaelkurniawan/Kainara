@@ -2,6 +2,141 @@
 
 @section('title', $product->name . ' - Detail')
 
+@push('styles')
+<style>
+    .btn-link {
+        text-decoration: none !important;
+    }
+    .btn-size {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0;
+    }
+    .card .text-muted {
+        font-size: 0.9rem !important;
+    }
+    .text-justify {
+        text-align: justify;
+    }
+    .review-user-name {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 0;
+        font-size: 1.25rem;
+    }
+    .review-date {
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    .review-rating {
+        text-align: center;
+        margin-bottom: 0.75rem;
+    }
+
+    /* --- CSS Tombol Navigasi Ulasan --- */
+    .review-nav-btn {
+        width: 120px;
+        height: 45px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+    #prev-review-btn:hover:not(:disabled) {
+        background-color: #B6B09F;
+        border-color: #343a40;
+        color: black;
+    }
+    #next-review-btn:hover:not(:disabled) {
+        background-color: #B6B09F;
+        border-color: #343a40;
+        color: black;
+    }
+    .review-nav-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* --- Warna Latar Belakang Kotak Ulasan --- */
+    .review-card-bg {
+        background-color: #EAE4D5 !important;
+    }
+
+    /* --- Wrapper untuk Header Nama Pengguna dalam Kartu --- */
+    .review-name-header-wrapper {
+        background-color: #B6B09F;
+        color: #333;
+        padding: 0.75rem 1rem;
+        border-top-left-radius: calc(0.375rem - 1px);
+        border-top-right-radius: calc(0.375rem - 1px);
+    }
+    .card-body-content {
+        padding: 1rem;
+    }
+
+    /* --- CSS untuk Komentar (Rata Tengah dan Tinggi Lebih Besar) --- */
+    .review-comment {
+        text-align: center;
+        line-height: 1.8;
+        padding: 0.5rem 0;
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* --- CSS Baru untuk Rating Bintang Presisi --- */
+    .precise-star-rating {
+        position: relative;
+        display: inline-block;
+        white-space: nowrap; /* Penting untuk menjaga bintang sejajar */
+        line-height: 1; /* Menghilangkan spasi ekstra di sekitar ikon */
+        vertical-align: middle; /* Untuk menyelaraskan dengan teks lain jika ada */
+        overflow: hidden; /* Crucial: Hanya bagian yang terisi yang terlihat */
+        /* Ukuran font akan ditentukan oleh parent (fs-4 atau fs-5) */
+        color: #ccc; /* Warna default untuk bintang kosong */
+    }
+    .precise-star-rating .fas,
+    .precise-star-rating .far {
+        /* Memastikan ikon tidak memiliki margin atau padding bawaan */
+        margin: 0;
+        padding: 0;
+        width: 1em; /* Menggunakan em agar ukuran konsisten dengan font-size */
+        display: inline-block; /* Agar bisa diatur lebarnya jika perlu, meski di sini di handle overflow */
+        text-align: center; /* Untuk menjaga ikon tetap di tengah ruang 1em nya */
+    }
+
+    .precise-star-rating .precise-stars-filled,
+    .precise-star-rating .precise-stars-empty {
+        position: absolute;
+        top: 0;
+        left: 0;
+        white-space: nowrap;
+        height: 100%;
+    }
+
+    .precise-star-rating .precise-stars-filled {
+        color: #ffc107; /* Warna kuning Bootstrap warning */
+        overflow: hidden; /* Mengclip bintang terisi */
+    }
+
+    .precise-star-rating .precise-stars-empty {
+        color: #ccc; /* Warna abu-abu untuk bintang kosong (latar belakang) */
+        z-index: -1; /* Pastikan di belakang bintang yang terisi */
+    }
+
+    /* New style for selected size button */
+    .btn-size.selected {
+        background-color: #AD9D6C !important;
+        color: white !important;
+        border-color: #AD9D6C !important;
+    }
+</style>
+@endpush
+
 @section('content')
     {{-- Data hardcode untuk ulasan --}}
     @php
@@ -79,6 +214,20 @@
 
     <div class="container-fluid px-5 py-5">
 
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <div class="row g-5">
             <div class="col-lg-6 d-flex align-items-start justify-content-center">
                 <img src="{{ asset('images/batik1.jpg') }}" alt="batik1" class="img-fluid object-fit-contain" />
@@ -120,7 +269,6 @@
 
                 <div class="d-flex align-items-center mb-4">
                     <div class="text-warning me-2 fs-4">
-                        {{-- Logika bintang desimal untuk rata-rata rating (di bagian ringkasan produk) --}}
                         @php
                             $ratingHtmlSummary = '';
                             $fullStarsSummary = floor($averageRating);
@@ -158,28 +306,48 @@
                     <span class="text-decoration-underline fs-4 ms-2">Size Chart</span>
                 </p>
 
-                <div class="d-flex align-items-center mb-5 fw-semibold gap-3 fs-4">
-                    <span>Size</span>
-                    <div class="d-flex gap-3">
-                        @foreach (['XS','S','M','L','XL','XXL'] as $size)
-                            <button type="button" class="btn btn-outline-secondary rounded-0 btn-size">{{ $size }}</button>
-                        @endforeach
-                    </div>
-                </div>
+                <form action="{{ route('checkout.add') }}" method="POST" id="addToCheckoutForm">
+                    @csrf
+                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                    <input type="hidden" name="selected_size" id="selected_size_input">
 
-                <div class="mb-4" style="max-width: 63.5%;">
-                    <div class="d-flex gap-2 mb-3">
-                        <div class="d-flex border border-secondary px-3 py-2 justify-content-between align-items-center" style="width: 50%;">
-                            <button type="button" class="btn btn-link text-dark p-0 fw-bold rounded-0 btn-minus" style="font-size: 1.5rem;">-</button>
-                            <span id="quantity-display" class="fs-4">1</span>
-                            <button type="button" class="btn btn-link text-dark p-0 fw-bold rounded-0 btn-plus" style="font-size: 1.5rem;">+</button>
+                    <div class="d-flex align-items-center mb-5 fw-semibold gap-3 fs-4">
+                        <span>Size</span>
+                        <div class="d-flex gap-3">
+                            @php
+                                // Get unique sizes available for this product from its variants
+                                $availableSizes = $product->variants->pluck('size')->unique()->sort()->toArray();
+                                // Define all possible sizes to ensure consistent button order
+                                $allPossibleSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
+                            @endphp
+
+                            @foreach($allPossibleSizes as $size)
+                                @if(in_array($size, $availableSizes))
+                                    <button type="button" class="btn btn-outline-secondary rounded-0 btn-size" data-size="{{ $size }}">{{ $size }}</button>
+                                @else
+                                    {{-- Optionally, disable or hide sizes not available for this product --}}
+                                    <button type="button" class="btn btn-outline-secondary rounded-0 btn-size" disabled title="Not available for this product">{{ $size }}</button>
+                                @endif
+                            @endforeach
                         </div>
-                        <button class="btn border-secondary rounded-0 btn-lg" style="width: 50%;">Add to Cart</button>
                     </div>
 
-                    {{-- Changed Buy it now button color --}}
-                    <button class="btn rounded-0 btn-lg w-100" style="color: #FFFFFF; background-color:#B6B09F">Buy it now</button>
-                </div>
+                    <div class="mb-4" style="max-width: 63.5%;">
+                        <div class="d-flex gap-2 mb-3">
+                            <div class="d-flex border border-secondary px-3 py-2 justify-content-between align-items-center" style="width: 50%;">
+                                <button type="button" class="btn btn-link text-dark p-0 fw-bold rounded-0 btn-minus" style="font-size: 1.5rem;">-</button>
+                                <span id="quantity-display" class="fs-4">1</span>
+                                <input type="hidden" name="quantity" id="quantity_input" value="1">
+                                <button type="button" class="btn btn-link text-dark p-0 fw-bold rounded-0 btn-plus" style="font-size: 1.5rem;">+</button>
+                            </div>
+                            {{-- Changed to type="submit" and removed inline style --}}
+                            <button type="submit" class="btn border-secondary rounded-0 btn-lg" style="width: 50%;">Add to Cart</button>
+                        </div>
+
+                        {{-- Changed to type="submit" and kept inline style for specific color --}}
+                        <button type="submit" class="btn rounded-0 btn-lg w-100" style="color: #FFFFFF; background-color:#B6B09F">Buy it now</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -225,162 +393,45 @@
 @endsection
 
 @push('scripts')
-<style>
-    .btn-link {
-        text-decoration: none !important;
-    }
-    .btn-size {
-        width: 48px;
-        height: 48px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 0;
-    }
-    .card .text-muted {
-        font-size: 0.9rem !important;
-    }
-    .text-justify {
-        text-align: justify;
-    }
-    .review-user-name {
-        text-align: center;
-        font-weight: bold;
-        margin-bottom: 0;
-        font-size: 1.25rem;
-    }
-    .review-date {
-        text-align: center;
-        margin-bottom: 0.5rem;
-    }
-    .review-rating {
-        text-align: center;
-        margin-bottom: 0.75rem;
-    }
-
-    /* --- CSS Tombol Navigasi Ulasan --- */
-    .review-nav-btn {
-        width: 120px;
-        height: 45px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-    }
-    #prev-review-btn:hover:not(:disabled) {
-        background-color: #6c757d;
-        border-color: #6c757d;
-        color: white;
-    }
-    #next-review-btn:hover:not(:disabled) {
-        background-color: #343a40;
-        border-color: #343a40;
-        color: white;
-    }
-    .review-nav-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    /* --- Warna Latar Belakang Kotak Ulasan --- */
-    .review-card-bg {
-        background-color: #EAE4D5 !important;
-    }
-
-    /* --- Wrapper untuk Header Nama Pengguna dalam Kartu --- */
-    .review-name-header-wrapper {
-        background-color: #B6B09F;
-        color: #333;
-        padding: 0.75rem 1rem;
-        border-top-left-radius: calc(0.375rem - 1px);
-        border-top-right-radius: calc(0.375rem - 1px);
-    }
-    .card-body-content {
-        padding: 1rem;
-    }
-
-    /* --- CSS untuk Komentar (Rata Tengah dan Tinggi Lebih Besar) --- */
-    .review-comment {
-        text-align: center;
-        line-height: 1.8;
-        padding: 0.5rem 0;
-        min-height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* --- CSS Baru untuk Rating Bintang Presisi --- */
-    .precise-star-rating {
-        position: relative;
-        display: inline-block;
-        white-space: nowrap; /* Penting untuk menjaga bintang sejajar */
-        line-height: 1; /* Menghilangkan spasi ekstra di sekitar ikon */
-        vertical-align: middle; /* Untuk menyelaraskan dengan teks lain jika ada */
-        overflow: hidden; /* Crucial: Hanya bagian yang terisi yang terlihat */
-        /* Ukuran font akan ditentukan oleh parent (fs-4 atau fs-5) */
-        color: #ccc; /* Warna default untuk bintang kosong */
-    }
-    .precise-star-rating .fas,
-    .precise-star-rating .far {
-        /* Memastikan ikon tidak memiliki margin atau padding bawaan */
-        margin: 0;
-        padding: 0;
-        width: 1em; /* Menggunakan em agar ukuran konsisten dengan font-size */
-        display: inline-block; /* Agar bisa diatur lebarnya jika perlu, meski di sini di handle overflow */
-        text-align: center; /* Untuk menjaga ikon tetap di tengah ruang 1em nya */
-    }
-
-    .precise-star-rating .precise-stars-filled,
-    .precise-star-rating .precise-stars-empty {
-        position: absolute;
-        top: 0;
-        left: 0;
-        white-space: nowrap;
-        height: 100%;
-    }
-
-    .precise-star-rating .precise-stars-filled {
-        color: #ffc107; /* Warna kuning Bootstrap warning */
-        overflow: hidden; /* Mengclip bintang terisi */
-    }
-
-    .precise-star-rating .precise-stars-empty {
-        color: #ccc; /* Warna abu-abu untuk bintang kosong (latar belakang) */
-        z-index: -1; /* Pastikan di belakang bintang yang terisi */
-    }
-</style>
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         let selectedSize = null;
         let quantity = 1;
 
         const sizeButtons = document.querySelectorAll('.btn-size');
+        const selectedSizeInput = document.getElementById('selected_size_input');
+
         sizeButtons.forEach(button => {
             button.addEventListener('click', function () {
-                sizeButtons.forEach(btn => btn.classList.remove('bg-secondary', 'text-white'));
-                this.classList.add('bg-secondary', 'text-white');
-                selectedSize = this.innerText;
+                // Remove 'selected' class from all size buttons
+                sizeButtons.forEach(btn => btn.classList.remove('selected', 'bg-secondary', 'text-white'));
+                // Add 'selected' class to the clicked button
+                this.classList.add('selected', 'bg-secondary', 'text-white');
+                selectedSize = this.dataset.size; // Get size from data-size attribute
+                selectedSizeInput.value = selectedSize; // Set hidden input value
             });
         });
 
         const minusBtn = document.querySelector('.btn-minus');
         const plusBtn = document.querySelector('.btn-plus');
         const quantityDisplay = document.querySelector('#quantity-display');
+        const quantityInput = document.getElementById('quantity_input'); // Get the hidden quantity input
 
         minusBtn.addEventListener('click', function () {
             if (quantity > 1) {
                 quantity--;
                 quantityDisplay.innerText = quantity;
+                quantityInput.value = quantity; // Update hidden input
             }
         });
 
         plusBtn.addEventListener('click', function () {
             quantity++;
             quantityDisplay.innerText = quantity;
+            quantityInput.value = quantity; // Update hidden input
         });
 
+        // Review section JavaScript (remains unchanged)
         const hardcodedReviews = @json($hardcodedReviews);
         const reviewsPerPage = 3;
         let currentPage = 0;

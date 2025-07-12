@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Checkout Pembelian</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ asset('css/fonts.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+@extends('layouts.app')
+
+@section('title', 'Checkout')
+
+@push('styles')
     <style>
         body {
             background-color: #fff;
@@ -17,24 +13,28 @@
             margin-top: 2rem;
             margin-bottom: 2rem;
         }
+        /* Card styles */
         .card-no-border {
             border: none !important;
             border-radius: 0.5rem;
             box-shadow: 0 0px 0px rgba(0, 0, 0, 0);
+            height: 100%;
         }
         .card-summary {
             border: 1px solid black;
-            max-width: 40vw;
             border-radius: 1rem;
-            margin-right: 2vw;
+            height: 100%;
+            display: flex; /* Enable flexbox for internal layout */
+            flex-direction: column; /* Stack children vertically */
         }
+        /* Section titles */
         .section-title {
             font-size: 1.5rem;
             font-weight: bold;
             margin-bottom: 1.5rem;
             color: #333;
-            margin-bottom: 1.5rem;
         }
+        /* Address box styles */
         .address-box {
             background-color: #fff;
             border-radius: 1.5rem;
@@ -49,15 +49,6 @@
             margin: 0;
             line-height: 1.5;
         }
-        .address-box .btn-ubah {
-            background-color: #fff;
-            padding: 0.5rem 1rem;
-            border-radius: 0.25rem;
-            text-decoration: none;
-            color: #333;
-            font-size: 0.9rem;
-            border: none;
-        }
         .btn-ubah-text-only {
             background-color: transparent;
             border: none;
@@ -71,6 +62,7 @@
         .btn-ubah-text-only:hover {
             color: #555;
         }
+        /* Form element styles */
         .form-label {
             font-weight: 500;
             color: #555;
@@ -89,6 +81,7 @@
             border-color: #80bdff;
             box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
         }
+        /* Bank logo styles */
         .bank-logo {
             height: 70px;
             object-fit: contain;
@@ -104,10 +97,11 @@
             gap: 1rem;
             justify-content: space-between;
         }
+        /* Order items scroll container */
         .order-items-scroll-container {
-            max-height: 50vh;
-            overflow-y: auto;
-            padding-right: 10px;
+            flex-grow: 1; /* Allow to grow and shrink */
+            overflow-y: auto; /* Enable vertical scrolling */
+            padding-right: 10px; /* Space for scrollbar */
             margin-bottom: 1rem;
         }
         .order-items-scroll-container::-webkit-scrollbar {
@@ -123,7 +117,9 @@
         }
         .order-items-scroll-container::-webkit-scrollbar-thumb:hover {
             background: #555;
+            box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.25);
         }
+        /* Individual order item styles */
         .order-item {
             display: flex;
             align-items: center;
@@ -151,7 +147,9 @@
             font-weight: bold;
             color: #333;
             flex-shrink: 0;
+            text-align: right; /* Align to the right for prices */
         }
+        /* Summary details section */
         .summary-details {
             position: relative;
             padding-top: 1rem;
@@ -192,6 +190,7 @@
             height: 1px;
             background-color: black;
         }
+        /* Checkout button */
         .btn-checkout {
             width: 100%;
             padding: 1rem;
@@ -206,13 +205,24 @@
         .btn-checkout:hover {
             background-color: #9a9a9a;
         }
+
+        /* Media queries for responsiveness */
+        @media (max-width: 991.98px) {
+            .card-summary {
+                max-width: 100%; /* Full width on smaller screens */
+                margin-right: 0;
+                margin-top: 2rem; /* Add some space above on smaller screens */
+            }
+        }
     </style>
-</head>
-<body>
-    <div class="container container-main">
-        <div class="row g-4">
+@endpush
+
+@section('content')
+    <div class="container-fluid py-5 px-5">
+        <div class="row g-4 h-100 align-items-stretch">
             <div class="col-lg-8">
-                <div class="card p-4 card-no-border"> <div class="mb-4">
+                <div class="card card-no-border h-100 me-5"> 
+                    <div class="mb-4">
                         <h2 class="section-title d-flex align-items-center">
                             <i class="bi bi-geo-alt-fill text-danger me-2"></i> Address
                         </h2>
@@ -233,9 +243,10 @@
                     </div>
 
                     <div class="mb-4">
-                        <h2 class="section-title d-flex align-items-center"> <i class="bi bi-person-fill text-primary me-2"></i> Contact Information
+                        <h2 class="section-title d-flex align-items-center">
+                            <i class="bi bi-person-fill text-primary me-2"></i> Contact Information
                         </h2>
-                        <form action="{{ route('checkout.process') }}" method="POST">
+                        <form action="{{ route('checkout.add') }}" method="POST">
                             @csrf
                             <div class="row g-3 mb-5">
                                 <div class="col-md-6">
@@ -269,12 +280,13 @@
                             </div>
 
                             <div class="mt-5">
-                                <h2 class="section-title d-flex align-items-center"> <i class="bi bi-credit-card-fill text-success me-2"></i> Payment Method
+                                <h2 class="section-title d-flex align-items-center">
+                                    <i class="bi bi-credit-card-fill text-success me-2"></i> Payment Method
                                 </h2>
                                 <div class="mb-3">
                                     <select class="form-select @error('payment_method') is-invalid @enderror" id="paymentMethod" name="payment_method">
                                         <option value="transfer_bank" {{ old('payment_method') == 'transfer_bank' ? 'selected' : '' }}>Transfer Bank</option>
-                                        <option value="credit_card" {{ old('payment_card') == 'credit_card' ? 'selected' : '' }}>Credit Card</option>
+                                        <option value="credit_card" {{ old('payment_method') == 'credit_card' ? 'selected' : '' }}>Credit Card</option>
                                         <option value="e_wallet" {{ old('payment_method') == 'e_wallet' ? 'selected' : '' }}>E-Wallet</option>
                                     </select>
                                     @error('payment_method')
@@ -289,52 +301,81 @@
                                 </div>
                             </div>
 
-                            <input type="hidden" name="total_amount" value="{{ $total }}">
+                            {{-- Pass total amount and cart items as hidden inputs --}}
+                            <input type="hidden" name="total_amount" value="{{ $subtotal ?? 0 }}">
+                            @foreach ($cartItems as $index => $item)
+                                <input type="hidden" name="cart_items[{{ $index }}][product_id]" value="{{ $item['product_id'] }}">
+                                <input type="hidden" name="cart_items[{{ $index }}][product_variant_id]" value="{{ $item['product_variant_id'] ?? '' }}">
+                                <input type="hidden" name="cart_items[{{ $index }}][quantity]" value="{{ $item['quantity'] }}">
+                                <input type="hidden" name="cart_items[{{ $index }}][price]" value="{{ $item['price'] }}">
+                                <input type="hidden" name="cart_items[{{ $index }}][product_name]" value="{{ $item['product_name'] }}">
+                                <input type="hidden" name="cart_items[{{ $index }}][product_image]" value="{{ $item['product_image'] }}">
+                                <input type="hidden" name="cart_items[{{ $index }}][variant_size]" value="{{ $item['variant_size'] ?? '' }}">
+                                <input type="hidden" name="cart_items[{{ $index }}][variant_color]" value="{{ $item['variant_color'] ?? '' }}">
+                            @endforeach
+
+                            {{-- The checkout button is now inside the form to submit all data --}}
+                            <button type="submit" class="btn btn-checkout mt-4">CHECK OUT</button>
                         </form>
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-lg-4">
-                <div class="card-summary p-4">
+                <div class="card-summary p-4 h-100"> {{-- Add h-100 to the card and flex properties in CSS --}}
                     <h2 class="section-title">Order Summary</h2>
-                    
+
                     <div class="order-items-scroll-container">
                         <div class="order-items">
-                            @foreach ($cartItems as $item)
+                            @forelse ($cartItems as $item)
                             <div class="order-item">
-                                <img src="{{ asset($item['image']) }}" alt="{{ $item['name'] }}" class="img-fluid">
+                                {{-- Product Image --}}
+                                <img src="{{ asset($item['product_image']) }}" alt="{{ $item['product_name'] }}" class="img-fluid">
                                 <div class="order-item-details">
-                                    <p class="fw-semibold mb-0 fs-6">{{ $item['name'] }}</p>
-                                    <p class="text-muted mb-0">Size: {{ $item['size'] }}</p>
+                                    {{-- Product Name --}}
+                                    <p class="fw-semibold mb-0 fs-6">{{ $item['product_name'] }}</p>
+                                    {{-- Unit Price --}}
+                                    <p class="text-muted mb-0">IDR {{ number_format($item['price'], 0, ',', '.') }}</p>
+                                    {{-- Quantity --}}
                                     <p class="text-muted mb-0">x{{ $item['quantity'] }}</p>
+                                    {{-- Variant Details (Size and Color) --}}
+                                    @if ($item['variant_size'])
+                                        <p class="text-muted mb-0">Size: {{ $item['variant_size'] }}</p>
+                                    @endif
+                                    @if ($item['variant_color'])
+                                        <p class="text-muted mb-0">Color: {{ $item['variant_color'] }}</p>
+                                    @endif
                                 </div>
-                                <p class="order-item-price fs-6">IDR {{ number_format($item['price'], 0, ',', '.') }}</p>
+                                {{-- Total price for this item (Unit Price * Quantity) --}}
+                                <p class="order-item-price fs-6">IDR {{ number_format($item['price'] * $item['quantity'], 0, ',', '.') }}</p>
                             </div>
-                            @endforeach
+                            @empty
+                            <p class="text-muted text-center">Your cart is empty.</p>
+                            @endforelse
                         </div>
                     </div>
-                    
+
                     <div class="summary-details">
                         <div class="summary-row">
                             <span>SUBTOTAL</span>
-                            <span class="fw-semibold">IDR {{ number_format($subtotal, 0, ',', '.') }}</span>
+                            <span class="fw-semibold">IDR {{ number_format($subtotal ?? 0, 0, ',', '.') }}</span>
                         </div>
                         <div class="summary-row">
                             <span>SHIPPING</span>
-                            <span class="fw-semibold">{{ $shipping == 0 ? 'FREE' : 'IDR ' . number_format($shipping, 0, ',', '.') }}</span>
+                            {{-- Placeholder for shipping, assume 0 for now or calculate in controller --}}
+                            @php $shippingCost = 0; @endphp
+                            <span class="fw-semibold">{{ $shippingCost == 0 ? 'FREE' : 'IDR ' . number_format($shippingCost, 0, ',', '.') }}</span>
                         </div>
                         <div class="summary-total">
                             <span>TOTAL</span>
-                            <span>IDR {{ number_format($total, 0, ',', '.') }}</span>
+                            <span>IDR {{ number_format(($subtotal ?? 0) + $shippingCost, 0, ',', '.') }}</span>
                         </div>
-                        <button type="submit" class="btn btn-checkout mt-4">CHECK OUT</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+@endsection
+
+@push('scripts')
+@endpush

@@ -2,7 +2,6 @@
 
 @section('title', 'Our Products')
 
-{{-- You can push page-specific styles here if needed --}}
 @push('styles')
     <style>
         .product-card {

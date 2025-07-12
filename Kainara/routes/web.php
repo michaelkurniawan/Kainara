@@ -24,4 +24,6 @@ Route::get('/trynotif', function () {
 
 Route::get('/checkout', [CheckoutController::class, 'showCheckoutPage'])->name('checkout.show');
 
+Route::post('/checkout/add', [CheckoutController::class, 'addToCheckout'])->name('checkout.add');
+
 require __DIR__.'/admin.php';
