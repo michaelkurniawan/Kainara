@@ -337,7 +337,7 @@
             </div>
 
             <div class="icon-group-right">
-                <a href="#" class="nav-icon-link">
+                <a href="{{ route('cart.index') }}" class="nav-icon-link">
                     <img src="{{ asset('images/icons/icon-cart.png') }}" alt="Cart" class="header-icon">
                 </a>
                 <a href="#" class="nav-icon-link" title="My Account"> 

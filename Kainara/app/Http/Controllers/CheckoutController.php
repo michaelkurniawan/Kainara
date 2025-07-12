@@ -4,14 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
-use App\Models\ProductVariant; // Don't forget to import ProductVariant
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\Session;
 
 class CheckoutController extends Controller
 {
     public function showCheckoutPage()
     {
-
         $cartItems = Session::get('cart', []);
         $subtotal = 0;
 
@@ -20,19 +19,27 @@ class CheckoutController extends Controller
             if ($product) {
                 $item['product_name'] = $product->name;
                 $item['product_image'] = $product->image;
-                // Use the price from the session item, as it might be a variant price
                 $item['total_price'] = $item['price'] * $item['quantity'];
                 $subtotal += $item['total_price'];
             } else {
-                // If product not found, remove it or handle error
-                // For this example, we'll just set name to 'Unknown Product'
                 $item['product_name'] = 'Unknown Product';
-                $item['product_image'] = 'path/to/default/image.jpg'; // Or a placeholder
-                $item['total_price'] = 0; // Don't add to subtotal
+                $item['product_image'] = 'path/to/default/image.jpg'; 
+                $item['total_price'] = 0;
             }
         }
 
-        return view('products.checkout', compact('cartItems', 'subtotal'));
+        $address = Session::get('user_address', [
+            'type' => 'Home',
+            'street' => 'Jl. Contoh No.123',
+            'sub_district' => 'Kel. Contoh',
+            'district' => 'Kec. Contoh',
+            'city' => 'Kota Contoh',
+            'province' => 'Provinsi Contoh',
+            'postal_code' => '12345'
+        ]);
+
+
+        return view('products.checkout', compact('cartItems', 'subtotal', 'address'));
     }
 
     public function addToCheckout(Request $request)
@@ -40,12 +47,14 @@ class CheckoutController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
-            'selected_size' => 'nullable|string', // Size is optional for some products
+            'selected_size' => 'nullable|string',
+            'action' => 'required|string|in:add_to_cart,buy_now',
         ]);
 
         $productId = $request->input('product_id');
         $quantity = $request->input('quantity');
         $selectedSize = $request->input('selected_size');
+        $action = $request->input('action');
 
         $product = Product::findOrFail($productId);
         $price = $product->price;
@@ -54,7 +63,7 @@ class CheckoutController extends Controller
 
         if ($selectedSize) {
             $variantQuery = ProductVariant::where('product_id', $productId)
-                                        ->where('size', $selectedSize);
+                                         ->where('size', $selectedSize);
 
             $productVariant = $variantQuery->first();
 
@@ -66,7 +75,6 @@ class CheckoutController extends Controller
                     return back()->with('error', 'Not enough stock for the selected variant.');
                 }
             } else {
-                // Handle case where variant with selected size isn't found
                 return back()->with('error', 'Selected size is not available for this product.');
             }
         } else {
@@ -75,15 +83,18 @@ class CheckoutController extends Controller
                 $price = $productVariant->price ?: $product->price;
                 $productVariantId = $productVariant->id;
                 $variantColor = $productVariant->color;
-                 if ($productVariant->stock < $quantity) {
+                if ($productVariant->stock < $quantity) {
                     return back()->with('error', 'Not enough stock for the selected variant.');
                 }
-            } else {
-                // If no variant and no size selected, use base product price and no variant ID
             }
         }
 
-        $cart = Session::get('cart', []);
+        if ($action === 'buy_now') {
+            Session::forget('cart'); 
+            $cart = [];
+        } else {
+            $cart = Session::get('cart', []);
+        }
 
         $itemFound = false;
         foreach ($cart as $key => $cartItem) {
@@ -93,7 +104,11 @@ class CheckoutController extends Controller
                     (!$productVariantId && !$cartItem['product_variant_id'])
                 )
             ) {
-                $cart[$key]['quantity'] += $quantity;
+                if ($action === 'buy_now') {
+                    $cart[$key]['quantity'] = $quantity;
+                } else {
+                    $cart[$key]['quantity'] += $quantity;
+                }
                 $itemFound = true;
                 break;
             }
@@ -112,6 +127,11 @@ class CheckoutController extends Controller
 
         Session::put('cart', $cart);
 
-        return redirect()->route('checkout.show')->with('success', 'Product added to checkout!');
+        // Redirect based on action
+        if ($action === 'buy_now') {
+            return redirect()->route('checkout.show')->with('success', 'Proceeding to checkout with your selection!');
+        } else {
+            return back()->with('success', 'Product added to cart!');
+        }
     }
 }

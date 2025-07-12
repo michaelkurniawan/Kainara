@@ -221,7 +221,7 @@
     <div class="container-fluid py-5 px-5">
         <div class="row g-4 h-100 align-items-stretch">
             <div class="col-lg-8">
-                <div class="card card-no-border h-100 me-5"> 
+                <div class="card card-no-border h-100 me-5">
                     <div class="mb-4">
                         <h2 class="section-title d-flex align-items-center">
                             <i class="bi bi-geo-alt-fill text-danger me-2"></i> Address
@@ -311,7 +311,6 @@
                                 <input type="hidden" name="cart_items[{{ $index }}][product_name]" value="{{ $item['product_name'] }}">
                                 <input type="hidden" name="cart_items[{{ $index }}][product_image]" value="{{ $item['product_image'] }}">
                                 <input type="hidden" name="cart_items[{{ $index }}][variant_size]" value="{{ $item['variant_size'] ?? '' }}">
-                                <input type="hidden" name="cart_items[{{ $index }}][variant_color]" value="{{ $item['variant_color'] ?? '' }}">
                             @endforeach
 
                             {{-- The checkout button is now inside the form to submit all data --}}
@@ -337,14 +336,12 @@
                                     {{-- Unit Price --}}
                                     <p class="text-muted mb-0">IDR {{ number_format($item['price'], 0, ',', '.') }}</p>
                                     {{-- Quantity --}}
-                                    <p class="text-muted mb-0">x{{ $item['quantity'] }}</p>
-                                    {{-- Variant Details (Size and Color) --}}
                                     @if ($item['variant_size'])
                                         <p class="text-muted mb-0">Size: {{ $item['variant_size'] }}</p>
                                     @endif
-                                    @if ($item['variant_color'])
-                                        <p class="text-muted mb-0">Color: {{ $item['variant_color'] }}</p>
-                                    @endif
+                                    <p class="text-muted mb-0">x{{ $item['quantity'] }}</p>
+                                    {{-- Variant Details (Size and Color) --}}
+                                    
                                 </div>
                                 {{-- Total price for this item (Unit Price * Quantity) --}}
                                 <p class="order-item-price fs-6">IDR {{ number_format($item['price'] * $item['quantity'], 0, ',', '.') }}</p>

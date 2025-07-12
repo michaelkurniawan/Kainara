@@ -128,11 +128,19 @@
         z-index: -1; /* Pastikan di belakang bintang yang terisi */
     }
 
-    /* New style for selected size button */
+    /* Style for selected size button */
     .btn-size.selected {
         background-color: #AD9D6C !important;
         color: white !important;
         border-color: #AD9D6C !important;
+    }
+
+    /* Hover effect for size buttons */
+    .btn-size:not(:disabled):hover {
+        background-color: #AD9D6C;
+        color: white;
+        border-color: #AD9D6C;
+        transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
     }
 </style>
 @endpush
@@ -311,26 +319,32 @@
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                     <input type="hidden" name="selected_size" id="selected_size_input">
 
-                    <div class="d-flex align-items-center mb-5 fw-semibold gap-3 fs-4">
-                        <span>Size</span>
-                        <div class="d-flex gap-3">
-                            @php
-                                // Get unique sizes available for this product from its variants
-                                $availableSizes = $product->variants->pluck('size')->unique()->sort()->toArray();
-                                // Define all possible sizes to ensure consistent button order
-                                $allPossibleSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
-                            @endphp
+                    @php
+                        $availableSizesRaw = $product->variants->pluck('size')->unique();
+                        $displayableSizes = $availableSizesRaw->filter(function ($size) {
+                            return $size !== 'One Size';
+                        })->sort()->toArray();
+                        $hasOnlyOneSizeVariant = $availableSizesRaw->count() > 0 && count($displayableSizes) === 0;
+                    @endphp
 
-                            @foreach($allPossibleSizes as $size)
-                                @if(in_array($size, $availableSizes))
-                                    <button type="button" class="btn btn-outline-secondary rounded-0 btn-size" data-size="{{ $size }}">{{ $size }}</button>
-                                @else
-                                    {{-- Optionally, disable or hide sizes not available for this product --}}
-                                    <button type="button" class="btn btn-outline-secondary rounded-0 btn-size" disabled title="Not available for this product">{{ $size }}</button>
-                                @endif
-                            @endforeach
+                    @if (!$hasOnlyOneSizeVariant)
+                        <div class="d-flex align-items-center mb-5 fw-semibold gap-3 fs-4">
+                            <span>Size</span>
+                            <div class="d-flex gap-3">
+                                @foreach(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as $size)
+                                    @if(in_array($size, $displayableSizes))
+                                        <button type="button" class="btn btn-outline-secondary rounded-0 btn-size" data-size="{{ $size }}">{{ $size }}</button>
+                                    @else
+                                        <button type="button" class="btn btn-outline-secondary rounded-0 btn-size" disabled title="Not available for this product">{{ $size }}</button>
+                                    @endif
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
+                    @else
+                        <p class="mb-4 fs-4 fw-semibold">Size: One Size Only</p>
+                        <input type="hidden" name="selected_size_one_size_hidden" id="selected_size_input_one_size" value="One Size">
+                    @endif
+
 
                     <div class="mb-4" style="max-width: 63.5%;">
                         <div class="d-flex gap-2 mb-3">
@@ -340,12 +354,12 @@
                                 <input type="hidden" name="quantity" id="quantity_input" value="1">
                                 <button type="button" class="btn btn-link text-dark p-0 fw-bold rounded-0 btn-plus" style="font-size: 1.5rem;">+</button>
                             </div>
-                            {{-- Changed to type="submit" and removed inline style --}}
-                            <button type="submit" class="btn border-secondary rounded-0 btn-lg" style="width: 50%;">Add to Cart</button>
+                            {{-- Added name="action" to distinguish submission type --}}
+                            <button type="submit" name="action" value="add_to_cart" class="btn border-secondary rounded-0 btn-lg btn-add-to-cart" style="width: 50%;">Add to Cart</button>
                         </div>
 
-                        {{-- Changed to type="submit" and kept inline style for specific color --}}
-                        <button type="submit" class="btn rounded-0 btn-lg w-100" style="color: #FFFFFF; background-color:#B6B09F">Buy it now</button>
+                        {{-- Added name="action" to distinguish submission type --}}
+                        <button type="submit" name="action" value="buy_now" class="btn rounded-0 btn-lg w-100 btn-buy-it-now" style="color: #FFFFFF; background-color:#B6B09F">Buy it now</button>
                     </div>
                 </form>
             </div>
@@ -397,41 +411,112 @@
     document.addEventListener('DOMContentLoaded', function () {
         let selectedSize = null;
         let quantity = 1;
+        let maxQuantity = 0; // Initialize maxQuantity to 0
+
+        const productVariants = @json($product->variants);
+
+        // Map for size -> total stock (summing up stock for all colors of a given size)
+        const sizeStockMap = {};
+        productVariants.forEach(variant => {
+            if (variant.size) {
+                sizeStockMap[variant.size] = (sizeStockMap[variant.size] || 0) + variant.stock;
+            }
+        });
 
         const sizeButtons = document.querySelectorAll('.btn-size');
         const selectedSizeInput = document.getElementById('selected_size_input');
-
-        sizeButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                // Remove 'selected' class from all size buttons
-                sizeButtons.forEach(btn => btn.classList.remove('selected', 'bg-secondary', 'text-white'));
-                // Add 'selected' class to the clicked button
-                this.classList.add('selected', 'bg-secondary', 'text-white');
-                selectedSize = this.dataset.size; // Get size from data-size attribute
-                selectedSizeInput.value = selectedSize; // Set hidden input value
-            });
-        });
+        const selectedSizeInputOneSize = document.getElementById('selected_size_input_one_size');
 
         const minusBtn = document.querySelector('.btn-minus');
         const plusBtn = document.querySelector('.btn-plus');
         const quantityDisplay = document.querySelector('#quantity-display');
-        const quantityInput = document.getElementById('quantity_input'); // Get the hidden quantity input
+        const quantityInput = document.getElementById('quantity_input');
+
+        const addToCartButton = document.querySelector('.btn-add-to-cart');
+        const buyNowButton = document.querySelector('.btn-buy-it-now');
+
+        const hasOnlyOneSizeVariant = {{ json_encode($hasOnlyOneSizeVariant) }};
+
+        // --- Functions ---
+
+        function updateQuantityControls() {
+            quantity = Math.min(quantity, maxQuantity);
+            quantity = Math.max(1, quantity);
+
+            quantityDisplay.innerText = quantity;
+            quantityInput.value = quantity;
+            quantityInput.setAttribute('max', maxQuantity);
+
+            minusBtn.disabled = quantity <= 1;
+            plusBtn.disabled = quantity >= maxQuantity;
+
+            if (maxQuantity === 0 || !selectedSize) {
+                addToCartButton?.setAttribute('disabled', 'disabled');
+                buyNowButton?.setAttribute('disabled', 'disabled');
+            } else {
+                addToCartButton?.removeAttribute('disabled');
+                buyNowButton?.removeAttribute('disabled');
+            }
+        }
+
+        // --- Event Listeners ---
+
+        sizeButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                sizeButtons.forEach(btn => btn.classList.remove('selected', 'bg-secondary', 'text-white'));
+                this.classList.add('selected', 'bg-secondary', 'text-white');
+                
+                selectedSize = this.dataset.size;
+                if (selectedSizeInput) {
+                    selectedSizeInput.value = selectedSize;
+                }
+
+                maxQuantity = sizeStockMap[selectedSize] || 0;
+                updateQuantityControls();
+            });
+        });
 
         minusBtn.addEventListener('click', function () {
             if (quantity > 1) {
                 quantity--;
-                quantityDisplay.innerText = quantity;
-                quantityInput.value = quantity; // Update hidden input
+                updateQuantityControls();
             }
         });
 
         plusBtn.addEventListener('click', function () {
-            quantity++;
-            quantityDisplay.innerText = quantity;
-            quantityInput.value = quantity; // Update hidden input
+            if (quantity < maxQuantity) {
+                quantity++;
+                updateQuantityControls();
+            }
         });
 
-        // Review section JavaScript (remains unchanged)
+        // --- Initial Load Logic ---
+
+        if (hasOnlyOneSizeVariant) {
+            selectedSize = 'One Size';
+            if (selectedSizeInput) {
+                selectedSizeInput.value = 'One Size';
+            }
+            if (selectedSizeInputOneSize) {
+                selectedSizeInputOneSize.value = 'One Size';
+            }
+            
+            const oneSizeTotalStock = productVariants.reduce((sum, variant) => {
+                return variant.size === 'One Size' ? sum + variant.stock : sum;
+            }, 0);
+            maxQuantity = oneSizeTotalStock;
+            updateQuantityControls();
+        } else if (sizeButtons.length > 0) {
+            maxQuantity = 0;
+            selectedSize = null;
+            updateQuantityControls();
+        } else {
+            maxQuantity = 0;
+            selectedSize = null;
+            updateQuantityControls();
+        }
+
+        // --- Review Section JavaScript (remains unchanged) ---
         const hardcodedReviews = @json($hardcodedReviews);
         const reviewsPerPage = 3;
         let currentPage = 0;
@@ -441,13 +526,6 @@
         const nextBtn = document.getElementById('next-review-btn');
         const pageIndicator = document.getElementById('page-indicator');
 
-        /**
-         * Generates the HTML for star ratings, approximating quarter fills
-         * using Font Awesome's full and half stars.
-         *
-         * @param {number} rating The rating value (e.g., 3.2, 4.5).
-         * @returns {string} HTML string of Font Awesome star icons.
-         */
         function generateStarsHtml(rating) {
             let starsHtml = '';
             let remainingRating = rating;
@@ -492,11 +570,9 @@
 
                 const cardHtml = `
                     <div class="card h-100 rounded-3 shadow-sm review-card-bg">
-                        {{-- Wrapper untuk nama pengguna dengan background warna --}}
                         <div class="review-name-header-wrapper">
                             <h5 class="review-user-name fs-4">${review.user_name}</h5>
                         </div>
-                        {{-- Konten card-body lainnya dengan padding terpisah --}}
                         <div class="card-body-content">
                             <p class="card-text text-muted mb-2 review-date">
                                 ${new Date(review.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}

@@ -6,16 +6,16 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StoriesController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CartController; // Ensure this is present
 
 Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
-Route::get('/products', [ProductController::class, 'index'])->name('products.index'); 
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
 Route::get('/stories', [StoriesController::class, 'index'])->name('Stories.ListStories');
-
 Route::get('/stories/{slug}', [StoriesController::class, 'show'])->name('Stories.DetailStories');
 
 Route::get('/trynotif', function () {
@@ -23,7 +23,10 @@ Route::get('/trynotif', function () {
 });
 
 Route::get('/checkout', [CheckoutController::class, 'showCheckoutPage'])->name('checkout.show');
-
 Route::post('/checkout/add', [CheckoutController::class, 'addToCheckout'])->name('checkout.add');
+
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
+Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
 
 require __DIR__.'/admin.php';
