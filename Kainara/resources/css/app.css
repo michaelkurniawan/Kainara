@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 @font-face {
     font-family: 'Ancizar Serif';
@@ -30,6 +31,8 @@
     font-style: italic; /* Penting: Atur sebagai italic agar browser menggunakannya untuk gaya italic */
     font-display: swap;
 }
+=======
+>>>>>>> DEV_SISKA
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

@@ -14,7 +14,6 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Ancizar Sans', ...defaultTheme.fontFamily.sans],
-                // Corrected: Use defaultTheme.fontFamily.serif for serif fallbacks
                 serif: ['Ancizar Serif', ...defaultTheme.fontFamily.serif],
             },
         },

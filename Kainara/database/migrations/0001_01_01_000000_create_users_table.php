@@ -7,10 +7,14 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Menjalankan migrasi.
+     *
+     * Membuat tabel 'users' dan 'user_addresses',
+     * serta menambahkan kolom 'role' ke tabel 'users'.
      */
     public function up(): void
     {
+        // Membuat tabel 'users'
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('first_name');
@@ -19,6 +23,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('profile_picture')->default('default.png');
             $table->date('dob')->nullable();
+            // Menambahkan kolom 'role' dengan enum 'user' dan 'admin', default 'user'
             $table->enum('role', ['user', 'admin'])->default('user');
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('last_login')->nullable();
@@ -26,6 +31,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // Membuat tabel 'user_addresses'
         Schema::create('user_addresses', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
@@ -41,12 +47,14 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // Membuat tabel 'password_reset_tokens'
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
+        // Membuat tabel 'sessions'
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();
@@ -58,7 +66,9 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * Membalikkan migrasi.
+     *
+     * Menghapus tabel jika migrasi dibatalkan.
      */
     public function down(): void
     {
