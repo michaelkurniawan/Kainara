@@ -58,51 +58,84 @@
         .cart-header-row {
             display: flex;
             align-items: center;
-            padding: 0.75rem 1rem;
             margin-bottom: 0.5rem;
             font-weight: bold;
             color: rgb(136, 139, 142);
         }
 
-        .cart-col-image-placeholder, .product-image-container {
+        .cart-col-image-placeholder {
             width: 80px;
             flex-shrink: 0;
             margin-right: 1rem;
         }
+        
+        .product-image-container {
+            width: 80px;
+            flex-shrink: 0;
+            margin-right: 1rem;
+        }
+
         .product-image-container img {
             width: 80px;
             height: 80px;
             object-fit: cover;
         }
 
-        .cart-col-name, .product-details {
-            flex-grow: 1;
-        }
-
-        .cart-col-price, .product-unit-price-wrapper {
+        .cart-col-price {
             width: 100px;
             text-align: right;
-            margin-right: 3rem;
+            margin-left: 10.8rem;
             flex-shrink: 0;
         }
-
-        .cart-col-quantity, .product-quantity-controls-wrapper {
+        
+        .product-unit-price-wrapper {
+            width: 100px;
+            text-align: right;
+            margin-right: 6rem;
+            flex-shrink: 0;
+        }
+        
+        .cart-col-quantity {
             width: 100px;
             display: flex;
             justify-content: center;
             align-items: center;
+            margin-left: 9rem;
+            flex-shrink: 0;
+        }
+
+        .product-quantity-controls-wrapper {
+            width: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 5rem;
+            flex-shrink: 0;
+        }
+
+        .cart-col-total {
+            width: 120px;
+            text-align: right;
+            margin-left: 4.3rem;
+            flex-shrink: 0;
+        }
+        
+        .product-total-price-wrapper {
+            width: 120px;
+            text-align: right;
             margin-right: 3rem;
             flex-shrink: 0;
         }
 
-        .cart-col-total, .product-total-price-wrapper {
-            width: 120px;
-            text-align: right;
-            margin-right: 1rem;
+        .cart-col-trash-placeholder {
+            width: 24px;
             flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-
-        .cart-col-trash-placeholder, .trash-icon-container {
+        
+        .trash-icon-container {
             width: 24px;
             flex-shrink: 0;
             display: flex;
@@ -143,9 +176,8 @@
 
         <div class="row mt-3">
             <div class="col-md-8">
-                <div class="mb-2 p-3">
+                <div class="mb-2 ">
                     <div class="cart-header-row">
-                        <div class="cart-col-image-placeholder"></div>
                         <div class="cart-col-name">Product name</div>
                         <div class="cart-col-price">Price</div>
                         <div class="cart-col-quantity">Quantity</div>
