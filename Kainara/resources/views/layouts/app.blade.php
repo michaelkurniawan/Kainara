@@ -306,109 +306,15 @@
         ];
     @endphp
 
-    <!-- Header -->
-    <header>
-        <div class="container"> {{-- Hapus kelas d-flex dll dari sini, sudah diatur oleh CSS header .container --}}
-            {{-- Grup Navigasi Kiri --}}
-            <div class="nav-group-left">
-                <div class="dropdown header-dropdown"> {{-- Tambah kelas .header-dropdown --}}
-                    <a class="nav-link fw-bold dropdown-toggle" href="#" role="button" id="storeDropdown" data-bs-toggle="dropdown" aria-expanded="false">Store</a>
-                    <ul class="dropdown-menu" aria-labelledby="storeDropdown">
-                        <li><a class="dropdown-item" href="#">Men</a></li>
-                        <li><a class="dropdown-item" href="#">Women</a></li> {{-- Ganti urutan/nama jika perlu --}}
-                        <li><a class="dropdown-item" href="#">Fabric</a></li>
-                    </ul>
-                </div>
-                <a href="#" class="nav-link fw-bold">Stories</a>
-                <a href="#" class="nav-link fw-bold">My Order</a>
-                <a href="#" class="nav-link fw-bold">About Us</a>
-            </div>
-
-            <div id="logo-rotator" class="text-center">
-                {{-- Gambar untuk logo saat ini --}}
-                <img id="rotating-logo-current"
-                    src="{{ $logosData[0]['src'] }}"
-                    alt="Kainara Logo"
-                    class="{{ $logosData[0]['class'] }} logo-image active"> {{-- Tambah kelas 'active' --}}
-
-                {{-- Gambar untuk logo berikutnya (awalnya tersembunyi) --}}
-                <img id="rotating-logo-next"
-                    src="" {{-- Akan diisi oleh JavaScript --}}
-                    alt="Kainara Logo"
-                    class="logo-image"> {{-- Kelas umum untuk styling --}}
-            </div>
-
-            {{-- Grup Ikon Kanan --}}
-            <div class="icon-group-right">
-                <a href="#" class="nav-icon-link">
-                    <img src="{{ asset('images/icons/icon-cart.png') }}" alt="Cart" class="header-icon">
-                </a>
-                {{-- Dropdown untuk Ikon Profil --}}
-                {{-- Ikon Profil (Tanpa Dropdown) --}}
-                <a href="#" class="nav-icon-link" title="My Account"> {{-- Tambahkan title untuk aksesibilitas atau href ke halaman profil --}}
-                    <img src="{{ asset('images/icons/icon-account.png') }}" alt="Account" class="header-icon">
-                </a>
-            </div>
-        </div>
-    </header>
+   {{-- Memanggil Header --}}
+    @include('layouts.partials._header')
 
     <main class="py-4">
         @yield('content')
     </main>
 
-    <!-- Footer -->
-    <footer class="site-footer">
-        <div class="container">
-            <div class="row gy-4 justify-content-between mt-3""> {{-- Tambah justify-content-between --}}
-                {{-- Kolom Logo --}}
-                <div class="col-lg-3 col-md-12 text-center text-lg-start footer-logo-section mb-4 mb-lg-0">
-                    <img src="{{ asset('storage/logo3.png') }}" alt="Kainara Footer Logo" class="footer-logo">
-                </div>
-
-                {{-- Kolom Menu --}}
-                <div class="col-lg-2 col-md-3 col-6">
-                    <h6 class="footer-heading">MENU</h6>
-                    <ul class="list-unstyled footer-links">
-                        <li><a href="#">Woman</a></li>
-                        <li><a href="#">Men</a></li>
-                        <li><a href="#">My Order</a></li>
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Profile</a></li>
-                    </ul>
-                </div>
-
-                {{-- Kolom Socials --}}
-                <div class="col-lg-2 col-md-3 col-6">
-                    <h6 class="footer-heading">SOCIALS</h6>
-                    <ul class="list-unstyled footer-links">
-                        <li><a href="#"><i class="bi bi-facebook"></i> Facebook</a></li>
-                        <li><a href="#"><i class="bi bi-instagram"></i> Instagram</a></li>
-                        <li><a href="#"><i class="bi bi-twitter"></i> Twitter</a></li>
-                    </ul>
-                </div>
-
-                {{-- Kolom Alamat --}}
-                <div class="col-lg-4 col-md-6 footer-address-section"> {{-- Perbesar sedikit kolom alamat --}}
-                    <h6 class="footer-heading">BCA LEARNING INSTITUTE</h6>
-                    <p class="address-text mb-0">Sentul City, Jl. Pakuan No.3, Sumur Batu, Babakan Madang, Bogor Regency, West Java 16810</p>
-                </div>
-            </div>
-
-            {{-- BARIS BARU UNTUK KONTAK, NO.TELP, COPYRIGHT --}}
-            <div class="row footer-bottom-row align-items-center">
-                 <div class="col-md-4 text-center text-md-start mb-2 mb-md-0">
-                    <p class="contact-info email-info mb-0"><a href="mailto:contact@kainara.co.id">contact@kainara.co.id</a></p>
-                </div>
-                <div class="col-md-4 text-center mb-2 mb-md-0">
-                    <p class="contact-info phone-info mb-0"><a href="tel:+1234567890">(123) 456-7890</a></p>
-                </div>
-                <div class="col-md-4 text-center text-md-end">
-                    <p class="footer-copyright mb-0"><small>© {{ date('Y') }} Kainara. All rights reserved.</small></p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
+     {{-- Memanggil Footer --}}
+    @include('layouts.partials._footer')
 
 
     <!-- Bootstrap JS -->
