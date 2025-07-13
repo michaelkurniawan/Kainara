@@ -555,7 +555,7 @@
                 <div class="col-lg-7 mb-4 mb-lg-0">
                     <div class="card article-card-featured h-100"> {{-- h-100 dari Bootstrap agar card sama tinggi jika perlu --}}
                         <a href="#">
-                            <img src="{{ asset('images/articles/article-featured.jpg') }}" class="card-img-top" alt="Featured Article Image">
+                            <img src="{{ asset('images/articles/article-featured.png') }}" class="card-img-top" alt="Featured Article Image">
                         </a>
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title mb-2">
@@ -578,7 +578,7 @@
                         <div class="row g-0">
                             <div class="col-4"> {{-- Gunakan col-4 atau col-sm-4 agar lebih sempit --}}
                                 <a href="#">
-                                    <img src="{{ asset('images/articles/article-small-1.jpg') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 1">
+                                    <img src="{{ asset('images/articles/article-featured.png') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 1">
                                 </a>
                             </div>
                             <div class="col-8">
@@ -597,7 +597,7 @@
                         <div class="row g-0">
                             <div class="col-4">
                                 <a href="#">
-                                    <img src="{{ asset('images/articles/article-small-2.jpg') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 2">
+                                    <img src="{{ asset('images/articles/article-featured.png') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 2">
                                 </a>
                             </div>
                             <div class="col-8">
@@ -616,7 +616,7 @@
                         <div class="row g-0">
                             <div class="col-4">
                                 <a href="#">
-                                    <img src="{{ asset('images/articles/article-small-3.jpg') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 3">
+                                    <img src="{{ asset('images/articles/article-featured.png') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 3">
                                 </a>
                             </div>
                             <div class="col-8">
