@@ -300,7 +300,7 @@
         box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15) !important;
     }
     .latest-stories-custom .article-card-featured .card-img-top {
-        height: 380px;
+        height: 350px;
         object-fit: cover;
         border-top-left-radius: 0.375rem;
         border-top-right-radius: 0.375rem;
@@ -425,7 +425,7 @@
                     innovation and artistry.
                 </p>
                 <div class="hero-button-wrapper">
-                    <a href="#" class="btn btn-kainara">Discover Our Collection</a>
+                    <a href="{{ route('products.index') }}" class="btn btn-kainara">Discover Our Collection</a>
                 </div>
             </div>
 
@@ -496,86 +496,51 @@
 {{-- Latest Stories Section --}}
 <section class="latest-stories-custom">
     <div class="container-fluid px-5 py-5">
-        <div class="d-flex justify-content-between align-items-center mb-4 pb-2">
+        <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="section-title-stories">Latest Stories</h2>
-            <a href="#" class="link-styled-as-button-text">Read more articles!</a>
+            <a href="{{ route('Stories.ListStories') }}" class="link-styled-as-button-text">Read more articles!</a>
         </div>
 
         <div class="row">
-            {{-- Featured Article Card --}}
             <div class="col-lg-7 mb-4 mb-lg-0">
-                <div class="card article-card-featured h-100">
-                    <a href="#">
-                        <img src="{{ asset('images/articles/article-featured.jpg') }}" class="card-img-top" alt="Featured Article Image">
+                @if ($featuredArticle)
+                    <a href="{{ route('Stories.DetailStories', $featuredArticle->slug) }}" class="card article-card-featured h-100 d-block text-decoration-none text-dark">
+                        <img src="{{ asset('images/articles/' . $featuredArticle->thumbnail) }}" class="card-img-top" alt="{{ $featuredArticle->title }}">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title mb-2">
+                                {{ $featuredArticle->title }}
+                            </h5>
+                            <p class="card-text text-muted small mb-3">{{ \Carbon\Carbon::parse($featuredArticle->created_at)->format('d M Y') }}</p>
+                            <p class="card-text article-excerpt mb-0">
+                                {{ Str::limit(strip_tags($featuredArticle->content), 300, '...') }}
+                            </p>
+                        </div>
                     </a>
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title mb-2">
-                            <a href="#">The Gleaming Legacy: Songket, Indonesia's Golden Fabric</a>
-                        </h5>
-                        <p class="card-text text-muted small mb-3">21 May 2025</p>
-                        <p class="card-text article-excerpt mb-auto">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet...
-                        </p>
-                    </div>
-                </div>
+                @else
+                    <p>No featured article available.</p>
+                @endif
             </div>
 
             <div class="col-lg-5">
-                <div class="card article-card-small mb-3">
-                    <div class="row g-0">
-                        <div class="col-4">
-                            <a href="#">
-                                <img src="{{ asset('images/articles/article-small-1.jpg') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 1">
-                            </a>
-                        </div>
-                        <div class="col-8">
-                            <div class="card-body">
-                                <h6 class="card-title mb-1">
-                                    <a href="#">The Gleaming Legacy: Songket, Indonesia's Golden Fabric</a>
-                                </h6>
-                                <p class="card-text text-muted small">21 May 2025</p>
+                @forelse ($smallArticles as $article)
+                    <a href="{{ route('Stories.DetailStories', $article->slug) }}" class="card article-card-small {{ $loop->last ? 'mb-0' : 'mb-3' }} d-block text-decoration-none text-dark">
+                        <div class="row g-0">
+                            <div class="col-4">
+                                <img src="{{ asset('images/articles/' . $article->thumbnail) }}" class="img-fluid rounded-start article-img-small" alt="{{ $article->title }}">
+                            </div>
+                            <div class="col-8">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-1">
+                                        {{ $article->title }}
+                                    </h6>
+                                    <p class="card-text text-muted small">{{ \Carbon\Carbon::parse($article->created_at)->format('d M Y') }}</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                {{-- Small Article Card 2 --}}
-                <div class="card article-card-small mb-3">
-                    <div class="row g-0">
-                        <div class="col-4">
-                            <a href="#">
-                                <img src="{{ asset('images/articles/article-small-2.jpg') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 2">
-                            </a>
-                        </div>
-                        <div class="col-8">
-                            <div class="card-body">
-                                <h6 class="card-title mb-1">
-                                    <a href="#">The Gleaming Legacy: Songket, Indonesia's Golden Fabric</a>
-                                </h6>
-                                <p class="card-text text-muted small">20 May 2025</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Small Article Card 3 --}}
-                <div class="card article-card-small">
-                    <div class="row g-0">
-                        <div class="col-4">
-                            <a href="#">
-                                <img src="{{ asset('images/articles/article-small-3.jpg') }}" class="img-fluid rounded-start article-img-small" alt="Article Image 3">
-                            </a>
-                        </div>
-                        <div class="col-8">
-                            <div class="card-body">
-                                <h6 class="card-title mb-1">
-                                    <a href="#">The Gleaming Legacy: Songket, Indonesia's Golden Fabric</a>
-                                </h6>
-                                <p class="card-text text-muted small">19 May 2025</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    </a> {{-- Closing <a> tag for the entire card --}}
+                @empty
+                    <p>No other articles available.</p>
+                @endforelse
             </div>
         </div>
     </div>

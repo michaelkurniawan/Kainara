@@ -6,11 +6,10 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StoriesController;
 use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\CartController; // Ensure this is present
+use App\Http\Controllers\CartController; 
+use App\Http\Controllers\LatestStoriesController; 
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('welcome');
+Route::get('/', [LatestStoriesController::class, 'index'])->name('welcome');
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
