@@ -13,18 +13,26 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->unique();
-            $table->string('payment_method');
-            $table->string('payment_status')->default('pending'); // pending, completed, failed
-            $table->timestamp('paid_at')->nullable();
-            $table->string('payment_reference')->nullable();
+            $table->foreignId('order_id')->unique()->constrained('orders')->onDelete('cascade');
+            $table->string('midtrans_transaction_id')->unique()->nullable();
+            $table->string('midtrans_transaction_status')->default('pending');
             $table->decimal('amount_paid', 12, 2);
+            $table->timestamp('paid_at')->nullable();
+            $table->string('midtrans_payment_type')->nullable();
+            $table->string('midtrans_snap_token')->nullable();
+            $table->string('midtrans_va_number')->nullable();
+            $table->string('midtrans_bank')->nullable();
+            $table->string('midtrans_bill_key')->nullable();
+            $table->string('midtrans_biller_key')->nullable();
+            $table->string('midtrans_qr_code')->nullable();
+            $table->string('midtrans_deeplink_url')->nullable();
+            $table->string('midtrans_fraud_status')->nullable();
             $table->timestamps();
         });
 
         Schema::create('refunds', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('payment_id');
+            $table->foreignId('payment_id')->constrained('payments')->onDelete('cascade');
             $table->decimal('refunded_amount', 12, 2);
             $table->string('reason')->nullable();
             $table->timestamp('refunded_at');
