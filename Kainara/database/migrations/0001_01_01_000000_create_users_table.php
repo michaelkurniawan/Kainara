@@ -23,7 +23,6 @@ return new class extends Migration
             $table->string('password');
             $table->string('profile_picture')->default('default.png');
             $table->date('dob')->nullable();
-            // Menambahkan kolom 'role' dengan enum 'user' dan 'admin', default 'user'
             $table->enum('role', ['user', 'admin'])->default('user');
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('last_login')->nullable();

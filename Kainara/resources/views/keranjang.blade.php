@@ -5,13 +5,14 @@
 @push('styles')
     <style>
         .btn-gold {
-            background-color: rgb(0, 0, 0);
-            color: white;
-            border: none;
+            background-color: #EAE4D5;
+            color: black;
+            border: 1px solid #000;
         }
         .btn-gold:hover {
-            background-color: #d4af37;
-            color: white;
+            background-color: #B6B09F;
+            color: black;
+            border: 1px solid #000;
         }
 
         .img-shoppingcart-title {
@@ -34,11 +35,6 @@
             font-size: 1.25rem;
         }
 
-        .subtotal-box {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            padding: 1.5rem;
-        }
 
         h1.display-5 {
             font-size: 4.5rem;
@@ -153,6 +149,22 @@
             cursor: pointer;
             font-size: 1.2rem;
         }
+
+        .alert-info {
+            background-color: #EAE4D5; 
+            color: rgb(136, 139, 142);
+            border-color: #EAE4D5; 
+        }
+
+        .alert-link {
+            color: rgb(136, 139, 142);
+        }
+
+        .btn-outline-dark:hover {
+            background-color: transparent !important; 
+            color: #000 !important; 
+            border-color: #000 !important;
+        }
     </style>
 @endpush
 
@@ -174,7 +186,7 @@
             </div>
         @endif
 
-        <div class="row mt-3">
+        <div class="row mt-5 ">
             <div class="col-md-8">
                 <div class="mb-2 ">
                     <div class="cart-header-row">
@@ -266,11 +278,13 @@
 
             <div class="col-lg-4">
                 <div class="subtotal-box">
-                    <h5 class="fw-bold">Subtotal</h5>
+                    <div class="d-flex justify-content-between align-items-baseline mb-1">
+                        <h5 class="fw-bold mb-0">Subtotal</h5>
+                        <h5 class="fw-bold mb-0">IDR {{ number_format($subtotal, 0, ',', '.') }}</h5>
+                    </div>
                     <p class="text-muted small mb-1">Includes Taxes</p>
                     <hr>
-                    <h5 class="fw-bold">IDR {{ number_format($subtotal, 0, ',', '.') }}</h5>
-                    <a href="{{ route('checkout.show') }}" class="btn btn-gold w-100 mt-3">Checkout</a>
+                    <a href="{{ route('checkout.show') }}" class="btn btn-gold w-100 mt-2">Checkout</a>
                     <a href="{{ route('products.index') }}" class="btn btn-outline-dark w-100 mt-2">Continue Shopping</a>
                 </div>
             </div>

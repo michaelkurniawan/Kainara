@@ -36,7 +36,6 @@
         margin-bottom: 0.75rem;
     }
 
-    /* --- CSS Tombol Navigasi Ulasan --- */
     .review-nav-btn {
         width: 120px;
         height: 45px;
@@ -60,12 +59,10 @@
         cursor: not-allowed;
     }
 
-    /* --- Warna Latar Belakang Kotak Ulasan --- */
     .review-card-bg {
         background-color: #EAE4D5 !important;
     }
 
-    /* --- Wrapper untuk Header Nama Pengguna dalam Kartu --- */
     .review-name-header-wrapper {
         background-color: #B6B09F;
         color: #333;
@@ -77,7 +74,6 @@
         padding: 1rem;
     }
 
-    /* --- CSS untuk Komentar (Rata Tengah dan Tinggi Lebih Besar) --- */
     .review-comment {
         text-align: center;
         line-height: 1.8;
@@ -88,25 +84,22 @@
         justify-content: center;
     }
 
-    /* --- CSS Baru untuk Rating Bintang Presisi --- */
     .precise-star-rating {
         position: relative;
         display: inline-block;
-        white-space: nowrap; /* Penting untuk menjaga bintang sejajar */
-        line-height: 1; /* Menghilangkan spasi ekstra di sekitar ikon */
-        vertical-align: middle; /* Untuk menyelaraskan dengan teks lain jika ada */
-        overflow: hidden; /* Crucial: Hanya bagian yang terisi yang terlihat */
-        /* Ukuran font akan ditentukan oleh parent (fs-4 atau fs-5) */
-        color: #ccc; /* Warna default untuk bintang kosong */
+        white-space: nowrap;
+        line-height: 1;
+        vertical-align: middle;
+        overflow: hidden;
+        color: #ccc;
     }
     .precise-star-rating .fas,
     .precise-star-rating .far {
-        /* Memastikan ikon tidak memiliki margin atau padding bawaan */
         margin: 0;
         padding: 0;
-        width: 1em; /* Menggunakan em agar ukuran konsisten dengan font-size */
-        display: inline-block; /* Agar bisa diatur lebarnya jika perlu, meski di sini di handle overflow */
-        text-align: center; /* Untuk menjaga ikon tetap di tengah ruang 1em nya */
+        width: 1em;
+        display: inline-block;
+        text-align: center;
     }
 
     .precise-star-rating .precise-stars-filled,
@@ -119,23 +112,21 @@
     }
 
     .precise-star-rating .precise-stars-filled {
-        color: #ffc107; /* Warna kuning Bootstrap warning */
-        overflow: hidden; /* Mengclip bintang terisi */
+        color: #ffc107;
+        overflow: hidden;
     }
 
     .precise-star-rating .precise-stars-empty {
-        color: #ccc; /* Warna abu-abu untuk bintang kosong (latar belakang) */
-        z-index: -1; /* Pastikan di belakang bintang yang terisi */
+        color: #ccc;
+        z-index: -1;
     }
 
-    /* Style for selected size button */
     .btn-size.selected {
         background-color: #AD9D6C !important;
         color: white !important;
         border-color: #AD9D6C !important;
     }
 
-    /* Hover effect for size buttons */
     .btn-size:not(:disabled):hover {
         background-color: #AD9D6C;
         color: white;
@@ -146,7 +137,6 @@
 @endpush
 
 @section('content')
-    {{-- Data hardcode untuk ulasan --}}
     @php
         $hardcodedReviews = [
             [
@@ -211,7 +201,6 @@
             ],
         ];
 
-        // Hitung rata-rata rating.
         $totalRating = 0;
         foreach ($hardcodedReviews as $review) {
             $totalRating += $review['rating'];
@@ -282,24 +271,23 @@
                             $fullStarsSummary = floor($averageRating);
                             $decimalPartSummary = $averageRating - $fullStarsSummary;
 
-                            // Apply the quarter-fill logic for the summary as well
                             for ($i = 0; $i < $fullStarsSummary; $i++) {
-                                $ratingHtmlSummary .= '<i class="fas fa-star"></i>'; // Full star
+                                $ratingHtmlSummary .= '<i class="fas fa-star"></i>';
                             }
 
                             if ($decimalPartSummary >= 0.75) {
-                                $ratingHtmlSummary .= '<i class="fas fa-star"></i>'; // Approximates full
+                                $ratingHtmlSummary .= '<i class="fas fa-star"></i>';
                             } elseif ($decimalPartSummary >= 0.25) {
-                                $ratingHtmlSummary .= '<i class="fas fa-star-half-alt"></i>'; // Approximates half/quarter
+                                $ratingHtmlSummary .= '<i class="fas fa-star-half-alt"></i>';
                             }
 
                             $starsRenderedSummary = floor($averageRating);
                             if ($decimalPartSummary >= 0.25) {
-                                $starsRenderedSummary++; // Count partial as a "rendered" slot for empty stars
+                                $starsRenderedSummary++;
                             }
                             $emptyStarsSummary = 5 - $starsRenderedSummary;
                             for ($i = 0; $i < $emptyStarsSummary; $i++) {
-                                $ratingHtmlSummary .= '<i class="far fa-star"></i>'; // Empty star
+                                $ratingHtmlSummary .= '<i class="far fa-star"></i>';
                             }
                         @endphp
                         {!! $ratingHtmlSummary !!}
@@ -354,11 +342,9 @@
                                 <input type="hidden" name="quantity" id="quantity_input" value="1">
                                 <button type="button" class="btn btn-link text-dark p-0 fw-bold rounded-0 btn-plus" style="font-size: 1.5rem;">+</button>
                             </div>
-                            {{-- Added name="action" to distinguish submission type --}}
                             <button type="submit" name="action" value="add_to_cart" class="btn border-secondary rounded-0 btn-lg btn-add-to-cart" style="width: 50%;">Add to Cart</button>
                         </div>
 
-                        {{-- Added name="action" to distinguish submission type --}}
                         <button type="submit" name="action" value="buy_now" class="btn rounded-0 btn-lg w-100 btn-buy-it-now" style="color: #FFFFFF; background-color:#B6B09F">Buy it now</button>
                     </div>
                 </form>
@@ -388,22 +374,7 @@
 
     </div>
 
-    <div class="modal fade" id="sizeChartModal" tabindex="-1" aria-labelledby="sizeChartModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content px-5">
-                <div class="modal-header mt-3 border-bottom border-3">
-                    <h4 class="modal-title fs-4" id="sizeChartModalLabel">Size Chart</h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="d-flex justify-content-center align-items-center py-4 gap-5 flex-wrap text-center">
-                        <img src="{{ asset('images/KemejaPanjang.png') }}" alt="Kemeja Panjang" class="img-fluid me-3" style="max-width: 45%;">
-                        <img src="{{ asset('images/SizeKemejaPanjang.png') }}" alt="Size Kemeja Panjang" class="img-fluid" style="max-width: 45%;">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('components.popupsizechart')
 @endsection
 
 @push('scripts')
@@ -411,11 +382,10 @@
     document.addEventListener('DOMContentLoaded', function () {
         let selectedSize = null;
         let quantity = 1;
-        let maxQuantity = 0; // Initialize maxQuantity to 0
+        let maxQuantity = 0;
 
         const productVariants = @json($product->variants);
 
-        // Map for size -> total stock (summing up stock for all colors of a given size)
         const sizeStockMap = {};
         productVariants.forEach(variant => {
             if (variant.size) {
@@ -437,8 +407,6 @@
 
         const hasOnlyOneSizeVariant = {{ json_encode($hasOnlyOneSizeVariant) }};
 
-        // --- Functions ---
-
         function updateQuantityControls() {
             quantity = Math.min(quantity, maxQuantity);
             quantity = Math.max(1, quantity);
@@ -450,7 +418,7 @@
             minusBtn.disabled = quantity <= 1;
             plusBtn.disabled = quantity >= maxQuantity;
 
-            if (maxQuantity === 0 || !selectedSize) {
+            if (maxQuantity === 0 || (!selectedSize && !hasOnlyOneSizeVariant)) {
                 addToCartButton?.setAttribute('disabled', 'disabled');
                 buyNowButton?.setAttribute('disabled', 'disabled');
             } else {
@@ -458,8 +426,6 @@
                 buyNowButton?.removeAttribute('disabled');
             }
         }
-
-        // --- Event Listeners ---
 
         sizeButtons.forEach(button => {
             button.addEventListener('click', function () {
@@ -490,8 +456,6 @@
             }
         });
 
-        // --- Initial Load Logic ---
-
         if (hasOnlyOneSizeVariant) {
             selectedSize = 'One Size';
             if (selectedSizeInput) {
@@ -516,7 +480,6 @@
             updateQuantityControls();
         }
 
-        // --- Review Section JavaScript (remains unchanged) ---
         const hardcodedReviews = @json($hardcodedReviews);
         const reviewsPerPage = 3;
         let currentPage = 0;
@@ -532,16 +495,16 @@
 
             for (let i = 0; i < 5; i++) {
                 if (remainingRating >= 1) {
-                    starsHtml += '<i class="fas fa-star"></i>'; // Full star
+                    starsHtml += '<i class="fas fa-star"></i>';
                     remainingRating--;
                 } else if (remainingRating >= 0.75) {
-                    starsHtml += '<i class="fas fa-star"></i>'; // Treat as full for visual quarter-up
-                    remainingRating = 0; // Consume the rest
+                    starsHtml += '<i class="fas fa-star"></i>';
+                    remainingRating = 0;
                 } else if (remainingRating >= 0.25) {
-                    starsHtml += '<i class="fas fa-star-half-alt"></i>'; // Treat as half for visual quarter
-                    remainingRating = 0; // Consume the rest
+                    starsHtml += '<i class="fas fa-star-half-alt"></i>';
+                    remainingRating = 0;
                 } else {
-                    starsHtml += '<i class="far fa-star"></i>'; // Empty star
+                    starsHtml += '<i class="far fa-star"></i>';
                 }
             }
             return starsHtml;
