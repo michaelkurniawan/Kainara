@@ -481,7 +481,7 @@
             </div>
         </div>
         <div class="join-button-motif-wrapper text-center position-relative mt-4">
-            <a href="#" class="btn btn-join-artisan">Join as Artisan</a>
+            <a href="{{ route('artisan.register') }}" class="btn btn-join-artisan">Join as Artisan</a>
         </div>
     </div>
     {{-- Decorative Motifs for Join Movement Section --}}

@@ -319,7 +319,7 @@
                 </div>
                 <a href="{{ route('Stories.ListStories') }}" class="nav-link fw-bold me-3">Stories</a>
                 <a href="#" class="nav-link fw-bold me-3">My Order</a>
-                <a href="#" class="nav-link fw-bold">About Us</a>
+                <a href="{{ route('tentangkainara') }}" class="nav-link fw-bold">About Us</a>
             </div>
 
             <div id="logo-rotator" class="text-center">

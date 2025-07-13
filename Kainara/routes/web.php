@@ -8,8 +8,15 @@ use App\Http\Controllers\StoriesController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CartController; 
 use App\Http\Controllers\LatestStoriesController; 
+use App\Http\Controllers\ArtisanRegistrationController;
 
 Route::get('/', [LatestStoriesController::class, 'index'])->name('welcome');
+
+Route::get('/join-as-artisan', [ArtisanRegistrationController::class, 'showForm'])->name('artisan.register');
+
+Route::get('/tentangkainara', function () {
+    return view('tentangkainara');
+})->name('tentangkainara');
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
