@@ -45,7 +45,6 @@
             /* background-position: center; */
             background-blend-mode: lighten;
             min-width: 100vw;
-            /* min-height: 50vw; */
             padding: 10vw;
         }
 
