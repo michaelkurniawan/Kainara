@@ -14,6 +14,7 @@ class LatestStoriesController extends Controller
      */
     public function index()
     {
+        // dd('Controller is running and this method is being called.'); 
         $latestArticles = Article::orderBy('created_at', 'desc')
                                  ->take(5)
                                  ->get();

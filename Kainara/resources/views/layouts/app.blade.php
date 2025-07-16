@@ -72,7 +72,7 @@
             align-items: center;
         }
 
-        header .container-fluid {
+        header .container {
             display: flex;
             justify-content: space-between;
             align-items: center;

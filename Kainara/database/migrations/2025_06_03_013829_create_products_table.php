@@ -30,6 +30,7 @@ return new class extends Migration
             $table->string('size');
             $table->string('color');
             $table->integer('stock');
+            $table->string('sleeve')->nullable();
             $table->decimal('price', 12, 2)->nullable();
             $table->timestamps();
         });
