@@ -7,7 +7,7 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminProductsController;
 use App\Http\Controllers\Admin\AdminArticlesController;
 use App\Http\Controllers\Admin\AdminOrderController;
-use App\Http\Controllers\Admin\AdminTestController; 
+use App\Http\Controllers\Admin\AdminFormController; 
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -57,10 +57,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Admin Test Submissions Routes (Combined from the second block)
         Route::prefix('test-submissions')->name('test.')->group(function () {
-            Route::get('/', [AdminTestController::class, 'index'])->name('submissions');
-            Route::get('/{profile}', [AdminTestController::class, 'show'])->name('show');
-            Route::post('/{profile}/approve', [AdminTestController::class, 'approve'])->name('approve');
-            Route::post('/{profile}/reject', [AdminTestController::class, 'reject'])->name('reject');
+            Route::get('/', [AdminFormController::class, 'index'])->name('submissions');
+            Route::get('/{profile}', [AdminFormController::class, 'show'])->name('show');
+            Route::post('/{profile}/approve', [AdminFormController::class, 'approve'])->name('approve');
+            Route::post('/{profile}/reject', [AdminFormController::class, 'reject'])->name('reject');
         });
 
         // Admin Logout Route

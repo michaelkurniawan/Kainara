@@ -243,16 +243,13 @@
             ],
         ];
 
-        // Set default address to primary, or first if no primary exists
         $defaultAddress = collect($userAddresses)->firstWhere('is_primary');
         if (!$defaultAddress && count($userAddresses) > 0) {
             $defaultAddress = $userAddresses[0];
         } elseif (!$defaultAddress) {
-            $defaultAddress = null; // No default address if userAddresses is empty
+            $defaultAddress = null; 
         }
-        // This $address variable will be used to display initial data on the main page
         $address = $defaultAddress;
-        // This is for initial selection in modal itself
         $selectedAddressId = $defaultAddress['id'] ?? null;
     @endphp
 

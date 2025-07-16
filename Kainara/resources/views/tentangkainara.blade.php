@@ -22,7 +22,6 @@
         .content-section {
             background-color: #FFFFFF;
             padding-top: 50px;
-            padding-bottom: 15vh;
         }
         
         .logo-banner {
@@ -113,9 +112,8 @@
 
     <!-- 2. Wrapper untuk konten yang tetap di tengah (dalam container) -->
     <div class="content-section">
-        <div class="container">
+        <div class="container-fluid px-5 py-5">
             <div class="row g-4 justify-content-center align-items-stretch">
-                {{-- KOLOM 1: Card Cendrawasih --}}
                 <div class="col-md-4 d-flex flex-column">
                     <div class="card p-3 card-custom shadow-sm flex-grow-1">
                         <img src="{{ asset('images/cendrawasih.png') }}" class="card-img-top-custom card-img-cendrawasih-large" alt="Cenderawasih">

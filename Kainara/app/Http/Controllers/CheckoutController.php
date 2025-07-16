@@ -11,6 +11,39 @@ class CheckoutController extends Controller
 {
     public function showCheckoutPage()
     {
+        // Initialize dummy addresses in session if not already present
+        if (!Session::has('user_addresses')) {
+            Session::put('user_addresses', [
+                [
+                    'id' => 1,
+                    'type' => 'Home',
+                    'name' => 'Michael Kurniawan',
+                    'phone' => '085175059853',
+                    'street' => 'Jl. Pakuan No.3, Sumur Batu',
+                    'sub_district' => 'Babakan Madang',
+                    'district' => 'Kabupaten Bogor',
+                    'city' => '',
+                    'province' => 'Jawa Barat',
+                    'postal_code' => '16810',
+                    'is_primary' => true,
+                ],
+                [
+                    'id' => 2,
+                    'type' => 'Work',
+                    'name' => 'Michael Kurniawan',
+                    'phone' => '085175059853',
+                    'street' => 'Sentul City, Jl. Pakuan No.3, Sumur Batu',
+                    'sub_district' => 'Babakan Madang',
+                    'district' => 'Bogor Regency',
+                    'city' => '',
+                    'province' => 'West Java',
+                    'postal_code' => '16810',
+                    'is_primary' => false,
+                ],
+            ]);
+        }
+
+        $userAddresses = Session::get('user_addresses', []);
         $cartItems = Session::get('cart', []);
         $subtotal = 0;
 
@@ -23,23 +56,31 @@ class CheckoutController extends Controller
                 $subtotal += $item['total_price'];
             } else {
                 $item['product_name'] = 'Unknown Product';
-                $item['product_image'] = 'path/to/default/image.jpg'; 
+                $item['product_image'] = 'https://placehold.co/80x80/cccccc/333333?text=No+Image'; // Placeholder
                 $item['total_price'] = 0;
             }
         }
 
-        $address = Session::get('user_address', [
-            'type' => 'Home',
-            'street' => 'Jl. Contoh No.123',
-            'sub_district' => 'Kel. Contoh',
-            'district' => 'Kec. Contoh',
-            'city' => 'Kota Contoh',
-            'province' => 'Provinsi Contoh',
-            'postal_code' => '12345'
-        ]);
+        // Determine the selected address ID
+        $selectedAddressId = null;
+        if (Session::has('selected_address_id')) {
+            // Priority 1: From flash session (e.g., after adding/editing an address)
+            $selectedAddressId = Session::get('selected_address_id');
+        } else {
+            // Priority 2: Find the primary address
+            $defaultAddress = collect($userAddresses)->firstWhere('is_primary');
+            if ($defaultAddress) {
+                $selectedAddressId = $defaultAddress['id'];
+            } elseif (!empty($userAddresses)) {
+                // Priority 3: If no primary, take the first available address
+                $selectedAddressId = $userAddresses[0]['id'];
+            }
+        }
 
+        // Get the actual address data for display on the main page
+        $address = collect($userAddresses)->firstWhere('id', $selectedAddressId);
 
-        return view('products.checkout', compact('cartItems', 'subtotal', 'address'));
+        return view('products.checkout', compact('cartItems', 'subtotal', 'userAddresses', 'selectedAddressId', 'address'));
     }
 
     public function addToCheckout(Request $request)
@@ -90,7 +131,7 @@ class CheckoutController extends Controller
         }
 
         if ($action === 'buy_now') {
-            Session::forget('cart'); 
+            Session::forget('cart');
             $cart = [];
         } else {
             $cart = Session::get('cart', []);

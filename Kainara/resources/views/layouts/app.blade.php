@@ -35,11 +35,13 @@
             --header-shadow: 0 .125rem .25rem rgba(0,0,0,.075); /* Shadow dari Bootstrap .shadow-sm */
             --footer-logo-height: 250px;
             --footer-padding-y: 1rem;
-            
-            /* --color-brand: #AD9D6C; Warna emas/coklat untuk dropdown */
             --color-dropdown-text: #FFFFFF; /* Warna teks di dropdown */
             --color-dropdown-hover-bg: #9a8a5e; /* Warna background hover item dropdown (lebih gelap dari brand) */
             --header-dropdown-border-radius: 15px; /* Sesuai desain */
+        }
+
+        body, h1, h2, h3, h4, h5, h6, p, a, li, span, strong, em {
+            font-family: 'AncizarSerif', serif;
         }
 
         body {

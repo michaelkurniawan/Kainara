@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ArtisanProfile;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ArtisanApprovedNotification;
 use App\Mail\ArtisanRejectedNotification;
 
-class AdminTestController extends Controller
+class AdminFormController extends Controller
 {
     // Menampilkan daftar pendaftar
     public function index()
