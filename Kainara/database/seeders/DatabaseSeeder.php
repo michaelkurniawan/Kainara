@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             DeliverySeeder::class,
             PaymentSeeder::class,
             RefundSeeder::class,
+            ArtisanSeeder::class,
         ]);
     }
 }

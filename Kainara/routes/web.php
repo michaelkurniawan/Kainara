@@ -13,7 +13,10 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\StripePaymentController; 
 
 Route::get('/', [LatestStoriesController::class, 'index'])->name('welcome');
+
 Route::get('/join-as-artisan', [ArtisanRegistrationController::class, 'showForm'])->name('artisan.register');
+Route::post('/join-as-artisan', [ArtisanRegistrationController::class, 'store'])->name('artisan.register.store');
+
 Route::get('/tentangkainara', function () {
     return view('tentangkainara');
 })->name('tentangkainara');
