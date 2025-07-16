@@ -316,7 +316,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            
+
                             <div class="mt-5">
                                 <h2 class="section-title d-flex align-items-center">
                                     <i class="bi bi-credit-card-fill text-success me-2"></i> Payment Method

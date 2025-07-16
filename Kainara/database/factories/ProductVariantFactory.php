@@ -25,7 +25,6 @@ class ProductVariantFactory extends Factory
             'size' => fake()->word(),
             'color' => fake()->colorName(),
             'stock' => fake()->numberBetween(0, 100),
-            'sleeve' => fake()->boolean(50) ? fake()->randomElement(['long', 'short']) : null,
             'price' => fake()->boolean(30) ? fake()->randomFloat(2, 10000, 5000000) : null,
         ];
     }
