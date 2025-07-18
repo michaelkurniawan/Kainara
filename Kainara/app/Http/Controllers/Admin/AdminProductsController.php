@@ -7,11 +7,13 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\ProductVariant;
-use App\Http\Requests\Admin\StoreProductRequest; // Assuming you have this request
-use App\Http\Requests\Admin\UpdateProductRequest; // Assuming you have this request
+use App\Models\Vendor;
+use App\Models\Gender; // Import the Gender model
+use App\Http\Requests\Admin\StoreProductRequest;
+use App\Http\Requests\Admin\UpdateProductRequest;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB; // Added for potential future DB queries
+use Illuminate\Support\Facades\DB;
 
 class AdminProductsController extends Controller
 {
@@ -20,41 +22,51 @@ class AdminProductsController extends Controller
      */
     public function index(Request $request)
     {
-        // Start with a base query for Product
         $query = Product::query();
 
-        // Filter by category_id if provided
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->input('category_id'));
         }
 
-        // Search logic (similar to AdminUserController for consistency)
+        if ($request->filled('vendor_id')) {
+            $query->where('vendor_id', $request->input('vendor_id'));
+        }
+
+        if ($request->filled('gender_id')) { // Filter by gender_id
+            $query->where('gender_id', $request->input('gender_id'));
+        }
+
         if ($request->has('search') && $request->search != '') {
             $search = strtolower($request->input('search'));
 
             $query->where(function($q) use ($search) {
-                $q->where(DB::raw('LOWER(name)'), 'like', '%' . $search . '%')
-                  ->orWhere(DB::raw('LOWER(description)'), 'like', '%' . $search . '%')
-                  ->orWhere(DB::raw('LOWER(origin)'), 'like', '%' . $search . '%')
+                $q->where(DB::raw('LOWER(products.name)'), 'like', '%' . $search . '%')
+                  ->orWhere(DB::raw('LOWER(products.description)'), 'like', '%' . $search . '%')
+                  ->orWhere(DB::raw('LOWER(products.origin)'), 'like', '%' . $search . '%')
                   ->orWhereHas('category', function ($sq) use ($search) {
+                      $sq->where(DB::raw('LOWER(name)'), 'like', '%' . $search . '%');
+                  })
+                  ->orWhereHas('vendor', function ($sq) use ($search) {
+                      $sq->where(DB::raw('LOWER(name)'), 'like', '%' . $search . '%');
+                  })
+                  ->orWhereHas('gender', function ($sq) use ($search) { // Search by gender name
                       $sq->where(DB::raw('LOWER(name)'), 'like', '%' . $search . '%');
                   });
             });
         }
 
-        // Load relationships and sum stock
-        $products = $query->with('category')
+        $products = $query->with('category', 'vendor', 'gender') // Eager load gender
                           ->withSum('variants', 'stock')
                           ->orderBy('created_at', 'desc')
                           ->paginate(10);
 
-        // Append all request query parameters to the pagination links
         $products->appends($request->query());
 
-        // Fetch all categories for the filter dropdown, ordered by name
         $categories = Category::orderBy('name')->get();
+        $vendors = Vendor::orderBy('name')->get();
+        $genders = Gender::orderBy('name')->get(); // Fetch all genders
 
-        return view('admin.products.index', compact('products', 'categories'));
+        return view('admin.products.index', compact('products', 'categories', 'vendors', 'genders'));
     }
 
     /**
@@ -62,9 +74,10 @@ class AdminProductsController extends Controller
      */
     public function create()
     {
-        // Fetch all categories for the dropdown, ordered by name
         $categories = Category::orderBy('name')->get();
-        return view('admin.products.create', compact('categories'));
+        $vendors = Vendor::orderBy('name')->get();
+        $genders = Gender::orderBy('name')->get(); // Fetch all genders
+        return view('admin.products.create', compact('categories', 'vendors', 'genders'));
     }
 
     /**
@@ -75,41 +88,76 @@ class AdminProductsController extends Controller
         $validatedData = $request->validated();
 
         $imagePath = null;
-        // Check if an image file was uploaded
         if ($request->hasFile('image')) {
-            // Store the image and get its path
             $imagePath = $request->file('image')->store('product_images', 'public');
         }
 
-        // Generate a unique slug for the product name
         $slug = Str::slug($validatedData['name']);
         $originalSlug = $slug;
         $count = 1;
-
-        // Ensure the slug is unique, appending a counter if necessary
         while (Product::where('slug', $slug)->exists()) {
             $slug = $originalSlug . '-' . $count++;
         }
 
+        // Determine vendor_id based on category
+        $vendorId = null;
+        $shirtCategory = Category::where('name', 'Shirt')->first();
+
+        if ($shirtCategory && $validatedData['category_id'] == $shirtCategory->id) {
+            $kainaraVendor = Vendor::firstOrCreate(
+                ['name' => 'Kainara'],
+                [
+                    'email' => 'info@kainara.com',
+                    'phone_number' => '000-000-0000',
+                    'address' => 'Jl. Kainara No. 1',
+                    'city' => 'Jakarta',
+                    'province' => 'DKI Jakarta',
+                    'postal_code' => '10000',
+                    'business_type' => 'Textile',
+                    'business_description' => 'Official vendor for Kainara products.',
+                    'is_approved' => true,
+                ]
+            );
+            $vendorId = $kainaraVendor->id;
+        } else {
+            $vendorId = $validatedData['vendor_id'];
+        }
+
+        // Determine gender_id based on category
+        $genderId = null;
+        $shirtCategory = Category::where('name', 'Shirt')->first();
+        $fabricCategory = Category::where('name', 'Fabric')->first();
+        $unisexGender = Gender::where('name', 'Unisex')->first();
+
+        if ($shirtCategory && $validatedData['category_id'] == $shirtCategory->id) {
+            // For 'Shirt' category, use the selected gender from the form (Male/Female)
+            $genderId = $validatedData['gender_id'];
+        } elseif ($fabricCategory && $validatedData['category_id'] == $fabricCategory->id) {
+            // For 'Fabric' category, always assign Unisex
+            $genderId = $unisexGender->id;
+        } else {
+            // For other categories, use the selected gender from the form
+            $genderId = $validatedData['gender_id'];
+        }
+
+
         try {
-            // Create the product record in the database
             $product = Product::create([
                 'category_id' => $validatedData['category_id'],
+                'vendor_id' => $vendorId,
+                'gender_id' => $genderId, // Assign the determined gender ID
                 'name' => $validatedData['name'],
                 'origin' => $validatedData['origin'],
                 'description' => $validatedData['description'],
                 'price' => $validatedData['price'],
                 'image' => $imagePath,
-                'material' => $validatedData['material'] ?? null, // Use null coalesce for optional fields
+                'material' => $validatedData['material'] ?? null,
                 'slug' => $slug,
             ]);
 
-            // Handle product variants if they exist in the validated data
             if (isset($validatedData['variants']) && is_array($validatedData['variants']) && count($validatedData['variants']) > 0) {
                 foreach ($validatedData['variants'] as $variantData) {
-                    // Use the variant's price if provided, otherwise use the product's base price
                     $variantPrice = $variantData['price'] ?? $validatedData['price'];
-
                     $product->variants()->create([
                         'color' => $variantData['color'],
                         'size' => $variantData['size'],
@@ -121,11 +169,9 @@ class AdminProductsController extends Controller
 
             return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
         } catch (\Exception $e) {
-            // If an error occurs during product creation, delete the uploaded image
             if ($imagePath) {
                 Storage::disk('public')->delete($imagePath);
             }
-            // Redirect back with input and an error message
             return redirect()->back()->withInput()->with('error', 'Failed to create new product: ' . $e->getMessage());
         }
     }
@@ -135,8 +181,7 @@ class AdminProductsController extends Controller
      */
     public function show(Product $product)
     {
-        // Eager load category, variants, and reviews for the product
-        $product->load('category', 'variants', 'reviews');
+        $product->load('category', 'variants', 'reviews', 'vendor', 'gender'); // Eager load gender
         return view('admin.products.show', compact('product'));
     }
 
@@ -145,9 +190,10 @@ class AdminProductsController extends Controller
      */
     public function edit(Product $product)
     {
-        // Fetch all categories for the dropdown
         $categories = Category::orderBy('name')->get();
-        return view('admin.products.update', compact('product', 'categories'));
+        $vendors = Vendor::orderBy('name')->get();
+        $genders = Gender::orderBy('name')->get(); // Fetch all genders
+        return view('admin.products.update', compact('product', 'categories', 'vendors', 'genders'));
     }
 
     /**
@@ -157,31 +203,67 @@ class AdminProductsController extends Controller
     {
         $validatedData = $request->validated();
 
-        $oldImage = $product->image; // Store the current image path
-        $newImage = $oldImage; // Initialize new image path with the old one
+        $oldImage = $product->image;
+        $newImage = $oldImage;
 
-        // Check if a new image file was uploaded
         if ($request->hasFile('image')) {
             $newImage = $request->file('image')->store('product_images', 'public');
         }
 
-        // Slug generation: only regenerate if the product name has changed
         $slug = $product->slug;
         if ($product->name !== $validatedData['name']) {
             $slug = Str::slug($validatedData['name']);
             $originalSlug = $slug;
             $count = 1;
-
-            // Ensure the new slug is unique, excluding the current product's ID
             while (Product::where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
                 $slug = $originalSlug . '-' . $count++;
             }
         }
 
+        // Determine vendor_id based on category (same logic as store)
+        $vendorId = null;
+        $shirtCategory = Category::where('name', 'Shirt')->first();
+
+        if ($shirtCategory && $validatedData['category_id'] == $shirtCategory->id) {
+            $kainaraVendor = Vendor::firstOrCreate(
+                ['name' => 'Kainara'],
+                [
+                    'email' => 'info@kainara.com',
+                    'phone_number' => '000-000-0000',
+                    'address' => 'Jl. Kainara No. 1',
+                    'city' => 'Jakarta',
+                    'province' => 'DKI Jakarta',
+                    'postal_code' => '10000',
+                    'business_type' => 'Textile',
+                    'business_description' => 'Official vendor for Kainara products.',
+                    'is_approved' => true,
+                ]
+            );
+            $vendorId = $kainaraVendor->id;
+        } else {
+            $vendorId = $validatedData['vendor_id'];
+        }
+
+        // Determine gender_id based on category (same logic as store)
+        $genderId = null;
+        $shirtCategory = Category::where('name', 'Shirt')->first();
+        $fabricCategory = Category::where('name', 'Fabric')->first();
+        $unisexGender = Gender::where('name', 'Unisex')->first();
+
+        if ($shirtCategory && $validatedData['category_id'] == $shirtCategory->id) {
+            $genderId = $validatedData['gender_id'];
+        } elseif ($fabricCategory && $validatedData['category_id'] == $fabricCategory->id) {
+            $genderId = $unisexGender->id;
+        } else {
+            $genderId = $validatedData['gender_id'];
+        }
+
+
         try {
-            // Update the product record
             $product->update([
                 'category_id' => $validatedData['category_id'],
+                'vendor_id' => $vendorId,
+                'gender_id' => $genderId, // Update with the determined gender ID
                 'name' => $validatedData['name'],
                 'origin' => $validatedData['origin'],
                 'description' => $validatedData['description'],
@@ -192,12 +274,9 @@ class AdminProductsController extends Controller
             ]);
 
             $submittedVariantIds = [];
-
-            // Handle updating and creating product variants
             if (isset($validatedData['variants']) && is_array($validatedData['variants'])) {
                 foreach ($validatedData['variants'] as $variantData) {
                     if (isset($variantData['id']) && !empty($variantData['id'])) {
-                        // Find existing variant and update it
                         $variant = ProductVariant::find($variantData['id']);
                         if ($variant && $variant->product_id === $product->id) {
                             $variant->update([
@@ -206,36 +285,31 @@ class AdminProductsController extends Controller
                                 'stock' => $variantData['stock'],
                                 'price' => $variantData['price'] ?? $validatedData['price'],
                             ]);
-                            $submittedVariantIds[] = $variant->id; // Add updated variant's ID
+                            $submittedVariantIds[] = $variant->id;
                         }
                     } else {
-                        // Create a new variant
                         $newVariant = $product->variants()->create([
                             'color' => $variantData['color'],
                             'size' => $variantData['size'],
                             'stock' => $variantData['stock'],
                             'price' => $variantData['price'] ?? $validatedData['price'],
                         ]);
-                        $submittedVariantIds[] = $newVariant->id; // Add new variant's ID
+                        $submittedVariantIds[] = $newVariant->id;
                     }
                 }
             }
 
-            // Delete variants that were not submitted (removed by the user)
             $product->variants()->whereNotIn('id', $submittedVariantIds)->delete();
 
-            // Delete the old image only if a new one was successfully uploaded and it's different
             if ($request->hasFile('image') && $oldImage && $oldImage !== $newImage && Storage::disk('public')->exists($oldImage)) {
                 Storage::disk('public')->delete($oldImage);
             }
 
             return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
         } catch (\Exception $e) {
-            // If an error occurs during update, delete the newly uploaded image
             if ($request->hasFile('image') && $newImage && $newImage !== $oldImage) {
                 Storage::disk('public')->delete($newImage);
             }
-            // Redirect back with input and an error message
             return redirect()->back()->withInput()->with('error', 'Failed to update product: ' . $e->getMessage());
         }
     }
@@ -246,12 +320,10 @@ class AdminProductsController extends Controller
     public function destroy(Product $product)
     {
         try {
-            // Delete associated image if it exists and is not the default
             if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
 
-            // Delete the product (variants will be deleted via cascade if set up in migration)
             $product->delete();
 
             return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');

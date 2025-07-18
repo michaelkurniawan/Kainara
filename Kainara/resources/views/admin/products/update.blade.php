@@ -1,3 +1,5 @@
+{{-- resources/views/admin/products/update.blade.php --}}
+
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -19,9 +21,9 @@
                         <div class="flex flex-col items-center justify-center mb-6">
                             <label for="image" class="cursor-pointer relative group">
                                 <img id="image_preview"
-                                     src="{{ $product->image ? Storage::url($product->image) : asset('/asset/default_product.png') }}"
-                                     alt="Product Image"
-                                     class="w-96 h-96 object-cover border-4 border-gray-300 transition-colors duration-200"
+                                    src="{{ $product->image ? Storage::url($product->image) : asset('/asset/default_product.png') }}"
+                                    alt="Product Image"
+                                    class="w-96 h-96 object-cover border-4 border-gray-300 transition-colors duration-200"
                                 >
                                 <input type="file" id="image" name="image" accept="image/*" class="hidden" onchange="previewImage(event)">
 
@@ -45,15 +47,43 @@
                                 {{-- Category --}}
                                 <div class="mb-4">
                                     <x-input-label for="category_id" :value="__('Category')" />
-                                    <select id="category_id" name="category_id" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>
+                                    <select id="category_id" name="category_id" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required onchange="handleCategoryChange()">
                                         <option value="">{{ __('Select Category') }}</option>
                                         @foreach($categories as $category)
-                                            <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                            <option value="{{ $category->id }}" data-category-name="{{ $category->name }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
                                                 {{ $category->name }}
                                             </option>
                                         @endforeach
                                     </select>
                                     <x-input-error :messages="$errors->get('category_id')" class="mt-2" />
+                                </div>
+
+                                {{-- Vendor --}}
+                                <div class="mb-4">
+                                    <x-input-label for="vendor_id" :value="__('Vendor')" />
+                                    <select id="vendor_id" name="vendor_id" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>
+                                        <option value="">{{ __('Select Vendor') }}</option>
+                                        @foreach($vendors as $vendor)
+                                            <option value="{{ $vendor->id }}" data-vendor-name="{{ $vendor->name }}" {{ old('vendor_id', $product->vendor_id) == $vendor->id ? 'selected' : '' }}>
+                                                {{ $vendor->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('vendor_id')" class="mt-2" />
+                                </div>
+
+                                {{-- Gender --}}
+                                <div class="mb-4">
+                                    <x-input-label for="gender_id" :value="__('Gender')" />
+                                    <select id="gender_id" name="gender_id" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>
+                                        <option value="">{{ __('Select Gender') }}</option>
+                                        @foreach($genders as $gender)
+                                            <option value="{{ $gender->id }}" data-gender-name="{{ $gender->name }}" {{ old('gender_id', $product->gender_id) == $gender->id ? 'selected' : '' }}>
+                                                {{ $gender->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('gender_id')" class="mt-2" />
                                 </div>
 
                                 {{-- Origin --}}
@@ -92,42 +122,36 @@
                         <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 variants-section">
                             <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">{{ __('Product Variants') }}</h4>
 
-                            {{-- Wrapper untuk semua baris varian dan tombol add (+) --}}
+                            @php
+                                $initialVariants = old('variants', $product->variants->map(function($variant) {
+                                    return [
+                                        'id' => $variant->id,
+                                        'color' => $variant->color,
+                                        'size' => $variant->size,
+                                        'stock' => $variant->stock,
+                                        'price' => $variant->price,
+                                    ];
+                                })->toArray());
+                                $numVariants = count($initialVariants);
+                                if (empty($initialVariants) && !$errors->any()) {
+                                    $numVariants = 1;
+                                    $initialVariants = [[]];
+                                }
+                            @endphp
+
                             <div id="variants-wrapper" class="relative group p-4 border border-gray-200 dark:border-gray-700 rounded-md pr-12">
                                 <div id="variants-container" class="pb-16">
-                                    @php
-                                        // Ambil varian dari $product atau dari old() input
-                                        $initialVariants = old('variants', $product->variants->map(function($variant) {
-                                            return [
-                                                'id' => $variant->id,
-                                                'color' => $variant->color,
-                                                'size' => $variant->size,
-                                                'stock' => $variant->stock,
-                                                'price' => $variant->price,
-                                            ];
-                                        })->toArray());
-                                        $numVariants = count($initialVariants);
-                                        // Jika tidak ada varian yang tersimpan dan tidak ada error validasi, tampilkan setidaknya satu baris kosong
-                                        if (empty($initialVariants) && !$errors->any()) {
-                                            $numVariants = 1;
-                                            $initialVariants = [[]]; // Tambahkan array kosong untuk satu baris input
-                                        }
-                                    @endphp
-
                                     @foreach ($initialVariants as $index => $variantData)
                                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border border-gray-200 dark:border-gray-700 rounded-md relative {{ $index > 0 ? 'mt-4' : '' }} pr-4">
-                                            {{-- Tombol delete hanya muncul jika ada lebih dari 1 varian atau ini adalah varian yang sudah ada --}}
-                                            {{-- NOTE: Atur tampilan tombol delete melalui JavaScript di updateVariantIndexes() --}}
                                             <button type="button" onclick="this.closest('div.grid').remove(); updateVariantIndexes();" class="absolute top-4 right-0 mr-4 z-10">
                                                 <img src="{{ asset('asset/trash.png') }}" alt="Delete" class="h-5 w-5">
                                             </button>
 
-                                            {{-- Hidden input untuk ID varian (penting untuk update/delete di backend) --}}
+                                            {{-- Hidden input for variant ID (important for backend update/delete) --}}
                                             @if (isset($variantData['id']))
                                                 <input type="hidden" name="variants[{{ $index }}][id]" value="{{ $variantData['id'] }}">
                                             @endif
 
-                                            {{-- Color --}}
                                             <div>
                                                 <x-input-label for="variants_{{ $index }}_color" :value="__('Color')" />
                                                 <x-text-input id="variants_{{ $index }}_color" class="block mt-1 w-full" type="text" name="variants[{{ $index }}][color]" :value="old('variants.' . $index . '.color', $variantData['color'] ?? '')" required />
@@ -136,7 +160,6 @@
                                                 @enderror
                                             </div>
 
-                                            {{-- Size --}}
                                             <div>
                                                 <x-input-label for="variants_{{ $index }}_size" :value="__('Size')" />
                                                 <select id="variants_{{ $index }}_size" name="variants[{{ $index }}][size]" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>
@@ -172,8 +195,7 @@
                                     @endforeach
                                 </div>
 
-                                {{-- Tombol Plus (+) yang muncul saat hover --}}
-                                {{-- Menambahkan z-index ke tombol + memastikan dia di atas elemen lain --}}
+                                {{-- Add Variant Button --}}
                                 <div onclick="addVariantRow()" class="absolute bottom-[-32px] left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 bg-opacity-75 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer shadow-md hover:scale-105 z-20">
                                     <svg class="w-8 h-8 text-gray-500 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                 </div>
@@ -202,26 +224,21 @@
             reader.readAsDataURL(event.target.files[0]);
         }
 
-        // Initialize globalVariantIndex based on existing variants or 0 if none
         let globalVariantIndex = {{ count($initialVariants) > 0 ? count($initialVariants) : 0 }};
 
         function addVariantRow() {
             const variantContainer = document.getElementById('variants-container');
             const newVariantRow = document.createElement('div');
-            // Menambahkan p-4 border rounded-md ke baris yang ditambahkan via JS
-            newVariantRow.className = 'grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border border-gray-200 dark:border-gray-700 rounded-md relative mt-4 pr-4'; // Changed pr-16 to pr-4
+            newVariantRow.className = 'grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border border-gray-200 dark:border-gray-700 rounded-md relative mt-4 pr-4';
 
             newVariantRow.innerHTML = `
-                <button type="button" onclick="this.closest('div.grid').remove(); updateVariantIndexes();" class="absolute top-4 right-0 mr-4"> {{-- Changed right-12 to right-0 and added mr-4 --}}
+                <button type="button" onclick="this.closest('div.grid').remove(); updateVariantIndexes();" class="absolute top-4 right-0 mr-4 z-10">
                     <img src="{{ asset('asset/trash.png') }}" alt="Delete" class="h-5 w-5">
                 </button>
 
                 <div>
                     <x-input-label for="variants_${globalVariantIndex}_color" :value="__('Color')" />
                     <x-text-input id="variants_${globalVariantIndex}_color" class="block mt-1 w-full" type="text" name="variants[${globalVariantIndex}][color]" required />
-                    @error('variants.${globalVariantIndex}.color')
-                        <p class="text-sm text-red-600 dark:text-red-400 mt-2">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <div>
@@ -235,25 +252,16 @@
                             <option value="{{ $sizeOption }}">{{ $sizeOption }}</option>
                         @endforeach
                     </select>
-                    @error('variants.${globalVariantIndex}.size')
-                        <p class="text-sm text-red-600 dark:text-red-400 mt-2">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <div>
                     <x-input-label for="variants_${globalVariantIndex}_stock" :value="__('Stock')" />
                     <x-text-input id="variants_${globalVariantIndex}_stock" class="block mt-1 w-full" type="number" name="variants[${globalVariantIndex}][stock]" required min="0" />
-                    @error('variants.${globalVariantIndex}.stock')
-                        <p class="text-sm text-red-600 dark:text-red-400 mt-2">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <div>
                     <x-input-label for="variants_${globalVariantIndex}_price" :value="__('Variant Price (Optional)')" />
                     <x-text-input id="variants_${globalVariantIndex}_price" class="block mt-1 w-full" type="number" step="0.01" name="variants[${globalVariantIndex}][price]" />
-                    @error('variants.${globalVariantIndex}.price')
-                        <p class="text-sm text-red-600 dark:text-red-400 mt-2">{{ $message }}</p>
-                    @enderror
                 </div>
             `;
             variantContainer.appendChild(newVariantRow);
@@ -264,26 +272,27 @@
         function updateVariantIndexes() {
             const variantRows = document.querySelectorAll('#variants-container > div.grid');
             variantRows.forEach((row, newIndex) => {
-                // Update names
-                row.querySelector('[name^="variants["][name$="][color]"]').name = `variants[${newIndex}][color]`;
-                row.querySelector('[name^="variants["][name$="][size]"]').name = `variants[${newIndex}][size]`;
-                row.querySelector('[name^="variants["][name$="][stock]"]').name = `variants[${newIndex}][stock]`;
-                // Check if the price input exists before trying to access its name property
+                const colorInput = row.querySelector('[name^="variants["][name$="][color]"]');
+                if (colorInput) colorInput.name = `variants[${newIndex}][color]`;
+
+                const sizeSelect = row.querySelector('[name^="variants["][name$="][size]"]');
+                if (sizeSelect) sizeSelect.name = `variants[${newIndex}][size]`;
+
+                const stockInput = row.querySelector('[name^="variants["][name$="][stock]"]');
+                if (stockInput) stockInput.name = `variants[${newIndex}][stock]`;
+
                 const priceInput = row.querySelector('[name^="variants["][name$="][price]"]');
-                if (priceInput) {
-                    priceInput.name = `variants[${newIndex}][price]`;
-                }
+                if (priceInput) priceInput.name = `variants[${newIndex}][price]`;
+
+                const idInput = row.querySelector('input[type="hidden"][name^="variants["][name$="][id]"]');
+                if (idInput) idInput.name = `variants[${newIndex}][id]`;
 
 
-                // Update IDs
-                row.querySelector('[id^="variants_"][id$="_color"]').id = `variants_${newIndex}_color`;
-                row.querySelector('[id^="variants_"][id$="_size"]').id = `variants_${newIndex}_size`;
-                row.querySelector('[id^="variants_"][id$="_stock"]').id = `variants_${newIndex}_stock`;
-                // Check if the price input exists before trying to access its id property
-                const priceIdInput = row.querySelector('[id^="variants_"][id$="_price"]');
-                if (priceIdInput) {
-                    priceIdInput.id = `variants_${newIndex}_price`;
-                }
+                if (colorInput) colorInput.id = `variants_${newIndex}_color`;
+                if (sizeSelect) sizeSelect.id = `variants_${newIndex}_size`;
+                if (stockInput) stockInput.id = `variants_${newIndex}_stock`;
+                if (priceInput) priceInput.id = `variants_${newIndex}_price`;
+
 
                 const removeButton = row.querySelector('button[onclick*="remove"]');
                 if (removeButton) {
@@ -297,6 +306,68 @@
             globalVariantIndex = variantRows.length;
         }
 
-        document.addEventListener('DOMContentLoaded', updateVariantIndexes);
+        function handleCategoryChange() {
+            const categorySelect = document.getElementById('category_id');
+            const vendorSelect = document.getElementById('vendor_id');
+            const genderSelect = document.getElementById('gender_id');
+            const selectedCategoryOption = categorySelect.options[categorySelect.selectedIndex];
+            const selectedCategoryName = selectedCategoryOption.dataset.categoryName;
+
+            const kainaraVendorOption = Array.from(vendorSelect.options).find(option => option.dataset.vendorName === 'Kainara');
+            const maleGenderOption = Array.from(genderSelect.options).find(option => option.dataset.genderName === 'Male');
+            const femaleGenderOption = Array.from(genderSelect.options).find(option => option.dataset.genderName === 'Female');
+            const unisexGenderOption = Array.from(genderSelect.options).find(option => option.dataset.genderName === 'Unisex');
+
+
+            // Logic for Vendor selection
+            if (selectedCategoryName === 'Shirt') {
+                if (kainaraVendorOption) {
+                    vendorSelect.value = kainaraVendorOption.value;
+                    vendorSelect.disabled = true;
+                }
+            } else {
+                vendorSelect.disabled = false;
+                if (vendorSelect.value === (kainaraVendorOption ? kainaraVendorOption.value : '')) {
+                    vendorSelect.value = '';
+                }
+            }
+
+            // Logic for Gender selection
+            genderSelect.disabled = false;
+
+            if (selectedCategoryName === 'Shirt') {
+                Array.from(genderSelect.options).forEach(option => {
+                    if (option.dataset.genderName === 'Unisex') {
+                        option.style.display = 'none';
+                    } else {
+                        option.style.display = '';
+                    }
+                });
+                if (genderSelect.value === (unisexGenderOption ? unisexGenderOption.value : '')) {
+                    genderSelect.value = '';
+                }
+            } else if (selectedCategoryName === 'Fabric') {
+                if (unisexGenderOption) {
+                    genderSelect.value = unisexGenderOption.value;
+                    genderSelect.disabled = true;
+                }
+                Array.from(genderSelect.options).forEach(option => {
+                    if (option.dataset.genderName !== 'Unisex' && option.value !== '') {
+                        option.style.display = 'none';
+                    } else {
+                        option.style.display = '';
+                    }
+                });
+            } else {
+                Array.from(genderSelect.options).forEach(option => {
+                    option.style.display = '';
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateVariantIndexes();
+            handleCategoryChange();
+        });
     </script>
 </x-app-layout>

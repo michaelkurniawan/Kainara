@@ -30,6 +30,7 @@ class StoreProductRequest extends FormRequest
             'price' => ['required', 'numeric', 'min:0'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
             'material' => ['nullable', 'string', 'max:255'],
+            'vendor_id' => ['nullable', 'exists:vendors,id'], // Make it nullable if 'Shirt' category handles it automatically
 
             // Rules for variants array
             'variants' => ['required', 'array', 'min:1'],

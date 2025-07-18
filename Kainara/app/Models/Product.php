@@ -18,6 +18,8 @@ class Product extends Model
      */
     protected $fillable = [
         'category_id',
+        'vendor_id',
+        'gender_id',
         'name',
         'slug',
         'origin', 
@@ -41,6 +43,16 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
+    }
+
+    public function vendor(): BelongsTo // Add this relationship
+    {
+        return $this->belongsTo(Vendor::class);
+    }
+
+    public function gender(): BelongsTo // New relationship for Gender
+    {
+        return $this->belongsTo(Gender::class);
     }
 
     /**
