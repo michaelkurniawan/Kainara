@@ -31,7 +31,6 @@ class StoreVendorRequest extends FormRequest
             'postal_code' => ['nullable', 'string', 'max:10'],
             'business_type' => ['nullable', 'string', 'max:100'],
             'business_description' => ['nullable', 'string'],
-            // 'is_approved' => ['boolean'], // DIHAPUS
         ];
     }
 }

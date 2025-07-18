@@ -50,8 +50,6 @@ class AdminVendorController extends Controller
     public function store(StoreVendorRequest $request)
     {
         $validatedData = $request->validated();
-        // Set is_approved ke true secara otomatis karena semua vendor baru dianggap disetujui
-        $validatedData['is_approved'] = true;
 
         try {
             Vendor::create($validatedData);
@@ -83,8 +81,6 @@ class AdminVendorController extends Controller
     public function update(UpdateVendorRequest $request, Vendor $vendor)
     {
         $validatedData = $request->validated();
-        // is_approved tidak lagi diizinkan diubah dari form, selalu true
-        $validatedData['is_approved'] = true;
 
         try {
             $vendor->update($validatedData);

@@ -115,7 +115,6 @@ class AdminProductsController extends Controller
                     'postal_code' => '10000',
                     'business_type' => 'Textile',
                     'business_description' => 'Official vendor for Kainara products.',
-                    'is_approved' => true,
                 ]
             );
             $vendorId = $kainaraVendor->id;
@@ -236,7 +235,6 @@ class AdminProductsController extends Controller
                     'postal_code' => '10000',
                     'business_type' => 'Textile',
                     'business_description' => 'Official vendor for Kainara products.',
-                    'is_approved' => true,
                 ]
             );
             $vendorId = $kainaraVendor->id;

@@ -17,16 +17,16 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        // Ensure categories, vendors, and genders exist before creating products
+        // Pastikan categories, vendors, dan genders ada sebelum membuat products
         $this->call(CategorySeeder::class);
         $this->call(VendorSeeder::class);
-        $this->call(GenderSeeder::class); // Call GenderSeeder to populate genders
+        $this->call(GenderSeeder::class); // Panggil GenderSeeder untuk mengisi genders
 
         $categories = Category::all();
-        $otherApprovedVendors = Vendor::where('is_approved', true)
-                                      ->where('name', '!=', 'Kainara')
-                                      ->get();
+        // Ambil semua vendor (tidak perlu filter is_approved lagi)
+        $otherVendors = Vendor::where('name', '!=', 'Kainara')->get();
 
+        // Pastikan vendor 'Kainara' ada dan ambil ID-nya
         $kainaraVendor = Vendor::firstOrCreate(
             ['name' => 'Kainara'],
             [
@@ -38,29 +38,30 @@ class ProductSeeder extends Seeder
                 'postal_code' => '10000',
                 'business_type' => 'Textile',
                 'business_description' => 'Official vendor for Kainara products.',
-                'is_approved' => true,
+                // 'is_approved' => true, // DIHAPUS karena kolom tidak ada
             ]
         );
 
         $shirtCategory = Category::where('name', 'Shirt')->first();
-        $fabricCategory = Category::where('name', 'Fabric')->first(); // Get Fabric category
+        $fabricCategory = Category::where('name', 'Fabric')->first();
 
-        // Get Gender IDs
-        $maleGender = Gender::where('name', 'Male')->first();
-        $femaleGender = Gender::where('name', 'Female')->first();
-        $unisexGender = Gender::where('name', 'Unisex')->first();
+        // Ambil ID gender yang dibutuhkan (pastikan mereka dibuat oleh GenderSeeder)
+        $maleGenderId = Gender::where('name', 'Male')->first()->id;
+        $femaleGenderId = Gender::where('name', 'Female')->first()->id;
+        $unisexGenderId = Gender::where('name', 'Unisex')->first()->id;
 
-        // Fallback checks (should ideally not be hit if seeders are called correctly)
+        // Fallback jika tidak ada kategori atau vendor/gender (seharusnya tidak terjadi jika seeder dipanggil dengan benar)
         if ($categories->isEmpty()) { $this->call(CategorySeeder::class); $categories = Category::all(); }
-        if ($otherApprovedVendors->isEmpty() && $kainaraVendor === null) {
-            Vendor::factory()->count(5)->create(['is_approved' => true]);
-            $otherApprovedVendors = Vendor::where('is_approved', true)->where('name', '!=', 'Kainara')->get();
+        // Removed the 'is_approved' check here as the column no longer exists
+        if ($otherVendors->isEmpty() && $kainaraVendor === null) {
+            Vendor::factory()->count(5)->create();
+            $otherVendors = Vendor::where('name', '!=', 'Kainara')->get();
         }
-        if (!$maleGender || !$femaleGender || !$unisexGender) {
+        if (!$maleGenderId || !$femaleGenderId || !$unisexGenderId) {
             $this->call(GenderSeeder::class);
-            $maleGender = Gender::where('name', 'Male')->first();
-            $femaleGender = Gender::where('name', 'Female')->first();
-            $unisexGender = Gender::where('name', 'Unisex')->first();
+            $maleGenderId = Gender::where('name', 'Male')->first()->id;
+            $femaleGenderId = Gender::where('name', 'Female')->first()->id;
+            $unisexGenderId = Gender::where('name', 'Unisex')->first()->id;
         }
 
 
@@ -68,39 +69,38 @@ class ProductSeeder extends Seeder
         $oneSize = 'One Size';
         $colors = ['Red', 'Blue', 'Green', 'Black', 'White', 'Yellow', 'Pink', 'Purple', 'Orange', 'Gray', 'Brown', 'Navy'];
 
-        $categories->each(function (Category $category) use ($sizes, $oneSize, $colors, $otherApprovedVendors, $kainaraVendor, $shirtCategory, $fabricCategory, $maleGender, $femaleGender, $unisexGender) {
-            // Determine vendor_id based on category
+        $categories->each(function (Category $category) use ($sizes, $oneSize, $colors, $otherVendors, $kainaraVendor, $shirtCategory, $fabricCategory, $maleGenderId, $femaleGenderId, $unisexGenderId) {
+            // Tentukan vendor_id berdasarkan kategori
             $selectedVendorId = null;
             if ($shirtCategory && $category->id === $shirtCategory->id) {
                 $selectedVendorId = $kainaraVendor->id;
             } else {
-                $selectedVendorId = $otherApprovedVendors->isNotEmpty() ? $otherApprovedVendors->random()->id : ($kainaraVendor ? $kainaraVendor->id : null);
+                $selectedVendorId = $otherVendors->isNotEmpty() ? $otherVendors->random()->id : ($kainaraVendor ? $kainaraVendor->id : null);
             }
 
-            // Determine gender_id based on category
+            // Tentukan gender_id berdasarkan kategori untuk seeder
             $selectedGenderId = null;
             if ($shirtCategory && $category->id === $shirtCategory->id) {
-                // For 'Shirt' category, randomly assign Male or Female
-                $selectedGenderId = fake()->boolean() ? $maleGender->id : $femaleGender->id;
+                // Jika Shirt, pilih Male atau Female secara acak
+                $selectedGenderId = fake()->randomElement([$maleGenderId, $femaleGenderId]);
             } elseif ($fabricCategory && $category->id === $fabricCategory->id) {
-                // For 'Fabric' category, always Unisex
-                $selectedGenderId = $unisexGender->id;
+                // Jika Fabric, pilih Unisex
+                $selectedGenderId = $unisexGenderId;
             } else {
-                // For other categories, randomly assign any gender (or default to Unisex if only one option)
-                $genders = Gender::all();
-                $selectedGenderId = $genders->isNotEmpty() ? $genders->random()->id : null;
+                // Untuk kategori lain, bisa Unisex atau acak dari Male/Female/Unisex
+                $selectedGenderId = fake()->randomElement([$maleGenderId, $femaleGenderId, $unisexGenderId]);
             }
 
 
-            // Only create product if a vendor and gender can be assigned
+            // Hanya membuat produk jika ada vendor dan gender yang bisa di-assign
             if ($selectedVendorId && $selectedGenderId) {
                 Product::factory(rand(10, 20))->create([
                     'category_id' => $category->id,
                     'vendor_id' => $selectedVendorId,
-                    'gender_id' => $selectedGenderId, // Assign the determined gender ID
+                    'gender_id' => $selectedGenderId, // Assign gender yang sudah ditentukan
                 ])->each(function (Product $product) use ($sizes, $oneSize, $colors, $shirtCategory) {
 
-                    // Variant creation logic remains the same
+                    // Logika pembuatan varian tetap sama
                     if ($shirtCategory && $product->category_id === $shirtCategory->id) {
                         $numColorsForProduct = rand(1, 4);
                         $productColors = fake()->randomElements($colors, $numColorsForProduct);
@@ -118,7 +118,7 @@ class ProductSeeder extends Seeder
                                 }
                             }
                         }
-                    } elseif ($product->category_id === 2) { // Assuming category_id 2 is 'Fabric'
+                    } elseif ($product->category_id === 2) { // Asumsi category_id 2 adalah 'Fabric'
                         ProductVariant::factory()->create([
                             'product_id' => $product->id,
                             'size' => $oneSize,
@@ -126,7 +126,7 @@ class ProductSeeder extends Seeder
                             'stock' => fake()->numberBetween(50, 500),
                             'price' => fake()->boolean(30) ? fake()->randomFloat(2, $product->price * 0.9, $product->price * 1.1) : null,
                         ]);
-                    } else {
+                    } else { // Untuk kategori lain
                         $hasOneSizeOption = fake()->boolean(20);
 
                         if ($hasOneSizeOption) {

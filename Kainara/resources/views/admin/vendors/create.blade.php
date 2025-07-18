@@ -79,7 +79,6 @@
                                     <x-input-error :messages="$errors->get('business_description')" class="mt-2" />
                                 </div>
 
-                                {{-- is_approved checkbox DIHAPUS --}}
                             </div>
                         </div>
 
