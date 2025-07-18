@@ -7,7 +7,8 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminProductsController;
 use App\Http\Controllers\Admin\AdminArticlesController;
 use App\Http\Controllers\Admin\AdminOrderController;
-use App\Http\Controllers\Admin\AdminTestController; 
+use App\Http\Controllers\Admin\AdminAffiliateReqController; 
+use App\Http\Controllers\Admin\AdminVendorController; 
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -56,12 +57,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 
         // Admin Test Submissions Routes (Combined from the second block)
-        Route::prefix('test-submissions')->name('test.')->group(function () {
-            Route::get('/', [AdminTestController::class, 'index'])->name('submissions');
-            Route::get('/{profile}', [AdminTestController::class, 'show'])->name('show');
-            Route::post('/{profile}/approve', [AdminTestController::class, 'approve'])->name('approve');
-            Route::post('/{profile}/reject', [AdminTestController::class, 'reject'])->name('reject');
+        Route::prefix('affiliations')->name('affiliations.')->group(function () {
+            Route::get('/', [AdminAffiliateReqController::class, 'index'])->name('index');
+            Route::get('/{profile}', [AdminAffiliateReqController::class, 'show'])->name('show');
+            Route::post('/{profile}/approve', [AdminAffiliateReqController::class, 'approve'])->name('approve');
+            Route::post('/{profile}/reject', [AdminAffiliateReqController::class, 'reject'])->name('reject');
         });
+
+        Route::resource('vendors', AdminVendorController::class); // Added Vendor CRUD routes
 
         // Admin Logout Route
         Route::post('logout', [AdminSessionController::class, 'destroy'])->name('logout');

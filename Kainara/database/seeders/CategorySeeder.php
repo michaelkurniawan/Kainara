@@ -17,10 +17,10 @@ class CategorySeeder extends Seeder
         $categories = ['Shirt', 'Fabric'];
 
         foreach ($categories as $categoryName) {
-            Category::factory()->create([
-                'name' => $categoryName,
-                'slug' => Str::slug($categoryName),
-            ]);
+            Category::firstOrCreate(
+                ['slug' => Str::slug($categoryName)], // Attributes to search for
+                ['name' => $categoryName]             // Attributes to create if not found
+            );
         }
     }
 }
