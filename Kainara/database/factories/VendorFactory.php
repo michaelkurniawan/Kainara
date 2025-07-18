@@ -31,7 +31,6 @@ class VendorFactory extends Factory
             'postal_code' => $this->faker->postcode(),
             'business_type' => $this->faker->randomElement(['Textile', 'Crafts', 'Food & Beverage', 'Services', 'Retail']),
             'business_description' => $this->faker->paragraph(rand(2, 5)),
-            // Kolom 'is_approved' DIHAPUS dari sini karena sudah dihapus dari migrasi
             'created_at' => now(),
             'updated_at' => now(),
         ];

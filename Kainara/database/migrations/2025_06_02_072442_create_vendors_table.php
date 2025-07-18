@@ -22,7 +22,6 @@ return new class extends Migration
             $table->string('postal_code')->nullable();
             $table->string('business_type')->nullable();
             $table->text('business_description')->nullable();
-            // Kolom 'is_approved' DIHAPUS dari sini
             $table->timestamps();
         });
     }
