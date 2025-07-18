@@ -24,6 +24,7 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'category_id' => ['required', 'exists:categories,id'],
+            'gender_id' => ['nullable', 'exists:genders,id'],
             'name' => ['required', 'string', 'max:255', 'unique:products,name'],
             'origin' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
