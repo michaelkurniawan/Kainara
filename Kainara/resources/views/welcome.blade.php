@@ -78,7 +78,7 @@
     .hero-section-custom .hero-text-content h1 {
         font-family: var(--font-primary, 'Ancizar Serif', serif);
         color: var(--color-text-hero-title, #212529);
-        font-size: 3rem;
+        font-size: 2.8rem;
         font-weight: 700;
         line-height: 1.3;
         margin-bottom: 1.5rem;
@@ -414,8 +414,7 @@
 
     <div class="container">
         <div class="row align-items-center">
-            {{-- Hero Text Content --}}
-            <div class="col-lg-5 col-md-6 hero-text-content order-md-1 order-2">
+            <div class="col-lg-5 d-flex justify-content-center hero-text-content text-center">
                 <h1 class="fw-bold">
                     <span class="hero-title-italic">Threads of</span> <span class="hero-title-bold-italic">Heritage,</span><br>
                     <span class="hero-title-italic">Woven for the</span> <span class="hero-title-bold-italic">Future</span>
@@ -425,7 +424,7 @@
                     innovation and artistry.
                 </p>
                 <div class="hero-button-wrapper">
-                    <a href="{{ route('products.index') }}" class="btn btn-kainara">Discover Our Collection</a>
+                    <a href="{{ route('products.gender.index', ['gender' => 'Male']) }}" class="btn btn-kainara">Discover Our Collection</a>
                 </div>
             </div>
 

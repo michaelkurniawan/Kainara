@@ -227,7 +227,7 @@
 
         <div class="row g-5">
             <div class="col-lg-6 d-flex align-items-start justify-content-center">
-                <img src="{{ asset('images/batik1.jpg') }}" alt="batik1" class="img-fluid object-fit-contain" />
+                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="img-fluid object-fit-contain" />
             </div>
 
             <div class="col-lg-6">
@@ -292,7 +292,7 @@
                         @endphp
                         {!! $ratingHtmlSummary !!}
                     </div>
-                    <span class="text-muted fs-5">
+                    <span class="text-muted fs-5 ms-2">
                         {{ number_format($averageRating, 1) }} Stars | {{ $reviewCount }} Reviews
                     </span>
                 </div>
@@ -334,8 +334,8 @@
                     @endif
 
 
-                    <div class="mb-4" style="max-width: 63.5%;">
-                        <div class="d-flex gap-2 mb-3">
+                    <div class="mb-4" style="max-width: 57%;">
+                        <div class="d-flex gap-2 mb-4">
                             <div class="d-flex border border-secondary px-3 py-2 justify-content-between align-items-center" style="width: 50%;">
                                 <button type="button" class="btn btn-link text-dark p-0 fw-bold rounded-0 btn-minus" style="font-size: 1.5rem;">-</button>
                                 <span id="quantity-display" class="fs-4">1</span>

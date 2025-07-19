@@ -355,7 +355,7 @@
                         <div class="order-items">
                             @forelse ($cartItems as $item)
                             <div class="order-item">
-                                <img src="{{ asset($item['product_image']) }}" alt="{{ $item['product_name'] }}" class="img-fluid">
+                                <img src="{{ asset('storage/' . $item['product_image']) }}" alt="{{ $item['product_name'] }}" class="img-fluid object-fit-contain" />
                                 <div class="order-item-details">
                                     <p class="fw-semibold mb-0 fs-6">{{ $item['product_name'] }}</p>
                                     <p class="text-muted mb-0">IDR {{ number_format($item['price'], 0, ',', '.') }}</p>
@@ -402,6 +402,10 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // These are placeholder inputs for the form. It's unclear if they are intended to be visible
+        // or just hidden inputs to submit the chosen address details. If they are visible, ensure they
+        // are actually in your HTML (they are not in the provided snippet).
+        // For a typical checkout, you'd have hidden inputs for selected address ID, or send all details.
         const formAddressType = document.getElementById('address_type_input');
         const formStreet = document.getElementById('street_input');
         const formSubDistrict = document.getElementById('sub_district_input');
@@ -430,7 +434,8 @@
                 <p class="text-muted mb-0" data-address-line="province-postal">${selectedAddressData.province || ''} ${selectedAddressData.postal_code || ''}</p>
             `;
 
-            // Fill in the actual form input fields
+            // Fill in the actual form input fields (if they exist as hidden inputs for submission)
+            // You might need to add hidden input fields in your <form> for these values to be submitted.
             if (formAddressType) formAddressType.value = selectedAddressData.type || '';
             if (formStreet) formStreet.value = selectedAddressData.street || '';
             if (formSubDistrict) formSubDistrict.value = selectedAddressData.sub_district || '';
@@ -438,6 +443,7 @@
             if (formCity) formCity.value = selectedAddressData.city || '';
             if (formProvince) formProvince.value = selectedAddressData.province || '';
             if (formPostalCode) formPostalCode.value = selectedAddressData.postal_code || '';
+            // For name and phone, assuming they are also part of the contact form.
             if (userNameInput) userNameInput.value = selectedAddressData.name || '';
             if (userPhoneInput) userPhoneInput.value = selectedAddressData.phone || '';
         });

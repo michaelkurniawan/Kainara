@@ -16,11 +16,7 @@
                 </div>
                 
                 <div class="text-center mb-4">
-                    @php
-                        $imagePath = 'HardCode_KainSongket.jpeg';
-                    @endphp
-                    {{-- MASIH HARDCODE UNTUK IMAGE --}}
-                    <img src="{{ asset('images/HardCode_KainSongket.jpeg') }}" class="img-fluid rounded shadow-sm mb-2 w-75" alt="{{ $story->image_alt ?? 'Story Image' }}">
+                    <img src="{{ asset('storage/' . $story->thumbnail) }}" alt="{{ $story->thumbnail }}" class="img-fluid rounded shadow-sm mb-2 w-75" />
                 </div>
 
                 <div class="text-justify lh-lg fs-5">

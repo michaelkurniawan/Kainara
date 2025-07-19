@@ -53,12 +53,11 @@
         }
 
         .dropdown-toggle::after {
-            display: none; /* Hide default Bootstrap caret */
+            display: none;
         }
 
         .filter-label {
             font-size: 1.5rem;
-            /* Add pointer cursor to filter labels */
             cursor: pointer;
         }
 
@@ -70,6 +69,7 @@
 
         .btn.border {
             background-color: #fff;
+            border: 1px solid #dee2e6; /* Ensure border is visible */
             font-size: 1rem;
         }
 
@@ -97,7 +97,6 @@
             border-color: #AD9D6C;
         }
 
-        /* --- Modal Styling for Consistency --- */
         .filter-modal .modal-content {
             background-color: #FFFFFF;
             overflow: hidden;
@@ -118,20 +117,19 @@
         }
 
         .filter-modal .modal-body {
-            padding: 1.5rem 2rem; /* Consistent padding for all modal bodies */
+            padding: 1.5rem 2rem;
             color: #333;
             max-height: 60vh;
             overflow-y: auto;
         }
 
-        /* Ensure font size for form-check-label in modals is consistent */
         .filter-modal .form-check-label {
-            font-size: 1rem; /* Consistent font size for labels */
+            font-size: 1rem;
         }
 
         .filter-modal .modal-footer {
             border-top: 1px solid #ddd;
-            padding: 0.5rem 1rem; /* Smaller padding for modal footer */
+            padding: 0.5rem 1rem;
             display: flex;
             justify-content: flex-end;
             background-color: #FFFFFF;
@@ -170,7 +168,6 @@
             color: #000;
         }
 
-        /* Specific styling for color circles in modal */
         .filter-modal .color-option-label {
             display: flex;
             align-items: center;
@@ -182,36 +179,31 @@
             border-radius: 50%;
             border: 1px solid #999;
             margin-right: 0.5rem;
-            flex-shrink: 0; /* Prevent shrinking */
+            flex-shrink: 0;
         }
 
-        /* Adjustments for modal positioning and width */
         .filter-modal .modal-dialog {
-            margin: 0; /* Remove default margin */
-            max-width: none; /* Allow custom width */
-            position: absolute; /* Absolute positioning */
-            transform: none !important; /* Override Bootstrap's center transform */
+            margin: 0;
+            max-width: none;
+            position: absolute;
+            transform: none !important;
         }
 
-        /* Specifically for sort filter modal to make it smaller and right-aligned */
         #sortFilterModal .modal-dialog {
-            width: 300px; /* Adjust this value as needed for smaller width */
-            right: 0; /* Align to the right */
-            left: auto; /* Ensure it's not trying to align left as well */
-            top: var(--filter-line-bottom); /* Maintain vertical position */
+            width: 300px;
+            right: 0;
+            left: auto;
+            top: var(--filter-line-bottom);
         }
 
-        /* For origin and color filter modals, keep previous width */
         #originFilterModal .modal-dialog,
         #colorFilterModal .modal-dialog {
-            width: var(--filter-line-width); /* Keep previous width */
-            left: var(--filter-line-left); /* Keep previous left alignment */
-            top: var(--filter-line-bottom); /* Keep previous top alignment */
-            right: auto; /* Ensure it's not trying to align right */
+            width: var(--filter-line-width);
+            left: var(--filter-line-left);
+            top: var(--filter-line-bottom);
+            right: auto;
         }
 
-
-        /* Remove fade animation */
         .filter-modal.fade .modal-dialog {
             transition: none;
         }
@@ -219,7 +211,6 @@
             transform: none;
         }
 
-        /* Make modal backdrop transparent */
         .modal-backdrop {
             opacity: 0 !important;
             background-color: transparent !important;
@@ -242,7 +233,6 @@
                     </div>
                 </div>
 
-                {{-- Color Filter Button --}}
                 <div class="filter-group position-relative me-4">
                     <div class="dropdown">
                         <a class="dropdown-toggle text-dark text-decoration-none filter-label d-flex align-items-center"
@@ -255,7 +245,6 @@
                 </div>
             </div>
 
-            {{-- Sort Filter Button --}}
             <div class="filter-group position-relative mb-1">
                 <div class="dropdown">
                     <a class="dropdown-toggle text-dark text-decoration-none filter-label d-flex align-items-center"
@@ -269,14 +258,46 @@
             </div>
 
             <div class="w-100 position-absolute start-0" style="bottom: 0;">
-                <div class="filter-line" id="filterLine"></div> {{-- Added ID for JavaScript --}}
+                <div class="filter-line" id="filterLine"></div>
             </div>
         </div>
 
-        @if (!empty($originFilter) || !empty($colorFilter) || request()->has('sort'))
-            <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+        {{-- Displaying active filters --}}
+        {{-- Kondisi utama untuk menampilkan bagian "Filtered by:"
+             Sekarang hanya akan muncul jika ada filter Origin, Color, Sort, atau Category (jika Category dari query).
+             Gender filter TIDAK akan pernah memicu tampilan "Filtered by". --}}
+        @if (!empty($originFilter) || !empty($colorFilter) || request()->has('sort') || (request()->has('category_name') && !request()->route('category_name')))
+            <div class="d-flex flex-wrap align-items-center gap-3 mb-3 mt-3">
                 <h4 class="me-1" style="font-size: 1.25rem;">Filtered by:</h4>
 
+                {{-- Chip filter Gender telah Dihapus sepenuhnya dari tampilan ini,
+                     karena permintaan Anda adalah tidak menampilkannya sama sekali. --}}
+
+                {{-- Category Name Filter chip (ONLY show if from query param, NOT route param) --}}
+                @if (request()->has('category_name') && !request()->route('category_name'))
+                    <form method="GET" action="{{ route('products.index') }}" class="d-inline">
+                        {{-- Preserve all other filters --}}
+                        @foreach ((array) $originFilter as $origin)
+                            <input type="hidden" name="origins[]" value="{{ $origin }}">
+                        @endforeach
+                        @foreach ((array) $colorFilter as $color)
+                            <input type="hidden" name="colors[]" value="{{ $color }}">
+                        @endforeach
+                        @if (request()->has('sort'))
+                            <input type="hidden" name="sort" value="{{ is_array(request('sort')) ? request('sort')[0] : request('sort') }}">
+                        @endif
+                        {{-- Preserve gender if it's active (from route or query, if it somehow gets back in query) --}}
+                        @if ($genderFilter)
+                            <input type="hidden" name="gender" value="{{ $genderFilter }}">
+                        @endif
+                        <button type="submit" class="btn border d-flex align-items-center px-3 py-2" style="font-size: 1.1rem;">
+                            <span class="me-3">Category: {{ $categoryNameFilter }}</span>
+                            <i class="bi bi-x-lg" style="font-size: 0.7rem;"></i>
+                        </button>
+                    </form>
+                @endif
+
+                {{-- Origin Filters --}}
                 @foreach ((array) $originFilter as $selectedOrigin)
                     <form method="GET" action="{{ route('products.index') }}" class="d-inline">
                         @foreach ((array) $originFilter as $origin)
@@ -290,6 +311,12 @@
                         @if (request()->has('sort'))
                             <input type="hidden" name="sort"
                                 value="{{ is_array(request('sort')) ? request('sort')[0] : request('sort') }}">
+                        @endif
+                        @if ($genderFilter)
+                            <input type="hidden" name="gender" value="{{ $genderFilter }}">
+                        @endif
+                        @if ($categoryNameFilter)
+                            <input type="hidden" name="category_name" value="{{ $categoryNameFilter }}">
                         @endif
                         <button type="submit" class="btn border d-flex align-items-center px-3 py-2"
                             style="font-size: 1.1rem;">
@@ -316,7 +343,12 @@
                             <input type="hidden" name="sort"
                                 value="{{ is_array(request('sort')) ? request('sort')[0] : request('sort') }}">
                         @endif
-
+                        @if ($genderFilter)
+                            <input type="hidden" name="gender" value="{{ $genderFilter }}">
+                        @endif
+                        @if ($categoryNameFilter)
+                            <input type="hidden" name="category_name" value="{{ $categoryNameFilter }}">
+                        @endif
                         <button type="submit" class="btn border d-flex align-items-center px-3 py-2"
                             style="font-size: 1.1rem;">
                             <span class="me-2 d-flex align-items-center">
@@ -328,7 +360,6 @@
                         </button>
                     </form>
                 @endforeach
-
 
                 {{-- Sort Filter --}}
                 @php
@@ -350,7 +381,12 @@
                         @foreach ((array) $colorFilter as $color)
                             <input type="hidden" name="colors[]" value="{{ $color }}">
                         @endforeach
-
+                        @if ($genderFilter)
+                            <input type="hidden" name="gender" value="{{ $genderFilter }}">
+                        @endif
+                        @if ($categoryNameFilter)
+                            <input type="hidden" name="category_name" value="{{ $categoryNameFilter }}">
+                        @endif
                         <button type="submit" class="btn border d-flex align-items-center px-3 py-2"
                             style="font-size: 1.1rem;">
                             <span class="me-3">{{ $sortLabel[$sort] }}</span>
@@ -360,18 +396,31 @@
                 @endif
 
                 <div class="ms-auto">
-                    <a href="{{ route('products.index') }}" class="btn btn-outline-danger px-4 py-1"
+                    {{-- Updated Clear All button: Resets all query filters, but retains gender/category if they are in the route. --}}
+                    @php
+                        $clearAllParams = [];
+                        // If gender is set via route, keep it in the URL when clearing all.
+                        if (request()->route('gender')) {
+                            $clearAllParams['gender'] = request()->route('gender');
+                        }
+                        // If category_name is set via route, keep it in the URL when clearing all.
+                        if (request()->route('category_name')) {
+                            $clearAllParams['category_name'] = request()->route('category_name');
+                        }
+                    @endphp
+                    <a href="{{ route('products.index', $clearAllParams) }}" class="btn btn-outline-danger px-4 py-1"
                         style="font-size: 1.25rem;">Clear All</a>
                 </div>
             </div>
         @endif
+        {{-- End of Filtered By Section --}}
 
         <div class="row g-4 py-4 mb-4">
             @forelse ($products as $product)
                 <div class="col-12 col-sm-6 col-md-4">
                     <a href="{{ route('products.show', $product->slug) }}" class="text-decoration-none text-dark">
                         <div class="product-container card h-100">
-                            <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="img-fluid" />
+                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="img-fluid" />
                             <div class="product-card">
                                 <div class="product-title">{{ $product->name }}</div>
                                 <div class="product-price">IDR {{ number_format($product->price, 0, ',', '.') }}</div>
@@ -386,29 +435,37 @@
             @endforelse
         </div>
 
-        @include('Pagination.pagination-components', ['paginator' => $products])
+        {{-- Pagination Component --}}
+        {{-- Pass the paginator, genderFilter, and categoryNameFilter to the pagination component --}}
+        @include('Pagination.pagination-components', ['paginator' => $products, 'genderFilter' => $genderFilter, 'categoryNameFilter' => $categoryNameFilter])
     </div>
 
+    {{-- Filter Modals (Hidden Forms for JS) --}}
     <form id="filterForm" method="GET" class="d-none">
-        {{-- These are for JavaScript to build the query parameters --}}
+        {{-- These are placeholders for JS to read initial values and for "clear all" logic --}}
+        {{-- They are disabled because the JS reconstructs the URL directly --}}
         @foreach($availableOrigins as $origin)
             <input type="hidden" name="origins[]" value="{{ $origin }}" disabled>
         @endforeach
         @foreach($availableColors as $color)
             <input type="hidden" name="colors[]" value="{{ $color }}" disabled>
         @endforeach
-        {{-- Add a hidden input for sort if it's currently active, so it can be preserved by JS --}}
         @if (request()->has('sort'))
             <input type="hidden" name="sort" value="{{ is_array(request('sort')) ? request('sort')[0] : request('sort') }}" disabled>
         @endif
+        {{-- These capture the gender/category from route/query params passed by the controller --}}
+        @if ($genderFilter)
+            <input type="hidden" name="gender" value="{{ $genderFilter }}" disabled>
+        @endif
+        @if ($categoryNameFilter)
+            <input type="hidden" name="category_name" value="{{ $categoryNameFilter }}" disabled>
+        @endif
     </form>
 
-    {{-- Modals for filters --}}
     <div class="modal filter-modal" id="originFilterModal" tabindex="-1" aria-labelledby="originFilterModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-
                 <div class="modal-body">
                     <div class="row row-cols-2 row-cols-md-3 g-3">
                         @foreach(collect($availableOrigins)->sort() as $origin)
@@ -436,7 +493,6 @@
         aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-
                 <div class="modal-body">
                     <div class="row row-cols-2 row-cols-md-3 g-3">
                         @foreach(collect($availableColors)->sort() as $color)
@@ -465,7 +521,6 @@
         aria-hidden="true">
         <div class="modal-dialog modal-md">
             <div class="modal-content">
-
                 <div class="modal-body">
                     @php
                         $sortOptions = [
@@ -495,7 +550,7 @@
     </div>
 @endsection
 
-{{-- Push page-specific scripts here --}}
+
 @push('scripts')
     <script>
         const filterForm = document.getElementById('filterForm');
@@ -509,28 +564,22 @@
         function buildAndRedirect(updatedParams = {}) {
             const params = getUrlParams();
 
-            // Handle current page to reset to 1 if filters change
             params.delete('page');
 
-            // Collect existing filters not being updated by this action
             const currentOrigins = params.getAll('origins[]');
             const currentColors = params.getAll('colors[]');
             const currentSort = params.get('sort');
 
-            // Clear all existing filter parameters
             params.delete('origins[]');
             params.delete('colors[]');
             params.delete('sort');
 
-            // Add origins
             const newOrigins = updatedParams.origins !== undefined ? updatedParams.origins : currentOrigins;
             newOrigins.forEach(o => params.append('origins[]', o));
 
-            // Add colors
             const newColors = updatedParams.colors !== undefined ? updatedParams.colors : currentColors;
             newColors.forEach(c => params.append('colors[]', c));
 
-            // Add sort
             const newSort = updatedParams.sort !== undefined ? updatedParams.sort : currentSort;
             if (newSort) {
                 params.append('sort', newSort);
@@ -541,26 +590,20 @@
             window.location.href = url.toString();
         }
 
-        // Function to set modal position and width
         function setModalPositionAndWidth() {
             const filterLineRect = filterLine.getBoundingClientRect();
             const bodyRect = document.body.getBoundingClientRect();
 
-            // Calculate the absolute top position relative to the viewport
             const topPosition = filterLineRect.bottom;
             const leftPosition = filterLineRect.left;
             const width = filterLineRect.width;
 
-            // Set CSS variables for the modal dialogs
-            // These are used by the origin and color modals
             document.documentElement.style.setProperty('--filter-line-width', `${width}px`);
             document.documentElement.style.setProperty('--filter-line-left', `${leftPosition}px`);
             document.documentElement.style.setProperty('--filter-line-bottom', `${topPosition}px`);
 
-            // For the sort filter modal, we need to adjust its position to be right-aligned
             const sortFilterModalDialog = document.querySelector('#sortFilterModal .modal-dialog');
             if (sortFilterModalDialog) {
-                // Get the right edge of the filter line and calculate the modal's left position
                 const filterLineRight = filterLineRect.right;
                 const modalWidth = 300; // This should match the width set in CSS
                 const desiredLeft = filterLineRight - modalWidth;
@@ -571,17 +614,14 @@
             }
         }
 
-        // Call the function on page load and resize
         window.addEventListener('load', setModalPositionAndWidth);
         window.addEventListener('resize', setModalPositionAndWidth);
 
-        // Also call it when a modal is opened, in case the layout shifts slightly
         const filterModals = document.querySelectorAll('.filter-modal');
         filterModals.forEach(modal => {
             modal.addEventListener('show.bs.modal', setModalPositionAndWidth);
         });
 
-        // --- Caret Icon Toggle Logic ---
         filterModals.forEach(modal => {
             modal.addEventListener('show.bs.modal', function(event) {
                 const triggerButton = event.relatedTarget; // The button that triggered the modal
@@ -596,9 +636,6 @@
             });
 
             modal.addEventListener('hidden.bs.modal', function(event) {
-                // Find the triggering button (if modal was closed by clicking outside or close button)
-                // This is a bit trickier than `show.bs.modal`'s `relatedTarget`.
-                // We'll rely on the modal's ID to infer which caret to reset.
                 let caretIdToReset;
                 if (modal.id === 'originFilterModal') {
                     caretIdToReset = 'originCaret';
@@ -618,7 +655,6 @@
             });
         });
 
-        // --- Origin Filter Modal Logic ---
         document.querySelector('#originFilterModal .apply-origin')?.addEventListener('click', () => {
             const selectedOrigins = Array.from(document.querySelectorAll('#originFilterModal .origin-checkbox:checked'))
                 .map(cb => cb.dataset.origin);
@@ -627,18 +663,6 @@
             });
         });
 
-        // The clear button for origin filter was commented out in your original code.
-        // If you want to re-enable it, uncomment the following:
-        /*
-        document.querySelector('#originFilterModal .clear-origin')?.addEventListener('click', () => {
-            document.querySelectorAll('#originFilterModal .origin-checkbox').forEach(cb => cb.checked = false);
-            buildAndRedirect({
-                origins: []
-            }); // Clear filter
-        });
-        */
-
-        // --- Color Filter Modal Logic ---
         document.querySelector('#colorFilterModal .apply-color')?.addEventListener('click', () => {
             const selectedColors = Array.from(document.querySelectorAll('#colorFilterModal .color-checkbox:checked'))
                 .map(cb => cb.dataset.color);
@@ -647,18 +671,6 @@
             });
         });
 
-        // The clear button for color filter was commented out in your original code.
-        // If you want to re-enable it, uncomment the following:
-        /*
-        document.querySelector('#colorFilterModal .clear-color')?.addEventListener('click', () => {
-            document.querySelectorAll('#colorFilterModal .color-checkbox').forEach(cb => cb.checked = false);
-            buildAndRedirect({
-                colors: []
-            }); // Clear filter
-        });
-        */
-
-        // --- Sort Filter Modal Logic ---
         document.querySelector('#sortFilterModal .apply-sort')?.addEventListener('click', () => {
             const selectedSort = document.querySelector('#sortFilterModal .sort-radio:checked')?.value || null;
             buildAndRedirect({
@@ -666,19 +678,6 @@
             });
         });
 
-        // The clear button for sort filter was commented out in your original code.
-        // If you want to re-enable it, uncomment the following:
-        /*
-        document.querySelector('#sortFilterModal .clear-sort')?.addEventListener('click', () => {
-            document.querySelectorAll('#sortFilterModal .sort-radio').forEach(radio => radio.checked = false);
-            buildAndRedirect({
-                sort: null
-            }); // Clear sort
-        });
-        */
-
-        // --- Initialize Checkboxes/Radios on modal open ---
-        // This ensures the modals reflect current filters when opened
         document.getElementById('originFilterModal').addEventListener('show.bs.modal', () => {
             const currentOrigins = getUrlParams().getAll('origins[]');
             document.querySelectorAll('#originFilterModal .origin-checkbox').forEach(cb => {

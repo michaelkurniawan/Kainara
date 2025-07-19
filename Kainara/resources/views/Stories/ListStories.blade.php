@@ -102,7 +102,7 @@
                 <div class="col">
                     <a href="{{ route('Stories.DetailStories', $story->slug) }}" class="text-decoration-none text-dark">
                         <div class="story-card h-100">
-                            <img src="{{ asset('images/HardCode_KainSongket.jpeg') }}" alt="Story Image" class="img-fluid rounded-top" />
+                            <img src="{{ asset('storage/' . $story->thumbnail) }}" alt="{{ $story->thumbnail }}" class="img-fluid rounded-top" />
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title">{{ $story->title }}</h5>
                                 <p class="card-text">{{ Str::limit(strip_tags($story->content), 100) }}</p>

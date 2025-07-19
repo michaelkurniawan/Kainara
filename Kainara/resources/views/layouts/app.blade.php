@@ -5,24 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Kainara - @yield('title', 'Welcome')</title>
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ancizar+Serif:ital,wght@0,300..900;1,300..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <!-- Bootstrap Icons CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
         :root {
-            /* Variabel untuk ukuran logo yang berputar (digunakan oleh kelas .logo-size-*) */
-            --logo-height-medium: 250px;  /* Contoh ukuran sedang */
-            --logo-height-large: 170px;   /* Contoh ukuran besar */
+            --logo-height-medium: 250px;
+            --logo-height-large: 170px;
 
             --target-icon-size: 24px;
-            --header-actual-height: 90px; /* TARGET TINGGI BAR HEADER (tanpa memperhitungkan logo yang meluber) */
+            --header-actual-height: 90px;
 
             --font-primary: 'Ancizar Serif', serif;
             --font-secondary: 'Ancizar Serif', serif;
@@ -32,12 +28,12 @@
             --color-text-light: #f8f9fa;
             --color-bg-header: #ffffff;
             --color-bg-footer: #000000;
-            --header-shadow: 0 .125rem .25rem rgba(0,0,0,.075); /* Shadow dari Bootstrap .shadow-sm */
+            --header-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
             --footer-logo-height: 250px;
             --footer-padding-y: 1rem;
-            --color-dropdown-text: #FFFFFF; /* Warna teks di dropdown */
-            --color-dropdown-hover-bg: #9a8a5e; /* Warna background hover item dropdown (lebih gelap dari brand) */
-            --header-dropdown-border-radius: 15px; /* Sesuai desain */
+            --color-dropdown-text: #FFFFFF;
+            --color-dropdown-hover-bg: #9a8a5e;
+            --header-dropdown-border-radius: 15px;
         }
 
         body, h1, h2, h3, h4, h5, h6, p, a, li, span, strong, em {
@@ -47,7 +43,6 @@
         body {
             font-family: var(--font-secondary);
             color: var(--color-text-dark);
-            /* padding-top: calc(var(--header-actual-height) + 2px); PENTING: Sesuaikan berdasarkan --header-actual-height */
             display: flex;
             flex-direction: column;
             min-height: 100vh;
@@ -61,7 +56,6 @@
             font-family: var(--font-primary);
         }
 
-        /* Styling Header */
         header {
             background-color: var(--color-bg-header);
             box-shadow: var(--header-shadow);
@@ -69,7 +63,7 @@
             top: 0;
             z-index: 1030;
             width: 100%;
-            height: var(--header-actual-height); /* Tinggi bar header */
+            height: var(--header-actual-height);
             display: flex;
             align-items: center;
         }
@@ -79,7 +73,7 @@
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            position: relative; /* Untuk logo absolut */
+            position: relative;
         }
 
         header .nav-group-left,
@@ -90,67 +84,54 @@
         }
 
         header .icon-group-right .nav-icon-link,
-        header .icon-group-right .dropdown { /* Target div dropdown profil juga */
-            display: flex; /* Jadikan link dan div dropdown sebagai flex item juga */
-            align-items: center; /* Pusatkan konten di dalamnya (gambar ikon) */
+        header .icon-group-right .dropdown {
+            display: flex;
+            align-items: center;
         }
 
         header .nav-group-left .nav-link:hover {
             color: var(--color-brand);
         }
 
-        /* Styling Umum untuk Dropdown di Header */
         header .header-dropdown .dropdown-menu {
-            background-color: var(--color-brand); /* Warna background dropdown */
-            border: none; /* Hilangkan border default Bootstrap */
-            border-radius: var(--header-dropdown-border-radius); /* Rounded corner sesuai desain */
-            box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15); /* Shadow halus */
-            padding: 0.5rem 0; /* Padding atas/bawah internal menu */
-            margin-top: 0.75rem !important; /* Beri sedikit jarak dari toggle (override Bootstrap) */
+            background-color: var(--color-brand);
+            border: none;
+            border-radius: var(--header-dropdown-border-radius);
+            box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15);
+            padding: 0.5rem 0;
+            margin-top: 0.75rem !important;
         }
 
         header .header-dropdown .dropdown-item {
-            color: var(--color-dropdown-text); /* Warna teks item */
-            padding: 0.6rem 1.5rem; /* Padding item */
-            font-family: var(--font-primary); /* Font yang lebih elegan untuk item dropdown */
-            font-weight: 600; /* Sedikit tebal */
-            font-size: 1.1rem; /* Ukuran font item dropdown */
+            color: var(--color-dropdown-text);
+            padding: 0.6rem 1.5rem;
+            font-family: var(--font-primary);
+            font-weight: 600;
+            font-size: 1.1rem;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
 
         header .header-dropdown .dropdown-item:hover,
         header .header-dropdown .dropdown-item:focus {
-            background-color: var(--color-dropdown-hover-bg); /* Warna background saat hover */
-            color: var(--color-dropdown-text); /* Warna teks tetap sama atau sedikit berubah */
+            background-color: var(--color-dropdown-hover-bg);
+            color: var(--color-dropdown-text);
         }
 
         header .nav-group-left .dropdown > .dropdown-toggle::after {
-            /* Contoh: Mengubah warna panah agar serasi dengan teks navigasi */
-            /* border-top-color: var(--color-text-nav); */
-            /* vertical-align: 0.15em; */ /* Sedikit penyesuaian vertikal jika perlu */
-            margin-left: 0.4em; /* Jarak antara teks "Store" dan panah */
-            vertical-align: 0.1em; 
+            margin-left: 0.4em;
+            vertical-align: 0.1em;
         }
 
         header .nav-group-left .dropdown > a.nav-link.dropdown-toggle::after {
-            margin-left: 0.3em;  /* Jarak antara teks "Store" dan panah */
+            margin-left: 0.3em;
             margin-top: 0.2em;
-            /* vertical-align: 100em; /* COBA SESUAIKAN NILAI INI (misal: 0, 0.05em, 0.15em, -0.05em, atau 'middle') */
-            transition: transform 0.25s ease-in-out; /* Transisi untuk animasi balik panah */
-            /* border-top-color: var(--color-text-nav); // Jika ingin mengubah warna panah */
+            transition: transform 0.25s ease-in-out;
         }
 
-        /* Styling untuk link navigasi teks agar konsisten dengan ikon dropdown */
-        header .nav-group-left .nav-link,
-        header .icon-group-right .nav-icon-link {
-            /* Pastikan padding dan line-height konsisten agar alignment vertikal baik */
-            /* Sudah diatur di CSS header sebelumnya, cek kembali jika perlu */
-        }
         header .nav-group-left .dropdown > .nav-link.dropdown-toggle {
-            display: inline-flex; /* 1. Jadikan link sebagai flex container */
+            display: inline-flex;
             align-items: center;
         }
-
 
         header #logo-rotator {
             position: absolute;
@@ -158,50 +139,38 @@
             top: 50%;
             transform: translate(-50%, -50%);
             z-index: 1031;
-            /* Penting: Beri dimensi pada #logo-rotator agar gambar di dalamnya bisa diposisikan absolut relatif terhadapnya */
-            /* Kita akan set width dan height berdasarkan logo terbesar atau target yang diinginkan */
-            width: var(--logo-height-large); /* Ambil dari variabel logo terbesar, atau set nilai tetap */
-            height: var(--logo-height-large); /* Ambil dari variabel logo terbesar, atau set nilai tetap */
-            display: flex; /* Untuk memusatkan gambar di dalamnya jika perlu */
+            width: var(--logo-height-large);
+            height: var(--logo-height-large);
+            display: flex;
             align-items: center;
             justify-content: center;
         }
 
         header #logo-rotator .logo-image {
-            position: absolute; /* Agar bisa ditumpuk */
+            position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%); /* Pusatkan gambar di dalam #logo-rotator */
-            opacity: 0; /* Awalnya semua transparan */
-            transition: opacity 0.5s ease-in-out; /* Transisi untuk efek fade */
-            /* Tinggi dan lebar akan diatur oleh kelas spesifik ukuran (.logo-size-*) */
-            /* Atau jika Anda tidak menggunakan kelas ukuran, atur height di sini dan JS akan menimpanya jika perlu */
-            /* height: var(--logo-height-medium); */
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
             width: auto;
-            display: block; /* atau inline-block dengan vertical-align middle */
-            /* vertical-align: middle; */
+            display: block;
         }
 
         header #logo-rotator .logo-image.active {
-            opacity: 1; /* Logo aktif terlihat penuh */
+            opacity: 1;
         }
-        
-        /* Kelas untuk ukuran logo yang berputar */
+
         header img.logo-size-medium { height: var(--logo-height-medium, 70px) !important; }
         header img.logo-size-large { height: var(--logo-height-large, 90px) !important; }
 
-        /* Fallback jika tidak ada kelas ukuran (opsional, bisa juga diatur di JS) */
         header img#rotating-logo {
-             /* Default height jika tidak ada kelas, misal: */
-             /* height: var(--logo-height-medium); */
-             width: auto; display: block; vertical-align: middle;
+            width: auto; display: block; vertical-align: middle;
         }
-
 
         header .icon-group-right .nav-icon-link {
             display: inline-flex;
             align-items: center;
-            /* height: var(--target-logo-height); Hapus jika tidak relevan dengan tinggi logo yang meluber */
         }
         header .icon-group-right .header-icon {
             height: var(--target-icon-size);
@@ -213,20 +182,18 @@
             opacity: 0.7;
         }
 
-        /* Styling Footer (biarkan seperti sebelumnya jika sudah OK) */
-        /* STYLING FOOTER BARU */
-       .site-footer {
+        .site-footer {
             background-color: var(--color-bg-footer, #121212);
             color: var(--color-text-muted-footer, #adb5bd);
-            padding-top: var(--footer-padding-y, 3rem); /* Padding atas footer utama */
-            padding-bottom: 1.5rem; /* Padding bawah keseluruhan footer dikurangi sedikit */
+            padding-top: var(--footer-padding-y, 3rem);
+            padding-bottom: 1.5rem;
             font-family: var(--font-secondary);
             font-size: 0.9rem;
             line-height: 1.7;
         }
 
         .site-footer .footer-logo {
-            max-height: var(--footer-logo-height, 70px); /* Sesuaikan jika perlu */
+            max-height: var(--footer-logo-height, 70px);
         }
 
         .site-footer .footer-heading {
@@ -257,22 +224,20 @@
         .site-footer .footer-links a .bi {
             margin-right: 0.5rem;
             font-size: 1rem;
-            vertical-align: -0.1em; /* Alignment ikon sedikit lebih baik */
+            vertical-align: -0.1em;
         }
 
         .site-footer .address-text {
             margin-bottom: 0;
-            font-size: 0.85rem; /* Ukuran font alamat bisa sedikit lebih kecil */
-            line-height: 1.6;   /* Tambahkan line-height agar teks multi-baris lebih mudah dibaca */
+            font-size: 0.85rem;
+            line-height: 1.6;
             max-width: 300px
         }
 
-        /* Styling untuk baris bawah footer (kontak, no.telp, copyright) */
         .site-footer .footer-bottom-row {
-            border-top: 1px solid rgba(255, 255, 255, 0.1); /* Garis pemisah */
-            padding-top: 1.5rem;  /* Jarak dari garis ke teks */
-            margin-top: 2.5rem;   /* Jarak dari konten footer di atasnya ke garis pemisah */
-            /* align-items-center sudah dari HTML */
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.5rem;
+            margin-top: 2.5rem;
         }
 
         .site-footer .contact-info a {
@@ -282,7 +247,7 @@
             padding-bottom: 2px;
             border-bottom: 1px solid var(--color-text-muted-footer, #adb5bd);
             transition: color 0.2s ease-in-out, border-bottom-color 0.2s ease-in-out;
-            font-size: 0.85rem; /* Ukuran font kontak */
+            font-size: 0.85rem;
         }
 
         .site-footer .contact-info a:hover {
@@ -293,12 +258,10 @@
         .site-footer .footer-copyright small {
             color: var(--color-text-muted-footer, #adb5bd);
             opacity: 0.9;
-            font-size: 0.8rem; /* Ukuran font copyright */
+            font-size: 0.8rem;
         }
-
-
     </style>
-    @stack('styles') {{-- Tambahkan ini untuk CSS spesifik halaman --}}
+    @stack('styles')
 </head>
 <body>
     @php
@@ -311,12 +274,14 @@
     <header>
         <div class="container-fluid px-5">
             <div class="nav-group-left">
-                <div class="dropdown header-dropdown me-3"> 
+                <div class="dropdown header-dropdown me-3">
                     <a class="nav-link fw-bold dropdown-toggle" href="#" role="button" id="storeDropdown" data-bs-toggle="dropdown" aria-expanded="false">Store</a>
                     <ul class="dropdown-menu" aria-labelledby="storeDropdown">
-                        <li><a class="dropdown-item" href="{{ route('products.index') }}">Men</a></li>
-                        <li><a class="dropdown-item" href="#">Women</a></li>
-                        <li><a class="dropdown-item" href="#">Fabric</a></li>
+                        {{-- Memastikan tautan menggunakan route parameter gender --}}
+                        <li><a class="dropdown-item" href="{{ route('products.gender.index', ['gender' => 'Male']) }}">Men</a></li>
+                        <li><a class="dropdown-item" href="{{ route('products.gender.index', ['gender' => 'Female']) }}">Women</a></li>
+                        {{-- Memastikan tautan menggunakan route parameter category_name --}}
+                        <li><a class="dropdown-item" href="{{ route('products.category.index', ['category_name' => 'Fabric']) }}">Fabric</a></li>
                     </ul>
                 </div>
                 <a href="{{ route('Stories.ListStories') }}" class="nav-link fw-bold me-3">Stories</a>
@@ -329,10 +294,10 @@
                     <img id="rotating-logo-current"
                         src="{{ $logosData[0]['src'] }}"
                         alt="Kainara Logo"
-                        class="{{ $logosData[0]['class'] }} logo-image active"> 
+                        class="{{ $logosData[0]['class'] }} logo-image active">
 
                     <img id="rotating-logo-next"
-                        src="" 
+                        src=""
                         alt="Kainara Logo"
                         class="logo-image">
                 </a>
@@ -342,7 +307,7 @@
                 <a href="{{ route('cart.index') }}" class="nav-icon-link">
                     <img src="{{ asset('images/icons/icon-cart.png') }}" alt="Cart" class="header-icon">
                 </a>
-                <a href="#" class="nav-icon-link" title="My Account"> 
+                <a href="#" class="nav-icon-link" title="My Account">
                     <img src="{{ asset('images/icons/icon-account.png') }}" alt="Account" class="header-icon">
                 </a>
             </div>
@@ -380,49 +345,44 @@
                     </ul>
                 </div>
 
-                <div class="col-lg-4 col-md-6 footer-address-section"> {{-- Perbesar sedikit kolom alamat --}}
+                <div class="col-lg-4 col-md-6 footer-address-section">
                     <h6 class="footer-heading">BCA LEARNING INSTITUTE</h6>
                     <p class="address-text mb-0">Sentul City, Jl. Pakuan No.3, Sumur Batu, Babakan Madang, Bogor Regency, West Java 16810</p>
                 </div>
             </div>
 
-            {{-- BARIS BARU UNTUK KONTAK, NO.TELP, COPYRIGHT --}}
             <div class="row footer-bottom-row align-items-center">
-                 <div class="col-md-4 text-center text-md-start mb-2 mb-md-0">
-                    <p class="contact-info email-info mb-0"><a href="mailto:contact@kainara.co.id">contact@kainara.co.id</a></p>
-                </div>
-                <div class="col-md-4 text-center mb-2 mb-md-0">
-                    <p class="contact-info phone-info mb-0"><a href="tel:+1234567890">(123) 456-7890</a></p>
-                </div>
-                <div class="col-md-4 text-center text-md-end">
-                    <p class="footer-copyright mb-0"><small>© {{ date('Y') }} Kainara. All rights reserved.</small></p>
-                </div>
+                    <div class="col-md-4 text-center text-md-start mb-2 mb-md-0">
+                        <p class="contact-info email-info mb-0"><a href="mailto:contact@kainara.co.id">contact@kainara.co.id</a></p>
+                    </div>
+                    <div class="col-md-4 text-center mb-2 mb-md-0">
+                        <p class="contact-info phone-info mb-0"><a href="tel:+1234567890">(123) 456-7890</a></p>
+                    </div>
+                    <div class="col-md-4 text-center text-md-end">
+                        <p class="footer-copyright mb-0"><small>© {{ date('Y') }} Kainara. All rights reserved.</small></p>
+                    </div>
             </div>
         </div>
     </footer>
 
-
-
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
-    <!-- Script Logo Rotator Anda -->
     <script>
         const logosDataForScriptOptimized = @json($logosData);
         let currentIndexOptimized = 0;
         const logoImg1 = document.getElementById('rotating-logo-current');
         const logoImg2 = document.getElementById('rotating-logo-next');
-        const allSizeClassesOptimized = ['logo-size-small', 'logo-size-medium', 'logo-size-large']; // Sesuaikan
+        const allSizeClassesOptimized = ['logo-size-small', 'logo-size-medium', 'logo-size-large'];
 
         if (logoImg1 && logoImg2 && logosDataForScriptOptimized && logosDataForScriptOptimized.length > 0) {
-            // Inisialisasi logo pertama
+            // Initialize with the first logo
             logoImg1.src = logosDataForScriptOptimized[0].src;
             allSizeClassesOptimized.forEach(cls => logoImg1.classList.remove(cls));
             if (logosDataForScriptOptimized[0].class) {
                 logoImg1.classList.add(logosDataForScriptOptimized[0].class);
             }
             logoImg1.classList.add('active');
-            logoImg2.classList.remove('active'); // Pastikan yang kedua tidak aktif
+            logoImg2.classList.remove('active'); // Ensure the 'next' is not active initially
 
             let activeImage = logoImg1;
             let inactiveImage = logoImg2;
@@ -431,25 +391,24 @@
                 currentIndexOptimized = (currentIndexOptimized + 1) % logosDataForScriptOptimized.length;
                 const nextLogo = logosDataForScriptOptimized[currentIndexOptimized];
 
-                // Siapkan gambar yang tidak aktif (inactiveImage)
+                // Update the inactive image's source and classes
                 inactiveImage.src = nextLogo.src;
                 allSizeClassesOptimized.forEach(cls => inactiveImage.classList.remove(cls));
                 if (nextLogo.class) {
                     inactiveImage.classList.add(nextLogo.class);
                 }
 
-                // Mulai transisi
-                activeImage.classList.remove('active'); // Fade out gambar yang aktif
-                inactiveImage.classList.add('active');  // Fade in gambar yang baru
+                // Toggle active classes for smooth transition
+                activeImage.classList.remove('active');
+                inactiveImage.classList.add('active');
 
-                // Tukar peran untuk iterasi berikutnya
+                // Swap active and inactive images
                 let temp = activeImage;
                 activeImage = inactiveImage;
                 inactiveImage = temp;
 
-            }, 4000); // Ganti setiap 4 detik
+            }, 4000); // Change logo every 4 seconds
         }
-
     </script>
 
     @stack('scripts')

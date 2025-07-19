@@ -10,7 +10,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\LatestStoriesController;
 use App\Http\Controllers\ArtisanRegistrationController;
 use App\Http\Controllers\OrderController;
-use App\Http\Controllers\StripePaymentController; 
+use App\Http\Controllers\StripePaymentController;
 
 Route::get('/', [LatestStoriesController::class, 'index'])->name('welcome');
 
@@ -22,6 +22,9 @@ Route::get('/tentangkainara', function () {
 })->name('tentangkainara');
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/gender/{gender}', [ProductController::class, 'index'])->name('products.gender.index');
+Route::get('/products/category/{category_name}', [ProductController::class, 'index'])->name('products.category.index');
+
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
 Route::get('/stories', [StoriesController::class, 'index'])->name('Stories.ListStories');
@@ -36,12 +39,12 @@ Route::post('/cart/update', [CartController::class, 'update'])->name('cart.updat
 Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
 
 Route::get('/checkout', [CheckoutController::class, 'showCheckoutPage'])->name('checkout.show');
-Route::post('/checkout/add', [CheckoutController::class, 'addToCheckout'])->name('checkout.add'); // Untuk menambahkan ke cart/buy now
+Route::post('/checkout/add', [CheckoutController::class, 'addToCheckout'])->name('checkout.add');
 
-Route::post('/order/process', [OrderController::class, 'processCheckout'])->name('order.process'); // Mengarahkan ke pembayaran
-Route::get('/order/{order}/details', [OrderController::class, 'showOrderDetails'])->name('order.details'); // Menampilkan detail order
-Route::get('/order/{order}/success', [OrderController::class, 'showOrderSuccess'])->name('order.success'); // Halaman sukses pembayaran
-Route::get('/order/{order}/fail', [OrderController::class, 'showOrderFail'])->name('order.fail'); // Halaman gagal pembayaran
+Route::post('/order/process', [OrderController::class, 'processCheckout'])->name('order.process');
+Route::get('/order/{order}/details', [OrderController::class, 'showOrderDetails'])->name('order.details');
+Route::get('/order/{order}/success', [OrderController::class, 'showOrderSuccess'])->name('order.success');
+Route::get('/order/{order}/fail', [OrderController::class, 'showOrderFail'])->name('order.fail');
 
 Route::middleware('web')->group(function () {
     Route::get('/payment/stripe/{order}', [StripePaymentController::class, 'showPaymentForm'])->name('stripe.payment.form');
