@@ -68,22 +68,20 @@
     .hero-section-custom .hero-text-content {
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center; /* Changed from flex-start to center */
         text-align: center;
         position: relative;
         z-index: 2;
-        padding-left: 4rem;
+        padding-left: 0; /* Removed padding-left */
     }
 
     .hero-section-custom .hero-text-content h1 {
         font-family: var(--font-primary, 'Ancizar Serif', serif);
         color: var(--color-text-hero-title, #212529);
-        font-size: 2.8rem;
+        font-size: 3.5rem;
         font-weight: 700;
-        line-height: 1.3;
         margin-bottom: 1.5rem;
-        text-align: center;
-        margin-left: 4rem;
+        max-width: '200%';
     }
 
     .hero-section-custom .hero-text-content h1 .hero-title-italic {
@@ -100,10 +98,8 @@
         font-family: var(--font-secondary);
         color: var(--color-text-hero-lead);
         font-size: 1.1rem;
-        max-width: 450px;
+        max-width: '100%';
         margin-bottom: 1rem;
-        text-align: center;
-        margin-left: 2rem;
     }
 
     .hero-section-custom .btn-kainara {
@@ -113,24 +109,21 @@
         border-radius: 4px;
         text-transform: uppercase;
         font-weight: 500;
-        letter-spacing: 0.5px;
+        letter-spacing: 2.5px;
         border: none;
         transition: background-color 0.3s ease;
         margin-top: 2rem;
-        margin-left: 6rem;
     }
     .hero-section-custom .btn-kainara:hover {
         background-color: #a58e6a;
     }
 
     .hero-section-custom .hero-image-container img.hero-model-img {
-        max-width: 100%;
-        height: auto;
-        max-height: 90vh;
-        display: block;
+        width: '100%';
+        height: 80vh;
+        display: flex;
         margin-left: auto;
         margin-right: auto;
-        transform: translateY(-35px);
     }
 
     .story-video-section-overlay {
@@ -212,9 +205,8 @@
     .join-movement-section-custom .section-title-join{
         font-family: var(--font-primary);
         color: var(--color-text-dark, #333);
-        font-size: 3rem;
+        font-size: 3.2rem;
         font-weight: 700;
-        margin-top: 3.5rem;
     }
 
     .join-movement-section-custom .section-title-join .join-title-bold-italic {
@@ -228,11 +220,11 @@
     }
 
     .join-movement-section-custom .feature-item-join {
-        margin: 3rem;
+        margin: 3.5rem;
     }
 
     .join-movement-section-custom .feature-icon-join {
-        max-height: 270px;
+        max-height: 300px;
         margin-bottom: 1rem;
     }
 
@@ -246,25 +238,17 @@
     .join-movement-section-custom .btn-join-artisan {
         background-color: var(--color-brand, #B9A077);
         color: white;
-        padding: 0.7rem 2.5rem;
+        padding: 0.8rem 3.5rem;
         border-radius: 4px;
         text-transform: uppercase;
         font-weight: 500;
+        font-size:1.2rem;
         letter-spacing: 0.5px;
         border: none;
         transition: background-color 0.3s ease;
-        margin-top: 0.5rem;
     }
     .join-movement-section-custom .btn-join-artisan:hover {
         background-color: #a58e6a;
-    }
-
-    .latest-stories-custom {
-        background-color:rgb(255, 255, 255);
-        padding-top: var(--section-padding-y, 4rem);
-        position: relative;
-        overflow: hidden;
-        margin-top: 2rem;
     }
 
     .latest-stories-custom .section-title-stories {
@@ -300,7 +284,7 @@
         box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15) !important;
     }
     .latest-stories-custom .article-card-featured .card-img-top {
-        height: 350px;
+        height: 440px;
         object-fit: cover;
         border-top-left-radius: 0.375rem;
         border-top-right-radius: 0.375rem;
@@ -314,6 +298,14 @@
         font-weight: 700;
         font-size: 1.5rem;
         text-decoration: none;
+    }
+    .product-image-container {
+        width: '100%';
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        margin: 0 auto;
     }
     .latest-stories-custom .article-card-featured .card-title a:hover {
         color: var(--color-brand, #B9A077);
@@ -344,8 +336,8 @@
         box-shadow: 0 0.3rem 0.8rem rgba(0,0,0,.12) !important;
     }
     .latest-stories-custom .article-card-small .article-img-small {
-        height: 100%;
-        min-height: 100px;
+        width: 250px;
+        height: 145px;
         object-fit: cover;
         border-top-left-radius: 0.375rem;
         border-bottom-left-radius: 0.375rem;
@@ -396,9 +388,7 @@
 </style>
 @endpush
 
-{{-- Hero Section --}}
-<section class="hero-section-custom" style="padding-top:20px;">
-    {{-- Decorative Motifs for Hero Section --}}
+<section class="hero-section-custom py-3">
     <div class="decorative-motif motif-hero-top-left">
         <img src="{{ asset('images/motif-batik.png') }}" alt="Motif Batik">
     </div>
@@ -414,8 +404,8 @@
 
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-lg-5 d-flex justify-content-center hero-text-content text-center">
-                <h1 class="fw-bold">
+            <div class="col-lg-5 hero-text-content">
+                <h1 class="fw-bold text-center">
                     <span class="hero-title-italic">Threads of</span> <span class="hero-title-bold-italic">Heritage,</span><br>
                     <span class="hero-title-italic">Woven for the</span> <span class="hero-title-bold-italic">Future</span>
                 </h1>
@@ -428,8 +418,7 @@
                 </div>
             </div>
 
-            {{-- Hero Image Container --}}
-            <div class="col-lg-7 col-md-6 hero-image-container text-center text-md-end order-md-2 order-1">
+            <div class="col-lg-7 col-md-6 hero-image-container d-flex justify-content-center align-items-center">
                 <img src="{{ asset('images/batik-couple.png') }}" alt="Kainara Models" class="img-fluid hero-model-img">
             </div>
         </div>
@@ -460,12 +449,12 @@
 </section>
 
 {{-- Join Movement Section --}}
-<section class="join-movement-section-custom">
+<section class="join-movement-section-custom py-5">
     <div class="container-fluid">
         <h2 class="section-title-join mb-5">
             <span class="join-title-bold-italic">Join the Movement.</span><span class="join-title-italic"> Share Your Craft with the World</span>
         </h2>
-        <div class="row justify-content-center">
+        <div class="row justify-content-center mb-5" style="margin-top: 80px">
             <div class="col-md-4 col-lg-3 feature-item-join">
                 <img src="{{ asset('images/icon-signup.png') }}" alt="Sign Up Easily" class="img-fluid feature-icon-join">
                 <h5 class="feature-title-join">Sign Up Easily</h5>
@@ -480,7 +469,7 @@
             </div>
         </div>
         <div class="join-button-motif-wrapper text-center position-relative mt-4">
-            <a href="{{ route('artisan.register') }}" class="btn btn-join-artisan">Join as Artisan</a>  
+            <a href="{{ route('artisan.register') }}" class="btn btn-join-artisan">Join as Artisan</a>
         </div>
     </div>
     {{-- Decorative Motifs for Join Movement Section --}}
@@ -492,9 +481,11 @@
     </div>
 </section>
 
+
+
 {{-- Latest Stories Section --}}
-<section class="latest-stories-custom">
-    <div class="container-fluid px-5 py-5">
+<section class="latest-stories-custom px-5 py-5">
+    <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="section-title-stories">Latest Stories</h2>
             <a href="{{ route('Stories.ListStories') }}" class="link-styled-as-button-text">Read more articles!</a>
@@ -504,7 +495,7 @@
             <div class="col-lg-7 mb-4 mb-lg-0">
                 @if ($featuredArticle)
                     <a href="{{ route('Stories.DetailStories', $featuredArticle->slug) }}" class="card article-card-featured h-100 d-block text-decoration-none text-dark">
-                        <img src="{{ asset('images/articles/' . $featuredArticle->thumbnail) }}" class="card-img-top" alt="{{ $featuredArticle->title }}">
+                        <img src="{{ asset('storage/' . $featuredArticle->thumbnail) }}" alt="{{ $featuredArticle->title }}" class="card-img-top" />
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title mb-2">
                                 {{ $featuredArticle->title }}
@@ -524,8 +515,8 @@
                 @forelse ($smallArticles as $article)
                     <a href="{{ route('Stories.DetailStories', $article->slug) }}" class="card article-card-small {{ $loop->last ? 'mb-0' : 'mb-3' }} d-block text-decoration-none text-dark">
                         <div class="row g-0">
-                            <div class="col-4">
-                                <img src="{{ asset('images/articles/' . $article->thumbnail) }}" class="img-fluid rounded-start article-img-small" alt="{{ $article->title }}">
+                            <div class="col-4 product-image-container">
+                                <img src="{{ asset('storage/' . $article->thumbnail) }}" alt="{{ $article->title }}" class="img-fluid rounded-start article-img-small" />                                
                             </div>
                             <div class="col-8">
                                 <div class="card-body">

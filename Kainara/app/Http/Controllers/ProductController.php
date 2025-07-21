@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str; // Import the Str class
 
 class ProductController extends Controller
 {
@@ -115,7 +116,36 @@ class ProductController extends Controller
 
     public function show($slug)
     {
-        $product = Product::with('variants')->where('slug', $slug)->firstOrFail();
-        return view('products.detail', compact('product'));
+        $product = Product::with(['variants', 'gender'])->where('slug', $slug)->firstOrFail();
+
+        $sizeChartComponent = 'components.popupsizechart.default';
+
+        if ($product->gender) {
+            $productNameLower = Str::lower($product->name); 
+
+            if ($product->gender->name === 'Male') {
+                if (Str::startsWith($productNameLower, "men's vest")) {
+                    $sizeChartComponent = 'components.popupsizechart.menvest';
+                } elseif (Str::startsWith($productNameLower, "men's outerwear")) {
+                    $sizeChartComponent = 'components.popupsizechart.menouterwear';
+                } else {
+                    $sizeChartComponent = 'components.popupsizechart.men';
+                }
+            } elseif ($product->gender->name === 'Female') {
+                if (Str::startsWith($productNameLower, "women's vest")) {
+                    $sizeChartComponent = 'components.popupsizechart.womenvest';
+                } elseif (Str::startsWith($productNameLower, "women's outerwear")) {
+                    $sizeChartComponent = 'components.popupsizechart.womenouterwear';
+                } elseif (Str::startsWith($productNameLower, "women's dress")) {
+                    $sizeChartComponent = 'components.popupsizechart.womendress';
+                } elseif (Str::startsWith($productNameLower, "women's blouse")) {
+                    $sizeChartComponent = 'components.popupsizechart.womenblouse';
+                } else {
+                    $sizeChartComponent = 'components.popupsizechart.women';
+                }
+            }
+        }
+
+        return view('products.detail', compact('product', 'sizeChartComponent'));
     }
 }

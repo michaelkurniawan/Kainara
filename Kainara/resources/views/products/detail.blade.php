@@ -133,6 +133,21 @@
         border-color: #AD9D6C;
         transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
     }
+
+    .product-image-container {
+        width: '100%';
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        margin: 0 auto;
+    }
+
+    .product-image-container img {
+        width: 736px;
+        height: 736px;
+        object-fit: contain;
+    }
 </style>
 @endpush
 
@@ -227,7 +242,10 @@
 
         <div class="row g-5">
             <div class="col-lg-6 d-flex align-items-start justify-content-center">
-                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="img-fluid object-fit-contain" />
+                {{-- Product Image Section --}}
+                <div class="product-image-container">
+                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="img-fluid" />
+                </div>
             </div>
 
             <div class="col-lg-6">
@@ -351,7 +369,7 @@
             </div>
         </div>
 
-        ---
+        <hr>
 
         <div class="product-reviews-section mt-3">
             <h2 class="fw-bold mb-4 d-flex align-items-center justify-content-center">Customer Reviews ({{ $reviewCount }})</h2>
@@ -374,7 +392,8 @@
 
     </div>
 
-    @include('components.popupsizechart')
+    {{-- Include the dynamically determined size chart modal --}}
+    @include($sizeChartComponent)
 @endsection
 
 @push('scripts')
@@ -431,7 +450,7 @@
             button.addEventListener('click', function () {
                 sizeButtons.forEach(btn => btn.classList.remove('selected', 'bg-secondary', 'text-white'));
                 this.classList.add('selected', 'bg-secondary', 'text-white');
-                
+
                 selectedSize = this.dataset.size;
                 if (selectedSizeInput) {
                     selectedSizeInput.value = selectedSize;
@@ -464,7 +483,7 @@
             if (selectedSizeInputOneSize) {
                 selectedSizeInputOneSize.value = 'One Size';
             }
-            
+
             const oneSizeTotalStock = productVariants.reduce((sum, variant) => {
                 return variant.size === 'One Size' ? sum + variant.stock : sum;
             }, 0);

@@ -3,11 +3,11 @@
 @section('title', $story->title . ' Detail')
 
 @section('content')
-    <div class="container py-5">
-        <img src="{{ asset('images/Detail_BatikKiri.png') }}" alt="Batik Motif Left" class="batik-left" />
-        <img src="{{ asset('images/Detail_BatikKanan.png') }}" alt="Batik Motif Right" class="batik-right" />
+    <div class="container-fluid py-5 position-relative main-content-wrapper">
+        <img src="{{ asset('images/Detail_BatikKiri.png') }}" alt="Batik Motif Left" class="batik-absolute batik-left" />
+        <img src="{{ asset('images/Detail_BatikKanan.png') }}" alt="Batik Motif Right" class="batik-absolute batik-right" />
+
         <div class="row justify-content-center">
-            
             <div class="col-lg-8 col-md-10">
 
                 <div class="text-center mb-5">
@@ -15,12 +15,12 @@
                     <p class="text-secondary medium">{{ $story->created_at->format('F j, Y') }}</p>
                 </div>
                 
-                <div class="text-center mb-4">
+                <div class="product-image-container text-center mb-5">
                     <img src="{{ asset('storage/' . $story->thumbnail) }}" alt="{{ $story->thumbnail }}" class="img-fluid rounded shadow-sm mb-2 w-75" />
                 </div>
 
                 <div class="text-justify lh-lg fs-5">
-                    {!! $story->content !!}
+                    {!! nl2br(e($story->content)) !!} 
                 </div>
 
                 <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
@@ -46,7 +46,6 @@
 @push('styles')
     <style>
         body {
-            position: relative; /* supaya anak-anak absolute bisa relatif ke body */
             background-color: white;
             font-family: 'AncizarSerif', serif;
             background-image: url('{{ asset('images/background_pattern_left.png') }}'), url('{{ asset('images/background_pattern_right.png') }}');
@@ -60,34 +59,51 @@
         }
 
         a.nav-link-custom {
-            color: black;        /* Warna tulisan hitam */
-            text-decoration: none; /* Hilangkan underline */
-            transition: all 0.3s ease; /* Animasi halus saat hover */
+            color: black;
+            text-decoration: none;
+            transition: all 0.3s ease;
             font-family: 'AncizarSerif', serif;
         }
 
         a.nav-link-custom:hover {
-            text-decoration: underline; /* Tambahkan underline saat hover */
+            text-decoration: underline;
+        }
+
+        .main-content-wrapper {
+            overflow: hidden; /* Penting untuk menjaga elemen absolute tetap di dalamnya */
+        }
+
+        .batik-absolute {
+            position: absolute; /* Ini yang membuat dia ikut ter-scroll */
+            width: 150px; /* Ukuran gambar batik */
+            opacity: 0.3; /* Transparansi */
+            pointer-events: none; /* Penting agar tidak menghalangi interaksi user */
+            z-index: -1; /* Posisikan di belakang semua konten lainnya */
         }
 
         .batik-left {
-            position: fixed;
-            bottom: 0;
+            top: 0; /* Mulai dari atas kontainer */
             left: 0;
-            width: 150px; /* atur ukuran sesuai keinginan */
-            opacity: 0.3; /* supaya nggak terlalu menonjol */
-            pointer-events: none; /* supaya gak ganggu klik */
-            z-index: 10;
         }
 
         .batik-right {
-            position: fixed;
-            top: 0;
+            bottom: 0; /* Mulai dari bawah kontainer */
             right: 0;
-            width: 150px;
-            opacity: 0.3;
-            pointer-events: none;
-            z-index: 10;
+        }
+
+        .product-image-container {
+            width: '100%';
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .product-image-container img {
+            width: 1200px;
+            height: 480px;
+            object-fit: cover;
         }
     </style>
 @endpush

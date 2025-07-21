@@ -12,7 +12,7 @@
         }
 
         .hero-section-fullwidth {
-            min-height: 100vh;
+            min-height: 90vh;
             background-image: url('{{ asset('images/atastentangkainara.svg') }}');
             background-size: cover; 
             background-position: center; 
