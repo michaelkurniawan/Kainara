@@ -1,47 +1,188 @@
-<x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+@extends('layouts.app')
 
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
+@section('title', 'Login')
 
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+@push('styles')
+<style>
+    body {
+        background-color: #f8f9fa; /* Warna background netral */
+    }
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+    .login-container {
+        min-height: calc(100vh - var(--header-actual-height) - var(--footer-padding-y) - 5rem); /* Sesuaikan tinggi agar konten pas di tengah vertikal, kurangi tinggi header & footer */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-image: url('{{ asset('images/background-login-top.png') }}'), url('{{ asset('images/background-login-bottom.png') }}');
+        background-repeat: no-repeat, no-repeat;
+        background-position: top center, bottom center;
+        background-size: contain, contain; /* Menyesuaikan gambar agar sesuai dengan ukuran container */
+        padding: 50px 0; /* Memberi padding atas bawah agar konten tidak terlalu mepet */
+    }
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
+    .login-card {
+        background-color: #ffffff;
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+    }
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+    .login-card h2 {
+        font-family: var(--font-primary);
+        color: var(--color-text-dark);
+        margin-bottom: 10px;
+        font-size: 2.2rem;
+        font-weight: 700;
+    }
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800" name="remember">
-                <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Remember me') }}</span>
-            </label>
-        </div>
+    .login-card p.text-muted {
+        font-size: 0.95rem;
+        margin-bottom: 30px;
+    }
 
-        <div class="flex items-center justify-end mt-4">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
-                </a>
-            @endif
+    .form-control {
+        border-radius: 5px;
+        padding: 12px 15px;
+        font-size: 1rem;
+        border: 1px solid #ced4da;
+    }
 
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+    .form-control:focus {
+        border-color: var(--color-brand);
+        box-shadow: 0 0 0 0.25rem rgba(var(--color-brand-rgb, 173, 157, 108), 0.25); /* Menggunakan variabel CSS untuk warna brand */
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--color-text-dark);
+        text-align: left;
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        position: relative; /* Untuk ikon mata */
+    }
+
+    .form-group .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 60%; /* Sesuaikan posisi ikon mata */
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6c757d;
+    }
+
+    .btn-login {
+        background-color: var(--color-brand);
+        color: #ffffff;
+        padding: 12px 0;
+        border-radius: 5px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        width: 100%;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-login:hover {
+        background-color: #9a8a5e; /* Warna sedikit lebih gelap saat hover */
+        color: #ffffff;
+    }
+
+    .text-link {
+        color: var(--color-brand);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    .text-link:hover {
+        color: #9a8a5e;
+        text-decoration: underline;
+    }
+
+    .reset-password-link {
+        display: block;
+        text-align: left;
+        margin-top: 5px;
+        font-size: 0.9rem;
+    }
+
+    .register-link {
+        margin-top: 25px;
+        font-size: 0.95rem;
+    }
+</style>
+@endpush
+
+@section('content')
+<div class="container-fluid login-container">
+    <div class="login-card">
+        <h2>Login</h2>
+        <p class="text-muted">Sign in with existing account</p>
+
+        <form action="{{ route('login') }}" method="POST">
+            @csrf
+            <div class="form-group">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+                @error('email')
+                    <div class="invalid-feedback text-start">
+                        {{ $message }}
+                    </div>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-group">
+                    <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required autocomplete="current-password">
+                    <span class="password-toggle" id="password-toggle">
+                        <i class="fa-solid fa-eye-slash"></i>
+                    </span>
+                    @error('password')
+                        <div class="invalid-feedback text-start">
+                            {{ $message }}
+                        </div>
+                    @enderror
+                </div>
+                @if (Route::has('password.request'))
+                    <a href="{{ route('password.request') }}" class="text-link reset-password-link">Reset Password</a>
+                @endif
+            </div>
+
+            <div class="d-grid gap-2 mb-4">
+                <button type="submit" class="btn btn-login">Login</button>
+            </div>
+        </form>
+
+        @if (Route::has('register'))
+            <p class="register-link text-muted">Don't have an account yet? <a href="{{ route('register') }}" class="text-link">Register now</a></p>
+        @endif
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const passwordField = document.getElementById('password');
+        const passwordToggle = document.getElementById('password-toggle');
+
+        if (passwordToggle) {
+            passwordToggle.addEventListener('click', function () {
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordField.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+        }
+    });
+</script>
+@endpush

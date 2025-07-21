@@ -3,14 +3,14 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\StoriesController;
-use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\LatestStoriesController;
-use App\Http\Controllers\ArtisanRegistrationController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\StripePaymentController; 
+use App\Http\Controllers\User\ProductController;
+use App\Http\Controllers\User\StoriesController;
+use App\Http\Controllers\User\CheckoutController;
+use App\Http\Controllers\User\CartController;
+use App\Http\Controllers\User\LatestStoriesController;
+use App\Http\Controllers\User\ArtisanRegistrationController;
+use App\Http\Controllers\User\OrderController;
+use App\Http\Controllers\User\StripePaymentController; 
 
 Route::get('/', [LatestStoriesController::class, 'index'])->name('welcome');
 
