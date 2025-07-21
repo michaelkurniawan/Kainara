@@ -494,7 +494,7 @@
                         {{-- Phone Number --}}
                         <div class="col-md-6 form-group-custom">
                             <label for="phone_number">Phone Number</label>
-                            <input type="tel" id="phone_number" name="phone_number" class="form-control-custom" placeholder="Enter your phone number" required>
+                            <input type="tel" id="phone_number" name="phone_number" class="form-control-custom" placeholder="Enter your phone number (e.g., 08123456789)" required minlength="10">
                             <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
                         </div>
 
@@ -536,7 +536,7 @@
                         {{-- Postal Code --}}
                         <div class="col-md-4 form-group-custom">
                             <label for="home_postal_code">Postal Code</label>
-                            <input type="text" id="home_postal_code" name="home_postal_code" class="form-control-custom" placeholder="Enter your postal code" required>
+                            <input type="text" id="home_postal_code" name="home_postal_code" class="form-control-custom" placeholder="Enter your postal code" required pattern="[0-9]{5}" title="5 digit postal code">
                             <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
                         </div>
                     </div>
@@ -715,7 +715,7 @@
                             {{-- Video Link --}}
                             <div class="col-12 form-group-custom">
                                 <label for="video_link">Video link (optional)</label>
-                                <input type="url" id="video_link" name="video_link" class="form-control-custom" placeholder="Paste the video link (optional)" required>
+                                <input type="url" id="video_link" name="video_link" class="form-control-custom" placeholder="Paste the video link (optional)">
                                 <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
                             </div>
                         </div>
@@ -769,13 +769,26 @@
 document.addEventListener('DOMContentLoaded', function() {
     // --- Elemen & Variabel Utama ---
     const form = document.getElementById('multi-step-form');
-    const nextButtons = document.querySelectorAll('.btn-next-step');
+    const nextButtons = document.querySelectorAll('.btn-next-step:not([type=submit])');
     const backButtons = document.querySelectorAll('.btn-back-step');
     const formSteps = document.querySelectorAll('.form-step');
     const stepIndicators = document.querySelectorAll('.stepper .step');
-    let currentStep = 1;
+    let currentStep = 1; // Default ke step 1
 
-    // --- FUNGSI UTAMA ---
+    // --- Cek Kondisi Awal Halaman ---
+    @if (session('registration_complete'))
+        currentStep = 4;
+    @elseif ($errors->any())
+        @if ($errors->has('project_title') || $errors->has('upload_photo') || $errors->has('fabric_type') || $errors->has('year_created'))
+            currentStep = 3;
+        @elseif ($errors->has('business_name') || $errors->has('business_type') || $errors->has('business_address'))
+            currentStep = 2;
+        @else
+            currentStep = 1;
+        @endif
+    @endif
+
+    // --- Fungsi Utama Navigasi ---
     function updateFormSteps() {
         formSteps.forEach(step => step.classList.remove('active'));
         document.getElementById('step-' + currentStep)?.classList.add('active');
@@ -792,54 +805,188 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // --- FUNGSI VALIDASI DENGAN ATURAN SPESIFIK ---
     function validateStep(stepNumber) {
-    let isValid = true;
-    const currentStepElement = document.querySelector('#step-' + stepNumber);
-    
-    // Bersihkan semua error di step saat ini
-    const errorMessages = currentStepElement.querySelectorAll('.error-message');
-    errorMessages.forEach(el => {
-        el.textContent = '';
-        el.style.display = 'none';
-    });
+        let isValid = true;
+        const currentStepElement = document.querySelector('#step-' + stepNumber);
+        
+        currentStepElement.querySelectorAll('.error-message').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
+        currentStepElement.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 
-    const invalidInputs = currentStepElement.querySelectorAll('.is-invalid');
-    invalidInputs.forEach(el => {
-        el.classList.remove('is-invalid');
-    });
+        const requiredInputs = currentStepElement.querySelectorAll('[required]');
+        
+        requiredInputs.forEach(input => {
+            const isVisible = input.offsetParent !== null;
+            let errorMessage = '';
 
-    // Validasi semua input yang required
-    const requiredInputs = currentStepElement.querySelectorAll('[required]');
-    requiredInputs.forEach(input => {
-        const isVisible = input.offsetParent !== null;
+            if (isVisible) {
+                // 1. Cek jika kosong
+                if ((input.type !== 'file' && !input.value.trim()) || (input.type === 'file' && input.files.length === 0)) {
+                    errorMessage = 'This field is required.';
+                }
+                
+                // 2. Cek format spesifik JIKA sudah diisi
+                if (input.value.trim() && !errorMessage) {
+                    switch (input.type) {
+                        case 'email':
+                            const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+                            if (!emailPattern.test(input.value)) {
+                                errorMessage = 'Please enter a valid email address.';
+                            }
+                            break;
+                        
+                        case 'tel':
+                            const phonePattern = /^\+?[0-9]{10,15}$/;
+                            if (!phonePattern.test(input.value.replace(/[\s-()]/g, ''))) {
+                                errorMessage = 'Please enter a valid phone number (10-15 digits).';
+                            }
+                            break;
 
-        // Validasi hanya jika input terlihat dan kosong
-        if (isVisible && ((input.type !== 'file' && !input.value.trim()) || (input.type === 'file' && input.files.length === 0))) {
-            isValid = false;
-            
-            // Temukan parent .form-group-custom
-            const formGroup = input.closest('.form-group-custom');
-            if (formGroup) {
-                // Temukan .error-message di dalam .form-group-custom tersebut
-                const errorElement = formGroup.querySelector('.error-message');
-                if (errorElement) {
-                    errorElement.textContent = input.type === 'file' ? 'Please upload at least one photo.' : 'This field is required.';
-                    errorElement.style.display = 'block';
+                        case 'number':
+                            if (input.id === 'year_created') {
+                                const year = parseInt(input.value);
+                                const currentYear = new Date().getFullYear();
+                                if (isNaN(year) || year < 1900 || year > currentYear) {
+                                    errorMessage = `Year must be between 1400 and ${currentYear}.`;
+                                }
+                            }
+                            break;
+                        
+                        case 'text':
+                            if (input.id.includes('postal_code')) {
+                                const postalPattern = /^[0-9]{5}$/;
+                                if (!postalPattern.test(input.value)) {
+                                    errorMessage = 'Postal code must be 5 digits.';
+                                }
+                            }
+                            break;
+                    }
                 }
             }
 
-            // Tambahkan kelas is-invalid ke input atau drop area
-            if (input.type === 'file') {
-                input.closest('.file-drop-area').classList.add('is-invalid');
-            } else {
-                input.classList.add('is-invalid');
+            // 3. Jika ada pesan error, tampilkan
+            if (errorMessage) {
+                isValid = false;
+                const formGroup = input.closest('.form-group-custom');
+                if (formGroup) {
+                    const errorElement = formGroup.querySelector('.error-message');
+                    if (errorElement) {
+                        errorElement.textContent = errorMessage;
+                        errorElement.style.display = 'block';
+                    }
+                }
+                
+                if (input.type === 'file') {
+                    input.closest('.file-drop-area').classList.add('is-invalid');
+                } else {
+                    input.classList.add('is-invalid');
+                }
             }
+        });
+
+        return isValid;
+    }
+
+    // --- EVENT LISTENERS UNTUK TOMBOL NAVIGASI & SUBMIT ---
+    nextButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const step = parseInt(button.dataset.step);
+            if (validateStep(step)) {
+                if (step < formSteps.length) {
+                    currentStep++;
+                    updateFormSteps();
+                    updateStepIndicator();
+                }
+            }
+        });
+    });
+
+    backButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const step = parseInt(button.dataset.step);
+            if (step > 1) {
+                currentStep--;
+                updateFormSteps();
+                updateStepIndicator();
+            }
+        });
+    });
+
+    form.addEventListener('submit', function(e) {
+        // Validasi step terakhir (Step 3) sebelum submit
+        if (!validateStep(formSteps.length - 1)) {
+            e.preventDefault(); // Hentikan submit jika validasi gagal
         }
     });
 
-    return isValid;
-}
+    // --- Logika Helper (Alamat & Others) ---
+    // (Kode untuk checkbox alamat dan dropdown "others" Anda sudah bagus,
+    // jadi saya akan salin ke sini tanpa perubahan besar)
+    const sameAddressCheckbox = document.getElementById('same_as_home_address');
+    if (sameAddressCheckbox) {
+        const homeAddress = document.getElementById('home_address');
+        const homeProvince = document.getElementById('home_province');
+        const homeCity = document.getElementById('home_city');
+        const homePostalCode = document.getElementById('home_postal_code');
+        
+        const businessAddress = document.getElementById('business_address');
+        const businessProvince = document.getElementById('business_province');
+        const businessCity = document.getElementById('business_city');
+        const businessPostalCode = document.getElementById('business_postal_code');
 
+        const businessAddressInputs = [businessAddress, businessCity, businessPostalCode];
+        
+        // Pastikan semua elemen ditemukan
+        if (homeAddress && homeProvince && homeCity && homePostalCode &&
+            businessAddress && businessProvince && businessCity && businessPostalCode) {
+            
+            sameAddressCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    // 1. Salin nilai
+                    businessAddress.value = homeAddress.value;
+                    businessProvince.value = homeProvince.value;
+                    businessCity.value = homeCity.value;
+                    businessPostalCode.value = homePostalCode.value;
+                    
+                    // 2. Kunci (lock) field
+                    businessAddressInputs.forEach(input => input.readOnly = true);
+                    businessProvince.classList.add('locked');
+
+                } else {
+                    // 1. Kosongkan nilai
+                    businessAddressInputs.forEach(input => input.value = '');
+                    businessProvince.value = "";
+                    
+                    // 2. Buka kunci
+                    businessAddressInputs.forEach(input => input.readOnly = false);
+                    businessProvince.classList.remove('locked');
+                }
+            });
+        } else {
+            console.error("Address copy feature failed: One or more address field IDs are incorrect.");
+        }
+    }
+
+    function setupOtherFieldToggle(selectId, wrapperId) {
+        const selectElement = document.getElementById(selectId);
+        const wrapperElement = document.getElementById(wrapperId);
+        const otherInput = wrapperElement?.querySelector('input');
+        if (selectElement && wrapperElement && otherInput) {
+            selectElement.addEventListener('change', function() {
+                if (this.value === 'others') {
+                    wrapperElement.style.display = 'block';
+                    otherInput.required = true;
+                } else {
+                    wrapperElement.style.display = 'none';
+                    otherInput.required = false;
+                }
+            });
+        }
+    }
+    setupOtherFieldToggle('business_type', 'other_business_type_wrapper');
+    setupOtherFieldToggle('fabric_type', 'other_fabric_type_wrapper');
+
+    
     // --- LOGIKA PREVIEW GAMBAR (TERMASUK DRAG & DROP) ---
     const fileInput = document.getElementById('upload_photo');
     const dropArea = document.getElementById('file-drop-area');
@@ -904,62 +1051,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         dropArea.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
     }
-
-
-    // --- EVENT LISTENERS ---
-    nextButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const step = parseInt(button.dataset.step);
-            if (validateStep(step)) {
-                if (step < formSteps.length) {
-                    currentStep++;
-                    updateFormSteps();
-                    updateStepIndicator();
-                } else if (step === formSteps.length -1) {
-                    // Logic untuk submit form, untuk sekarang kita pindah ke step 'Done'
-                    currentStep++;
-                    updateFormSteps();
-                    updateStepIndicator();
-                }
-            }
-        });
-    });
-
-    backButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const step = parseInt(button.dataset.step);
-            if (step > 1) {
-                currentStep--;
-                updateFormSteps();
-                updateStepIndicator();
-            }
-        });
-    });
-
-    // --- Logika Helper (Alamat & Others) ---
-    // (Kode untuk checkbox alamat dan dropdown "others" Anda sudah bagus,
-    // jadi saya akan salin ke sini tanpa perubahan besar)
-    const sameAddressCheckbox = document.getElementById('same_as_home_address');
-    if (sameAddressCheckbox) { /* ... isi dengan kode checkbox alamat Anda yang lama ... */ }
-
-    function setupOtherFieldToggle(selectId, wrapperId) {
-        const selectElement = document.getElementById(selectId);
-        const wrapperElement = document.getElementById(wrapperId);
-        const otherInput = wrapperElement?.querySelector('input');
-        if (selectElement && wrapperElement && otherInput) {
-            selectElement.addEventListener('change', function() {
-                if (this.value === 'others') {
-                    wrapperElement.style.display = 'block';
-                    otherInput.required = true;
-                } else {
-                    wrapperElement.style.display = 'none';
-                    otherInput.required = false;
-                }
-            });
-        }
-    }
-    setupOtherFieldToggle('business_type', 'other_business_type_wrapper');
-    setupOtherFieldToggle('fabric_type', 'other_fabric_type_wrapper');
 
 
     // --- INISIALISASI HALAMAN ---

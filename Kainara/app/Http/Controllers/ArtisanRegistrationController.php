@@ -96,21 +96,30 @@ class ArtisanRegistrationController extends Controller
                 // Status defaultnya adalah 'pending' dari migrasi
             ]);
 
-            // 3. Simpan portfolio yang berelasi dengan pendaftaran ini
+             // 3. LOGIKA PENYIMPANAN PORTFOLIO DIPERBAIKI
+            
+            // Siapkan array untuk menampung semua path foto yang berhasil di-upload
+            $uploadedPhotoPaths = [];
+
             if ($request->hasFile('upload_photo')) {
                 foreach ($request->file('upload_photo') as $file) {
                     $path = $file->store('portfolios', 'public');
-                    
-                    $profile->portfolios()->create([
-                        'project_title' => $validatedData['project_title'],
-                        'project_description' => $validatedData['project_description'],
-                        'fabric_type' => $validatedData['fabric_type'],
-                        'other_fabric_type' => $validatedData['other_fabric_type'],
-                        'year_created' => $validatedData['year_created'],
-                        'photo_path' => $path,
-                        'video_link' => $validatedData['video_link'],
-                    ]);
+                    // Tambahkan path yang berhasil ke dalam array
+                    $uploadedPhotoPaths[] = $path;
                 }
+            }
+
+            // Simpan SATU record portfolio HANYA JIKA ada foto yang di-upload
+            if (!empty($uploadedPhotoPaths)) {
+                $profile->portfolios()->create([
+                    'project_title' => $validatedData['project_title'],
+                    'project_description' => $validatedData['project_description'],
+                    'fabric_type' => $validatedData['fabric_type'],
+                    'other_fabric_type' => $validatedData['other_fabric_type'],
+                    'year_created' => $validatedData['year_created'],
+                    'photo_paths' => $uploadedPhotoPaths, // <-- NAMA KOLOM & NILAI SUDAH BENAR (ARRAY)
+                    'video_link' => $validatedData['video_link'],
+                ]);
             }
 
             // (Opsional) Kirim email notifikasi ke admin dan pendaftar

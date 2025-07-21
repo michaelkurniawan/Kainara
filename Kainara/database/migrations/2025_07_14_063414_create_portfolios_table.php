@@ -19,9 +19,8 @@ return new class extends Migration
             $table->string('fabric_type');
             $table->string('other_fabric_type')->nullable();
             $table->year('year_created');
-            $table->string('photo_path');
+            $table->json('photo_paths');    
             $table->string('video_link')->nullable();
-
             $table->timestamps();
         });
     }
