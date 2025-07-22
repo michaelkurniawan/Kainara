@@ -2,18 +2,11 @@
 
 namespace App\Http\Controllers\User;
 
-<<<<<<< HEAD:Kainara/app/Http/Controllers/ProductController.php
-use App\Models\Category;
-use App\Models\Gender;
-=======
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
->>>>>>> d325cf4c5eae42fb23c3244122db20af2aa1f7dc:Kainara/app/Http/Controllers/User/ProductController.php
 use App\Models\Product;
 use App\Models\ProductVariant;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str; // Import the Str class
 
 class ProductController extends Controller
 {
@@ -121,36 +114,7 @@ class ProductController extends Controller
 
     public function show($slug)
     {
-        $product = Product::with(['variants', 'gender'])->where('slug', $slug)->firstOrFail();
-
-        $sizeChartComponent = 'components.popupsizechart.default';
-
-        if ($product->gender) {
-            $productNameLower = Str::lower($product->name); 
-
-            if ($product->gender->name === 'Male') {
-                if (Str::startsWith($productNameLower, "men's vest")) {
-                    $sizeChartComponent = 'components.popupsizechart.menvest';
-                } elseif (Str::startsWith($productNameLower, "men's outerwear")) {
-                    $sizeChartComponent = 'components.popupsizechart.menouterwear';
-                } else {
-                    $sizeChartComponent = 'components.popupsizechart.men';
-                }
-            } elseif ($product->gender->name === 'Female') {
-                if (Str::startsWith($productNameLower, "women's vest")) {
-                    $sizeChartComponent = 'components.popupsizechart.womenvest';
-                } elseif (Str::startsWith($productNameLower, "women's outerwear")) {
-                    $sizeChartComponent = 'components.popupsizechart.womenouterwear';
-                } elseif (Str::startsWith($productNameLower, "women's dress")) {
-                    $sizeChartComponent = 'components.popupsizechart.womendress';
-                } elseif (Str::startsWith($productNameLower, "women's blouse")) {
-                    $sizeChartComponent = 'components.popupsizechart.womenblouse';
-                } else {
-                    $sizeChartComponent = 'components.popupsizechart.women';
-                }
-            }
-        }
-
-        return view('products.detail', compact('product', 'sizeChartComponent'));
+        $product = Product::with('variants')->where('slug', $slug)->firstOrFail();
+        return view('products.detail', compact('product'));
     }
 }
