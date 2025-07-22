@@ -13,12 +13,8 @@ class ProfileController extends Controller
      */
     public function index()
     {
-        if(Auth::check()) {
-            $user = Auth::user();
-            return view('profile', compact('user'));
-        }
-
-        return redirect()->route('login')->with('error', 'You must be logged in to view your profile');
+        $user = Auth::user();
+        return view('profile', compact('user'));
     }
 
     /**

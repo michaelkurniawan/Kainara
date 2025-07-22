@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     // Admin Login Routes
-    Route::middleware('redirectAdmin')->group(function () {
+    Route::middleware('guest')->group(function () {
         Route::get('login', [AdminSessionController::class, 'create'])->name('login');
         Route::post('login', [AdminSessionController::class, 'store']);
     });

@@ -12,7 +12,7 @@ use App\Http\Controllers\User\OrderController;
 use App\Http\Controllers\User\StripePaymentController; 
 use App\Http\Controllers\User\ProfileController;
 use App\Http\Controllers\User\Auth\LoginController;
-// use App\Http\Controllers\User\Auth\LoginController;
+use App\Http\Controllers\User\Auth\RegisterController;
 
 Route::get('/', [LatestStoriesController::class, 'index'])->name('welcome');
 
@@ -53,14 +53,21 @@ Route::middleware('web')->group(function () {
     Route::post('/payment/stripe/{order}/confirm', [StripePaymentController::class, 'confirmPayment'])->name('stripe.payment.confirm');
 });
 
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
-Route::post('/logout', [LoginController::class, 'logout']);
 
-// Rute untuk menampilkan form registrasi
-Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [RegisterController::class, 'register']);
 
-Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login']);
+
+    Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [RegisterController::class, 'register']);
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::post('/logout', [LoginController::class, 'logout']);
+});
+
 
 require __DIR__.'/admin.php';

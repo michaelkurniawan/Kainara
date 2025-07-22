@@ -4,6 +4,9 @@ namespace App\Http\Controllers\User\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class RegisterController extends Controller
 {
@@ -29,14 +32,16 @@ class RegisterController extends Controller
     {
         // 1. Validasi input
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'], // 'confirmed' akan memeriksa password_confirmation
+            'password' => ['required', 'string', 'min:8'], // 'confirmed' akan memeriksa password_confirmation
         ]);
 
         // 2. Buat user baru
         $user = User::create([
-            'name' => $request->name,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
@@ -45,6 +50,6 @@ class RegisterController extends Controller
         Auth::login($user);
 
         // 4. Redirect user
-        return redirect()->route('home'); // Ganti dengan rute tujuan Anda setelah registrasi
+        return redirect()->route('welcome'); // Ganti dengan rute tujuan Anda setelah registrasi
     }
 }
