@@ -4,6 +4,11 @@
 
 @push('styles')
 <style>
+    :root {
+        --font-primary: 'Ancizar Serif', serif;
+        --font-secondary: 'Ancizar Serif', serif;
+    }
+
     .btn-link {
         text-decoration: none !important;
     }
@@ -133,6 +138,21 @@
         border-color: #AD9D6C;
         transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
     }
+
+    .product-image-container {
+        width: '100%';
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        margin: 0 auto;
+    }
+
+    .product-image-container img {
+        width: 736px;
+        height: 736px;
+        object-fit: contain;
+    }
 </style>
 @endpush
 
@@ -225,13 +245,16 @@
             </div>
         @endif
 
-        <div class="row g-5">
+        <div class="row g-5 mb-5">
             <div class="col-lg-6 d-flex align-items-start justify-content-center">
-                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="img-fluid object-fit-contain" />
+                {{-- Product Image Section --}}
+                <div class="product-image-container">
+                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="img-fluid" />
+                </div>
             </div>
 
             <div class="col-lg-6">
-                <h1 class="fw-bold mb-3">{{ $product->name }}</h1>
+                <h1 class="fw-bold mb-3 fs-1">{{ $product->name }}</h1>
 
                 <div class="d-flex align-items-center text-secondary mb-3">
                     <i class="fas fa-location-dot fs-6 me-3"></i>
@@ -350,11 +373,10 @@
                 </form>
             </div>
         </div>
+        <hr>
 
-        ---
-
-        <div class="product-reviews-section mt-3">
-            <h2 class="fw-bold mb-4 d-flex align-items-center justify-content-center">Customer Reviews ({{ $reviewCount }})</h2>
+        <div class="product-reviews-section mt-4">
+            <h2 class="fw-bold mb-4 d-flex align-items-center justify-content-center fs-2">Customer Reviews ({{ $reviewCount }})</h2>
 
             <div id="reviews-container" class="row g-4 justify-content-center">
             </div>
@@ -374,7 +396,8 @@
 
     </div>
 
-    @include('components.popupsizechart')
+    {{-- Include the dynamically determined size chart modal --}}
+    @include($sizeChartComponent)
 @endsection
 
 @push('scripts')
@@ -431,7 +454,7 @@
             button.addEventListener('click', function () {
                 sizeButtons.forEach(btn => btn.classList.remove('selected', 'bg-secondary', 'text-white'));
                 this.classList.add('selected', 'bg-secondary', 'text-white');
-                
+
                 selectedSize = this.dataset.size;
                 if (selectedSizeInput) {
                     selectedSizeInput.value = selectedSize;
@@ -464,7 +487,7 @@
             if (selectedSizeInputOneSize) {
                 selectedSizeInputOneSize.value = 'One Size';
             }
-            
+
             const oneSizeTotalStock = productVariants.reduce((sum, variant) => {
                 return variant.size === 'One Size' ? sum + variant.stock : sum;
             }, 0);

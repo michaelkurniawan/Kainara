@@ -162,9 +162,9 @@
             <div class="dropdown header-dropdown me-3"> 
                 <a class="nav-link fw-bold dropdown-toggle" href="#" role="button" id="storeDropdown" data-bs-toggle="dropdown" aria-expanded="false">Store</a>
                 <ul class="dropdown-menu" aria-labelledby="storeDropdown">
-                    <li><a class="dropdown-item" href="{{ route('products.index') }}">Men</a></li>
-                    <li><a class="dropdown-item" href="#">Women</a></li>
-                    <li><a class="dropdown-item" href="#">Fabric</a></li>
+                    <li><a class="dropdown-item" href="{{ route('products.gender.index', ['gender' => 'Male']) }}">Men</a></li>
+                    <li><a class="dropdown-item" href="{{ route('products.gender.index', ['gender' => 'Female']) }}">Women</a></li>
+                    <li><a class="dropdown-item" href="{{ route('products.category.index', ['category_name' => 'Fabric']) }}">Fabric</a></li>
                 </ul>
             </div>
             <a href="{{ route('Stories.ListStories') }}" class="nav-link fw-bold me-3">Stories</a>

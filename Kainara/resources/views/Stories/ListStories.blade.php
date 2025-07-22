@@ -4,7 +4,11 @@
 
 @push('styles')
 <style>
-
+    :root {
+        --font-primary: 'Ancizar Serif', serif;
+        --font-secondary: 'Ancizar Serif', serif;
+    }
+    
     h1.display-5 {
         font-size: 4.5rem;
         font-weight: bold;
@@ -104,7 +108,7 @@
                         <div class="story-card h-100">
                             <img src="{{ asset('storage/' . $story->thumbnail) }}" alt="{{ $story->thumbnail }}" class="img-fluid rounded-top" />
                             <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">{{ $story->title }}</h5>
+                                <h5 class="card-title fw-bold">{{ $story->title }}</h5>
                                 <p class="card-text">{{ Str::limit(strip_tags($story->content), 100) }}</p>
                                 <p class="story-date mt-auto">{{ $story->created_at->format('F j, Y') }}</p>
                                 <p class="read-more-hover mt-auto text-end">Read More</p>
