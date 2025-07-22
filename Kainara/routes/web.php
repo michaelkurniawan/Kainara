@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\User\ProductController;
@@ -11,6 +10,9 @@ use App\Http\Controllers\User\LatestStoriesController;
 use App\Http\Controllers\User\ArtisanRegistrationController;
 use App\Http\Controllers\User\OrderController;
 use App\Http\Controllers\User\StripePaymentController; 
+use App\Http\Controllers\User\ProfileController;
+use App\Http\Controllers\User\Auth\LoginController;
+// use App\Http\Controllers\User\Auth\LoginController;
 
 Route::get('/', [LatestStoriesController::class, 'index'])->name('welcome');
 
@@ -47,5 +49,15 @@ Route::middleware('web')->group(function () {
     Route::get('/payment/stripe/{order}', [StripePaymentController::class, 'showPaymentForm'])->name('stripe.payment.form');
     Route::post('/payment/stripe/{order}/confirm', [StripePaymentController::class, 'confirmPayment'])->name('stripe.payment.confirm');
 });
+
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
+Route::post('/logout', [LoginController::class, 'logout']);
+
+// Rute untuk menampilkan form registrasi
+Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [RegisterController::class, 'register']);
+
+Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
 
 require __DIR__.'/admin.php';
