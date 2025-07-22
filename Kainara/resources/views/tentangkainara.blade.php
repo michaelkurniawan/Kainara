@@ -4,16 +4,13 @@
 
 @push('styles')
     <style>
-        /* Menerapkan font yang sudah terdaftar secara global */
-        /* GANTI DENGAN INI: */
-        /* Aturan ini memastikan semua elemen teks utama menggunakan font AncizarSerif */
         body, h1, h2, h3, h4, h5, h6, p, a, li, span, strong, em {
             font-family: 'AncizarSerif', serif;
         }
 
         .hero-section-fullwidth {
             min-height: 90vh;
-            background-image: url('{{ asset('images/atastentangkainara.svg') }}');
+            background-image: url('{{ asset('images/kainaraatas.svg') }}');
             background-size: cover; 
             background-position: center; 
             background-repeat: no-repeat; 
@@ -21,7 +18,6 @@
 
         .content-section {
             background-color: #FFFFFF;
-            padding-top: 50px;
         }
         
         .logo-banner {
@@ -31,7 +27,7 @@
         }
 
         .card-custom {
-            height: 100%;
+            height: 530px;
             border: none;
             background-color: #F5F1E9;
             border-radius: 1rem;
@@ -47,16 +43,20 @@
             width: 250px;
             height: auto;
             align-self: center;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
         }
         
         .card-text-custom-size {
-            font-size: 1rem; /* Setara dengan sekitar 14.4px. Ganti nilainya sesuai keinginan Anda */
+            font-size: 1rem; 
         }
+
         .card-img-cendrawasih-large {
-            margin-bottom: 0rem;
-            width: 190px; /* Ukuran baru khusus untuk gambar pertama */
+            width: 270px; 
+            height: auto;
+        }
+
+        .card-img-tangancanting-large {
+            width: 270px; 
+            height: auto;
         }
 
         /* --- PERUBAHAN DI SINI --- */
@@ -65,9 +65,8 @@
             height: 2px; /* Diubah dari 1px */
             background-color: #B6B09F;
             margin: 0.5rem auto 1.5rem auto;
-            width: 80%;
+            width: '100%';
         }
-        /* --- AKHIR PERUBAHAN --- */
 
         .section-kainara-story {
             background-image: url('{{ asset('images/backgroundbawah-tentangkainara.png') }}');
@@ -76,7 +75,7 @@
             background-position: center;
             background-blend-mode: lighten;
             position: relative;
-            min-height: 100vh;
+            min-height: 90vh;
             display: flex;
             justify-content: center; /* Tetap tengahkan secara horizontal */
             padding: 15vh 1rem;
@@ -104,23 +103,19 @@
 @endpush
 
 @section('content')
-    <!-- 1. Hero Section sekarang menjadi background full-screen -->
-    <!-- PERHATIKAN: Tag <img> di dalamnya sudah dihapus -->
     <section class="hero-section-fullwidth">
-        {{-- Section ini sengaja dikosongkan, karena tampilannya diatur oleh CSS background --}}
     </section>
 
-    <!-- 2. Wrapper untuk konten yang tetap di tengah (dalam container) -->
     <div class="content-section">
         <div class="container-fluid px-5 py-5">
-            <div class="row g-4 justify-content-center align-items-stretch">
+            <div class="row gx-5 justify-content-center align-items-stretch">
                 <div class="col-md-4 d-flex flex-column">
-                    <div class="card p-3 card-custom shadow-sm flex-grow-1">
+                    <div class="card card-custom shadow-sm flex-grow-1 py-5 px-3">
                         <img src="{{ asset('images/cendrawasih.png') }}" class="card-img-top-custom card-img-cendrawasih-large" alt="Cenderawasih">
                         <div class="card-body text-center">
                             <hr class="card-divider">
-                            <h5 class="card-title fw-bold fst-italic fs-3">Cendrawasih</h5>
-                            <p class="card-text card-text-custom-size">The bird of paradise is one of the many animals carved into batik motifs, especially Papuan batik, because this bird is considered a bird of heaven and has a strong philosophical meaning in Papuan culture. In addition, the beautiful and colorful feathers of the bird of paradise are an inspiration for batik artists to create unique and interesting motifs.</p>
+                            <h3 class="card-title fw-bold fst-italic fs-2">Cendrawasih</h3>
+                            <p class="card-text card-text-custom-size mt-4 fs-5">The bird of paradise is one of the many animals carved into batik motifs, especially Papuan batik, because this bird is considered a bird of heaven and has a strong philosophical meaning in Papuan culture. In addition, the beautiful and colorful feathers of the bird of paradise are an inspiration for batik artists to create unique and interesting motifs.</p>
                         </div>
                     </div>
                 </div>
@@ -128,26 +123,27 @@
                 {{-- KOLOM 2: Banner Logo + Card Canting --}}
                 <div class="col-md-4 d-flex flex-column text-center">
                     <img src="{{ asset('images/titlepenjelasanlogo.png') }}" alt="Title Penjelasan Logo" class="logo-banner">
-                    <div class="card p-3 card-custom shadow-sm flex-grow-1">
-                        <img src="{{ asset('images/tangancanting.png') }}" class="card-img-top-custom" alt="Canting Batik">
+                    <div class="card card-custom shadow-sm flex-grow-1 mt-4 py-5 px-3">
+                        <img src="{{ asset('images/tangancanting.png') }}" class="card-img-top-custom card-img-tangancanting-large" alt="Canting Batik" style="padding-top:20px; padding-bottom: 20px">
                         <div class="card-body">
                             <hr class="card-divider">
-                            <h5 class="card-title fw-bold fst-italic fs-3">Canting Batik</h5>
-                            <p class="card-text card-text-custom-size mt-4">An essential tool in the creation of hand-drawn batik, used to apply hot wax onto fabric to form intricate batik patterns.</p>
+                            <h3 class="card-title fw-bold fst-italic fs-2">Canting Batik</h3>
+                            <p class="card-text card-text-custom-size mt-4 fs-5">An essential tool in the creation of hand-drawn batik, used to apply hot wax onto fabric to form intricate batik patterns.</p>
                         </div>
                     </div>
                 </div>
                 
                 {{-- KOLOM 3: Card Penjelasan Kainara --}}
                 <div class="col-md-4 d-flex flex-column">
-                    <div class="card p-3 card-custom shadow-sm flex-grow-1">
+                    <div class="card card-custom shadow-sm flex-grow-1 py-5 px-3">
                         <img src="{{ asset('images/kainara.png') }}" class="card-img-top-custom" alt="Logo Kainara">
                         <div class="card-body">
                             <hr class="card-divider mt-2">
-                            <p class="card-text card-text-custom-size text-center mt-4">"Kainara" is a combination of two words <br><em>kain</em> + <em>nara</em></p>
-                            <p class="text-start card-text-custom-size mt-4"><strong>Kain</strong> = Represents the main product of this start-up, namely typical Indonesian fabrics such as batik, woven fabrics, lurik, and so on.</p>
-                            <p class="text-start card-text-custom-size"><strong>Nara</strong> = Taken from the word ‘Nusantara’. Inspired by Sanskrit, which can mean “story” or “human”.</p>
-                            <p class="card-text card-text-custom-size text-center mt-4">It can be interpreted as <em>"kain yang bercerita"</em> or <em>"kain yang punya jiwa dan koneksi dengan manusia"</em>.</p>
+                            <h3 class="card-title fw-bold fst-italic fs-3 text-center">"Kainara" is a Combination of Two Words</h3>
+                            <h3 class="card-title fst-italic fs-3 text-center"><em>kain</em> + <em>nara</h3>
+                            <p class="text-start card-text-custom-size mt-5 fs-5"><strong>Kain</strong> = Represents the main product of this start-up, namely typical Indonesian fabrics such as batik, woven fabrics, lurik, and so on.</p>
+                            <p class="text-start card-text-custom-size fs-5"><strong>Nara</strong> = Taken from the word ‘Nusantara’. Inspired by Sanskrit, which can mean “story” or “human”.</p>
+                            <p class="card-text card-text-custom-size text-center mt-5 fs-5">It can be interpreted as <em>"kain yang bercerita"</em> or <em>"kain yang punya jiwa dan koneksi dengan manusia"</em>.</p>
                         </div>
                     </div>
                 </div>

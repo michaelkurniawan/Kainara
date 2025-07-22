@@ -17,17 +17,26 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Membuat satu Super Admin
         User::factory()->create([
             'first_name' => 'Super',
             'last_name' => 'Admin',
             'email' => 'admin@admin.com',
-            'password' => Hash::make('admin123'), // Kata sandi: admin123
+            'password' => Hash::make('admin123'), 
             'role' => 'admin',
             'email_verified_at' => now(),
             'last_login' => now(),
         ]);
 
+        User::factory()->create([
+            'first_name' => 'Normal',
+            'last_name' => 'User',
+            'email' => 'user@user.com',
+            'password' => Hash::make('user123'),
+            'role' => 'user',
+            'email_verified_at' => now(),
+            'last_login' => now(),
+        ]);
+        
         // Membuat 5 pengguna dengan peran 'admin'
         User::factory(5)->admin()->create();
 
