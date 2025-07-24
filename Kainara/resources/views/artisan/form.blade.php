@@ -68,7 +68,7 @@
 
         .stepper .step-indicator-number {
             font-size: 1.2rem;
-            margin-bottom: 4px; /* Agar angka berada di tengah */
+            margin-bottom: 2px; /* Agar angka berada di tengah */
         }
 
         .stepper .step-label {
@@ -469,15 +469,14 @@
                         <div class="col-12 form-group-custom">
                             <label for="full_name">Full Name</label>
                             <input type="text" id="full_name" name="full_name" class="form-control-custom" placeholder="Enter your full name" required>
-                            <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
+                            <div class="error-message"></div> 
                         </div>
 
                         {{-- Date of Birth --}}
                         <div class="col-md-6 form-group-custom">
                             <label for="date_of_birth">Date of Birth</label>
-                            {{-- Untuk date picker, Anda mungkin perlu JS. Untuk sekarang, ini adalah input teks. --}}
                             <input type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="date_of_birth" name="date_of_birth" class="form-control-custom" placeholder="Select your date of birth" required>
-                            <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
+                            <div class="error-message"></div>
                         </div>
 
                         {{-- Gender --}}
@@ -488,14 +487,14 @@
                                 <option value="male">Male</option>
                                 <option value="female">Female</option>
                             </select>
-                            <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
+                            <div class="error-message"></div> 
                         </div>
 
                         {{-- Phone Number --}}
                         <div class="col-md-6 form-group-custom">
                             <label for="phone_number">Phone Number</label>
                             <input type="tel" id="phone_number" name="phone_number" class="form-control-custom" placeholder="Enter your phone number (e.g., 08123456789)" required minlength="10">
-                            <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
+                            <div class="error-message"></div>
                         </div>
 
                         {{-- Email Address --}}
@@ -572,22 +571,22 @@
                                 <option value="fashion_designer">Fashion Designer</option>
                                 <option value="others">Others</option>
                             </select>
-                            <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
+                            <div class="error-message"></div> 
                         </div>
                         <div class="col-12 form-group-custom" id="other_business_type_wrapper" style="display: none;">
                             <label for="other_business_type">If Others, please specify:</label>
                             <input type="text" id="other_business_type" name="other_business_type" class="form-control-custom" placeholder="Enter your business type" required>
-                            <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
+                            <div class="error-message"></div> 
                         </div>
                         <div class="col-12 form-group-custom">
                             <label for="business_description">Business Description</label>
                             <textarea id="business_description" name="business_description" class="form-control-custom" rows="3" placeholder="Briefly describe your business" required></textarea>
-                            <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
+                            <div class="error-message"></div> 
                         </div>
                         <div class="col-md-6 form-group-custom">
                             <label for="business_phone_number">Business Phone Number</label>
                             <input type="tel" id="business_phone_number" name="business_phone_number" class="form-control-custom" placeholder="Enter your business phone number" required>
-                            <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
+                            <div class="error-message"></div> 
                         </div>
                         <div class="col-md-6 form-group-custom">
                             <label for="business_email">Business Email <span class="text-muted small fw-normal">(not required)</span></label>
@@ -609,7 +608,7 @@
                             <div class="col-12 form-group-custom">
                                 <label for="business_address">Business Address</label>
                                 <input type="text" id="business_address" name="business_address" class="form-control-custom" placeholder="Enter your business address" required>
-                                <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
+                                <div class="error-message"></div> 
                             </div>
                             <div class="col-md-4 form-group-custom">
                                 <label for="business_province">Province</label>
@@ -621,17 +620,17 @@
                                         @endforeach
                                     @endif
                                 </select>
-                                <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
+                                <div class="error-message"></div> 
                             </div>
                             <div class="col-md-4 form-group-custom">
                                 <label for="business_city">City / Regency</label>
                                 <input type="text" id="business_city" name="business_city" class="form-control-custom" placeholder="Enter your city or regency" required>
-                                <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
+                                <div class="error-message"></div> 
                             </div>
                             <div class="col-md-4 form-group-custom">
                                 <label for="business_postal_code">Postal Code</label>
                                 <input type="text" id="business_postal_code" name="business_postal_code" class="form-control-custom" placeholder="Enter your postal code" required>
-                                <div class="error-message"></div> {{-- <-- TAMBAHKAN INI --}}
+                                <div class="error-message"></div> 
                             </div>
                         </div> {{-- Akhir dari div.row untuk alamat --}}
                     </div> {{-- Akhir dari div#business_address_fields --}}
@@ -836,9 +835,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             break;
                         
                         case 'tel':
-                            const phonePattern = /^\+?[0-9]{10,15}$/;
+                            const phonePattern = /^0[0-9]{9,14}$/;
                             if (!phonePattern.test(input.value.replace(/[\s-()]/g, ''))) {
-                                errorMessage = 'Please enter a valid phone number (10-15 digits).';
+                                errorMessage = 'Please enter a valid phone number starting with 0 (10–15 digits).';
                             }
                             break;
 
