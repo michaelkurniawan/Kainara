@@ -3,11 +3,11 @@
 @section('title', $story->title . ' Detail')
 
 @section('content')
-    <div class="container py-5">
-        <img src="{{ asset('images/Detail_BatikKiri.png') }}" alt="Batik Motif Left" class="batik-left" />
-        <img src="{{ asset('images/Detail_BatikKanan.png') }}" alt="Batik Motif Right" class="batik-right" />
+    <div class="container-fluid py-5 position-relative main-content-wrapper">
+        <img src="{{ asset('images/Detail_BatikKiri.png') }}" alt="Batik Motif Left" class="batik-absolute batik-left" />
+        <img src="{{ asset('images/Detail_BatikKanan.png') }}" alt="Batik Motif Right" class="batik-absolute batik-right" />
+
         <div class="row justify-content-center">
-            
             <div class="col-lg-8 col-md-10">
 
                 <div class="text-center mb-5">
@@ -15,12 +15,12 @@
                     <p class="text-secondary medium">{{ $story->created_at->format('F j, Y') }}</p>
                 </div>
                 
-                <div class="text-center mb-4">
+                <div class="text-center mb-4 d-flex justify-content-center">
                     <img src="{{ asset('storage/' . $story->thumbnail) }}" alt="{{ $story->thumbnail }}" class="img-fluid rounded shadow-sm mb-2 w-75" />
                 </div>
 
                 <div class="text-justify lh-lg fs-5">
-                    {!! $story->content !!}
+                    {!! nl2br(e($story->content)) !!} 
                 </div>
 
                 <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
@@ -46,7 +46,6 @@
 @push('styles')
     <style>
         body {
-            position: relative; /* supaya anak-anak absolute bisa relatif ke body */
             background-color: white;
             font-family: 'AncizarSerif', serif;
             background-image: url('{{ asset('images/background_pattern_left.png') }}'), url('{{ asset('images/background_pattern_right.png') }}');
@@ -60,35 +59,38 @@
         }
 
         a.nav-link-custom {
-            color: black;        /* Warna tulisan hitam */
-            text-decoration: none; /* Hilangkan underline */
-            transition: all 0.3s ease; /* Animasi halus saat hover */
+            color: black;
+            text-decoration: none;
+            transition: all 0.3s ease;
             font-family: 'AncizarSerif', serif;
         }
 
         a.nav-link-custom:hover {
-            text-decoration: underline; /* Tambahkan underline saat hover */
+            text-decoration: underline;
         }
 
-        .batik-left {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 150px; /* atur ukuran sesuai keinginan */
-            opacity: 0.3; /* supaya nggak terlalu menonjol */
-            pointer-events: none; /* supaya gak ganggu klik */
-            z-index: 10;
+        .main-content-wrapper {
+            overflow: hidden;
         }
 
-        .batik-right {
-            position: fixed;
-            top: 0;
-            right: 0;
+        .batik-absolute {
+            position: absolute;
             width: 150px;
             opacity: 0.3;
             pointer-events: none;
-            z-index: 10;
+            z-index: -1;
         }
+
+        .batik-left {
+            top: 0;
+            left: 0;
+        }
+
+        .batik-right {
+            bottom: 0;
+            right: 0;
+        }
+
     </style>
 @endpush
 

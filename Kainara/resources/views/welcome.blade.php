@@ -480,57 +480,53 @@
     </div>
 </section>
 
-
-
 {{-- Latest Stories Section --}}
-<section class="latest-stories-custom px-5 py-5">
-    <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="section-title-stories">Latest Stories</h2>
-            <a href="{{ route('Stories.ListStories') }}" class="link-styled-as-button-text">Read more articles!</a>
+<section class="latest-stories-custom container-fluid py-5 px-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title-stories">Latest Stories</h2>
+        <a href="{{ route('Stories.ListStories') }}" class="link-styled-as-button-text">Read more articles!</a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-7 mb-4 mb-lg-0">
+            @if ($featuredArticle)
+                <a href="{{ route('Stories.DetailStories', $featuredArticle->slug) }}" class="card article-card-featured h-100 d-block text-decoration-none text-dark">
+                    <img src="{{ asset('storage/' . $featuredArticle->thumbnail) }}" alt="{{ $featuredArticle->title }}" class="card-img-top" />
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-2">
+                            {{ $featuredArticle->title }}
+                        </h5>
+                        <p class="card-text text-muted small mb-3">{{ \Carbon\Carbon::parse($featuredArticle->created_at)->format('d M Y') }}</p>
+                        <p class="card-text article-excerpt mb-0">
+                            {{ Str::limit(strip_tags($featuredArticle->content), 300, '...') }}
+                        </p>
+                    </div>
+                </a>
+            @else
+                <p>No featured article available.</p>
+            @endif
         </div>
 
-        <div class="row">
-            <div class="col-lg-7 mb-4 mb-lg-0">
-                @if ($featuredArticle)
-                    <a href="{{ route('Stories.DetailStories', $featuredArticle->slug) }}" class="card article-card-featured h-100 d-block text-decoration-none text-dark">
-                        <img src="{{ asset('storage/' . $featuredArticle->thumbnail) }}" alt="{{ $featuredArticle->title }}" class="card-img-top" />
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title mb-2">
-                                {{ $featuredArticle->title }}
-                            </h5>
-                            <p class="card-text text-muted small mb-3">{{ \Carbon\Carbon::parse($featuredArticle->created_at)->format('d M Y') }}</p>
-                            <p class="card-text article-excerpt mb-0">
-                                {{ Str::limit(strip_tags($featuredArticle->content), 300, '...') }}
-                            </p>
+        <div class="col-lg-5">
+            @forelse ($smallArticles as $article)
+                <a href="{{ route('Stories.DetailStories', $article->slug) }}" class="card article-card-small {{ $loop->last ? 'mb-0' : 'mb-3' }} d-block text-decoration-none text-dark">
+                    <div class="row g-0">
+                        <div class="col-4 product-image-container">
+                            <img src="{{ asset('storage/' . $article->thumbnail) }}" alt="{{ $article->title }}" class="img-fluid rounded-start article-img-small" />                                
                         </div>
-                    </a>
-                @else
-                    <p>No featured article available.</p>
-                @endif
-            </div>
-
-            <div class="col-lg-5">
-                @forelse ($smallArticles as $article)
-                    <a href="{{ route('Stories.DetailStories', $article->slug) }}" class="card article-card-small {{ $loop->last ? 'mb-0' : 'mb-3' }} d-block text-decoration-none text-dark">
-                        <div class="row g-0">
-                            <div class="col-4 product-image-container">
-                                <img src="{{ asset('storage/' . $article->thumbnail) }}" alt="{{ $article->title }}" class="img-fluid rounded-start article-img-small" />                                
-                            </div>
-                            <div class="col-8">
-                                <div class="card-body">
-                                    <h6 class="card-title mb-1">
-                                        {{ $article->title }}
-                                    </h6>
-                                    <p class="card-text text-muted small">{{ \Carbon\Carbon::parse($article->created_at)->format('d M Y') }}</p>
-                                </div>
+                        <div class="col-8">
+                            <div class="card-body">
+                                <h6 class="card-title mb-1">
+                                    {{ $article->title }}
+                                </h6>
+                                <p class="card-text text-muted small">{{ \Carbon\Carbon::parse($article->created_at)->format('d M Y') }}</p>
                             </div>
                         </div>
-                    </a> {{-- Closing <a> tag for the entire card --}}
-                @empty
-                    <p>No other articles available.</p>
-                @endforelse
-            </div>
+                    </div>
+                </a> {{-- Closing <a> tag for the entire card --}}
+            @empty
+                <p>No other articles available.</p>
+            @endforelse
         </div>
     </div>
 </section>

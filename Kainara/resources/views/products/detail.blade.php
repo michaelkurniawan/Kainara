@@ -142,8 +142,8 @@
     .product-image-container {
         width: '100%';
         display: flex;
-        justify-content: center;
-        align-items: center;
+        justify-content: flex-start;
+        align-items: flex-start;
         overflow: hidden;
         margin: 0 auto;
     }
@@ -246,8 +246,7 @@
         @endif
 
         <div class="row g-5 mb-5">
-            <div class="col-lg-6 d-flex align-items-start justify-content-center">
-                {{-- Product Image Section --}}
+            <div class="col-lg-6">
                 <div class="product-image-container">
                     <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="img-fluid" />
                 </div>
