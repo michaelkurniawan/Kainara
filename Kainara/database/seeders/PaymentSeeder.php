@@ -14,21 +14,27 @@ class PaymentSeeder extends Seeder
      */
     public function run(): void
     {
-        $ordersAwaitingPayment = Order::where('status', 'Awaiting Payment')->doesntHave('payment')->get();
+        $ordersAwaitingPayment = Order::where('status', 'Awaiting Payment')
+                                      ->doesntHave('payment')
+                                      ->get();
 
         foreach ($ordersAwaitingPayment as $order) {
             $payment = Payment::factory()->create([
                 'order_id' => $order->id,
-                'amount_paid' => $order->subtotal + $order->shipping_cost,
+                'amount_paid' => $order->grand_total, // Pastikan jumlah pembayaran sesuai dengan grand_total order
             ]);
 
-            if ($payment->midtrans_transaction_status === 'settlement') {
+            if ($payment->status === 'succeeded') {
                 $order->status = 'Order Confirmed';
                 $order->save();
-            } elseif ($payment->midtrans_transaction_status === 'expire' || $payment->midtrans_transaction_status === 'deny' || $payment->midtrans_transaction_status === 'cancel') {
+            } elseif (in_array($payment->status, ['failed', 'canceled'])) {
                 $order->status = 'Canceled';
                 $order->save();
             }
+            // Untuk status 'pending' atau 'requires_action', status order akan tetap 'Awaiting Payment'
         }
+
+        // Opsional: Buat beberapa payment sukses tambahan yang tidak terkait dengan order 'Awaiting Payment'
+        // Payment::factory()->count(5)->succeeded()->create();
     }
 }
