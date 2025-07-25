@@ -19,17 +19,15 @@ class Order extends Model
      */
     protected $fillable = [
         'user_id',
-        'address_id', // This references the user_addresses table
+        'address_id', 
         'status',
         'shipping_cost',
         'subtotal',
         'is_completed',
         'completed_at',
         'auto_complete_at',
-        // Duplicated User Information
         'original_user_name',
         'original_user_email',
-        // Duplicated Shipping Address Information
         'shipping_label',
         'shipping_recipient_name',
         'shipping_phone',
@@ -38,6 +36,7 @@ class Order extends Model
         'shipping_city',
         'shipping_province',
         'shipping_postal_code',
+        'payment_method',
     ];
 
     protected $casts = [
@@ -86,8 +85,8 @@ class Order extends Model
         return $this->hasOne(Delivery::class);
     }
 
-    public function getTotalAmountAttribute(): float
+    public function getGrandTotalAttribute(): float
     {
-        return $this->subtotal + $this->shipping_cost;
+        return (float) ($this->subtotal ?? 0) + (float) ($this->shipping_cost ?? 0);
     }
 }

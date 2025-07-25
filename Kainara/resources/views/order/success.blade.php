@@ -27,7 +27,7 @@
                         <h2 class="card-title text-success">Pesanan Anda #{{ $order->id }} telah dikonfirmasi.</h2>
                         <p class="card-text">Terima kasih atas pembelian Anda!</p>
                         <p>Jumlah Dibayar: <strong>IDR {{ number_format($order->grand_total, 0, ',', '.') }}</strong></p>
-                        <a href="{{ route('home') }}" class="btn btn-primary mt-3">Lanjutkan Belanja</a>
+                        <a href="{{ route('products.index') }}" class="btn btn-primary mt-3">Lanjutkan Belanja</a>
                         <a href="{{ route('order.details', $order->id) }}" class="btn btn-secondary mt-3">Lihat Detail Pesanan</a>
                     </div>
                 </div>

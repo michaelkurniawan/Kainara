@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class RedirectIfAuthenticatedAdmin
+class RedirectIfAuthenticated
 {
     /**
      * Handle an incoming request.
@@ -22,6 +22,8 @@ class RedirectIfAuthenticatedAdmin
             if (Auth::guard($guard)->check()) {
                 if (Auth::user()->role === 'admin') {
                     return redirect(route('admin.dashboard'));
+                } else if (Auth::user()->role === 'user') {
+                    return redirect(route('welcome'));
                 }
             }
         }

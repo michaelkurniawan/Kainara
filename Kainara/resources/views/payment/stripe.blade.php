@@ -1,234 +1,202 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pembayaran Stripe untuk Pesanan #{{ $order->id }}</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Stripe.js v3 -->
-    <script src="https://js.stripe.com/v3/"></script>
-    <!-- Penting untuk AJAX dan keamanan CSRF Laravel -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <style>
-        body {
-            font-family: sans-serif;
-            background-color: #f8f9fa;
-        }
-        .container {
-            margin-top: 50px;
-        }
-        .card {
-            border: none;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .card-header {
-            background-color: #007bff;
-            color: white;
-            border-radius: 8px 8px 0 0;
-            font-size: 1.25rem;
-            font-weight: bold;
-            padding: 1.25rem;
-        }
-        .card-body {
-            padding: 2rem;
-        }
-        /* Styling untuk Stripe Elements */
-        .StripeElement {
-            box-sizing: border-box;
-            height: 40px;
-            padding: 10px 12px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            background-color: white;
-            box-shadow: 0 1px 3px 0 #e6ebf1;
-            -webkit-transition: box-shadow 150ms ease;
-            transition: box-shadow 150ms ease;
-        }
-        .StripeElement--focus {
-            box-shadow: 0 1px 3px 0 #cfd7df;
-        }
-        .StripeElement--invalid {
-            border-color: #fa755a;
-        }
-        .StripeElement--webkit-autofill {
-            background-color: #fefde5 !important;
-        }
-        #card-errors {
-            color: #fa755a;
-            margin-top: 10px;
-        }
-        .btn-primary {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-        .btn-primary:hover {
-            background-color: #218838;
-            border-color: #1e7e34;
-        }
-        .loading-overlay {
-            display: flex;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            visibility: hidden;
-            opacity: 0;
-            transition: visibility 0s, opacity 0.3s linear;
-        }
-        .loading-overlay.active {
-            visibility: visible;
-            opacity: 1;
-        }
-        .spinner-border {
-            width: 3rem;
-            height: 3rem;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        Selesaikan Pembayaran Anda untuk Pesanan #{{ $order->id }}
-                    </div>
-                    <div class="card-body">
-                        <h5 class="mb-4">Jumlah Total: <strong>IDR {{ number_format($order->grand_total, 0, ',', '.') }}</strong></h5>
+<!-- resources/views/payment/stripe.blade.php -->
+@extends('layouts.app')
 
-                        <form id="payment-form">
-                            @csrf <!-- Token CSRF untuk keamanan form -->
-                            <div class="form-group">
-                                <label for="card-element">Kartu Kredit atau Debit</label>
-                                <div id="card-element" class="StripeElement">
-                                    <!-- Stripe Elements akan dimasukkan di sini. -->
-                                </div>
-                                <!-- Tempat untuk menampilkan error validasi kartu -->
-                                <div id="card-errors" role="alert"></div>
-                            </div>
-                            <button type="submit" id="submit-button" class="btn btn-primary btn-block mt-4">Bayar Sekarang</button>
-                        </form>
+@section('title', 'Selesaikan Pembayaran Anda')
+
+@push('styles')
+<style>
+    /* Styling untuk form Stripe Elements */
+    #payment-element {
+        margin-bottom: 24px;
+        padding: 10px;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+    }
+    #payment-form button {
+        background-color: #B6B09F;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+    }
+    #payment-form button:hover {
+        background-color: #9a9a9a;
+    }
+    #payment-message {
+        color: #721c24; /* Warna merah gelap untuk teks error */
+        background: #f8d7da; /* Latar belakang merah muda */
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 12px;
+        border: 1px solid #f5c6cb; /* Border merah */
+    }
+    .hidden {
+        display: none;
+    }
+</style>
+@endpush
+
+@section('content')
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4">
+                <h1 class="text-center mb-4">Selesaikan Pembayaran untuk Pesanan #{{ $order->id }}</h1>
+                <p class="text-center mb-4 fs-4">Total: **IDR {{ number_format($order->grand_total, 0, ',', '.') }}**</p>
+                {{-- $order->grand_total akan menggunakan accessor dari model Order --}}
+
+                @if (session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                </div>
+                @endif
+
+                <form id="payment-form">
+                    <div id="payment-element">
+                        <!-- Stripe Elements akan disisipkan di sini -->
+                    </div>
+                    <button id="submit-button">Bayar Sekarang</button>
+                    <div id="payment-message" class="hidden mt-3"></div>
+                </form>
             </div>
         </div>
     </div>
+</div>
+@endsection
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="spinner-border text-primary" role="status">
-            <span class="sr-only">Memuat...</span>
-        </div>
-    </div>
+@push('scripts')
+<script>
+    const stripe = Stripe('{{ $stripePublicKey }}'); // Kunci publik Stripe Anda dari backend
+    const clientSecret = '{{ $clientSecret }}'; // Client secret dari backend
+    const orderId = {{ $order->id }}; // ID Order dari backend
 
-    <script>
-        // Inisialisasi Stripe dengan Public Key Anda
-        const stripe = Stripe('{{ $stripePublicKey }}'); // $stripePublicKey datang dari controller
-        const elements = stripe.elements();
+    // Inisialisasi Stripe Elements
+    // Ini adalah UI form pembayaran kartu yang disediakan oleh Stripe
+    const elements = stripe.elements({ clientSecret });
+    const paymentElement = elements.create('payment');
+    paymentElement.mount('#payment-element'); // Pasang elemen ke div di halaman HTML
 
-        // Buat instance Stripe Elements 'card'
-        const cardElement = elements.create('card', {
-            style: {
-                base: {
-                    iconColor: '#666EE8',
-                    color: '#313259',
-                    fontWeight: '300',
-                    fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif',
-                    fontSize: '16px',
-                    '::placeholder': {
-                        color: '#aab7c4',
-                    },
+    const form = document.getElementById('payment-form');
+    const submitButton = document.getElementById('submit-button');
+    const paymentMessage = document.getElementById('payment-message');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Mencegah submit form standar
+
+        submitButton.disabled = true; // Nonaktifkan tombol untuk mencegah double click
+        paymentMessage.textContent = ''; // Hapus pesan sebelumnya
+        paymentMessage.classList.add('hidden'); // Sembunyikan pesan
+
+        try {
+            // Konfirmasi pembayaran dengan Stripe
+            const { error, paymentIntent } = await stripe.confirmPayment({
+                elements, // Element pembayaran yang sudah kita mount
+                confirmParams: {
+                    // return_url: URL di mana Stripe akan mengalihkan pengguna setelah pembayaran selesai.
+                    // Ini penting untuk alur non-webhook.
+                    return_url: '{{ route('stripe.payment.confirm', $order->id) }}',
                 },
-                invalid: {
-                    iconColor: '#FFC7EE',
-                    color: '#FFC7EE',
-                },
-            },
-        });
-
-        // Mount Card Element ke elemen DOM
-        cardElement.mount('#card-element');
-
-        const form = document.getElementById('payment-form');
-        const cardErrors = document.getElementById('card-errors');
-        const submitButton = document.getElementById('submit-button');
-        const loadingOverlay = document.getElementById('loading-overlay');
-
-        // Tangani error real-time saat pengguna memasukkan detail kartu
-        cardElement.on('change', function(event) {
-            if (event.error) {
-                cardErrors.textContent = event.error.message;
-            } else {
-                cardErrors.textContent = '';
-            }
-        });
-
-        // Tangani saat form pembayaran disubmit
-        form.addEventListener('submit', async function(event) {
-            event.preventDefault(); // Mencegah submit form standar
-
-            submitButton.disabled = true; // Nonaktifkan tombol untuk mencegah double click
-            loadingOverlay.classList.add('active'); // Tampilkan loading overlay
-
-            // Konfirmasi PaymentIntent di sisi klien
-            // Client secret datang dari controller
-            const { paymentIntent, error } = await stripe.confirmCardPayment('{{ $clientSecret }}', {
-                payment_method: {
-                    card: cardElement, // Gunakan elemen kartu yang sudah di-mount
-                    billing_details: {
-                        // Informasi billing bisa diambil dari form checkout atau data user
-                        name: "{{ $order->customer_first_name ?? 'Guest' }} {{ $order->customer_last_name ?? '' }}",
-                        email: "{{ $order->customer_email ?? 'guest@example.com' }}",
-                    },
-                }
+                // redirect: 'if_required' akan menangani 3D Secure atau redirect lainnya secara otomatis
+                // Jika tidak ada redirect, PaymentIntent akan tersedia langsung di respons.
+                redirect: 'if_required',
             });
 
             if (error) {
-                // Tampilkan error jika konfirmasi gagal (misal: kartu ditolak)
-                cardErrors.textContent = error.message;
+                // Tampilkan pesan error kepada pengguna
+                paymentMessage.textContent = error.message;
+                paymentMessage.classList.remove('hidden');
                 submitButton.disabled = false; // Aktifkan kembali tombol
-                loadingOverlay.classList.remove('active'); // Sembunyikan loading overlay
+            } else if (paymentIntent) {
+                // Jika PaymentIntent tersedia (baik sukses, requires_action, atau lainnya)
+                // Kirim status ke backend untuk diperbarui di database
+                sendConfirmationToBackend(paymentIntent.id, paymentIntent.status);
             } else {
-                // Jika PaymentIntent berhasil dikonfirmasi di sisi klien (misal: status 'succeeded' atau 'requires_action')
-                // Kirim PaymentIntent ID dan status ke backend Laravel untuk verifikasi dan update database
-                const response = await fetch('{{ route('checkout.stripe.confirm', $order->id) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        payment_intent_id: paymentIntent.id,
-                        payment_intent_status: paymentIntent.status,
-                    })
-                });
+                // Kasus lain yang tidak terduga
+                paymentMessage.textContent = 'Terjadi kesalahan tidak terduga dalam proses pembayaran.';
+                paymentMessage.classList.remove('hidden');
+                submitButton.disabled = false;
+            }
+        } catch (err) {
+            console.error('Error during payment confirmation:', err);
+            paymentMessage.textContent = 'Terjadi kesalahan jaringan atau internal server. Mohon coba lagi.';
+            paymentMessage.classList.remove('hidden');
+            submitButton.disabled = false;
+        }
+    });
 
-                const result = await response.json(); // Ambil respons dari backend
+    /**
+     * Fungsi untuk mengirim status pembayaran ke backend Anda.
+     * Ini penting karena `redirect: 'if_required'` mungkin tidak selalu redirect browser
+     * atau untuk menangani kasus ketika pengguna kembali ke halaman ini setelah redirect Stripe.
+     */
+    async function sendConfirmationToBackend(paymentIntentId, paymentIntentStatus) {
+        try {
+            const response = await fetch('{{ route('stripe.payment.confirm', $order->id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}', // Laravel CSRF token
+                },
+                body: JSON.stringify({
+                    payment_intent_id: paymentIntentId,
+                    payment_intent_status: paymentIntentStatus,
+                }),
+            });
 
-                if (result.success) {
-                    // Pembayaran berhasil, arahkan ke halaman sukses
-                    alert(result.message); // Ganti alert() dengan modal/notifikasi kustom di produksi
-                    window.location.href = result.redirect_url;
+            const data = await response.json();
+
+            if (data.success) {
+                // Jika backend melaporkan sukses, arahkan ke halaman sukses
+                window.location.href = data.redirect_url;
+            } else {
+                // Jika backend melaporkan gagal atau memerlukan tindakan
+                paymentMessage.textContent = data.message || 'Konfirmasi pembayaran gagal di sistem kami.';
+                paymentMessage.classList.remove('hidden');
+                // Arahkan ke URL yang diberikan oleh backend (misalnya halaman gagal)
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
                 } else {
-                    // Pembayaran gagal atau memerlukan tindakan lebih lanjut (tapi backend tidak menangani redirect otomatis)
-                    alert('Pembayaran gagal: ' + result.message);
-                    submitButton.disabled = false;
-                    loadingOverlay.classList.remove('active');
-
-                    // Jika backend memberikan URL redirect, ikuti
-                    if (result.redirect_url) {
-                        window.location.href = result.redirect_url;
-                    }
+                    submitButton.disabled = false; // Aktifkan kembali tombol jika tidak ada redirect
                 }
             }
+        } catch (error) {
+            console.error('Error sending payment confirmation to backend:', error);
+            paymentMessage.textContent = 'Kesalahan jaringan atau server saat mengonfirmasi pembayaran. Mohon coba lagi.';
+            paymentMessage.classList.remove('hidden');
+            submitButton.disabled = false;
+        }
+    }
+
+    /**
+     * Tangani skenario di mana pengguna dialihkan kembali ke halaman ini setelah 3D Secure
+     * atau otentikasi lainnya (saat `return_url` dipicu).
+     * Stripe akan menambahkan `payment_intent_client_secret` ke URL.
+     */
+    const urlParams = new URLSearchParams(window.location.search);
+    const clientSecretFromUrl = urlParams.get('payment_intent_client_secret');
+
+    // Jika clientSecretFromUrl ada dan cocok dengan clientSecret kita, artinya pengguna kembali dari redirect Stripe
+    if (clientSecretFromUrl && clientSecretFromUrl === clientSecret) {
+        // Ambil PaymentIntent dari Stripe untuk memeriksa statusnya setelah redirect
+        stripe.retrievePaymentIntent(clientSecretFromUrl).then(({ paymentIntent }) => {
+            if (paymentIntent) {
+                sendConfirmationToBackend(paymentIntent.id, paymentIntent.status);
+            } else {
+                paymentMessage.textContent = 'Tidak dapat mengambil intent pembayaran setelah pengalihan.';
+                paymentMessage.classList.remove('hidden');
+                submitButton.disabled = false;
+            }
+        }).catch(err => {
+            console.error('Error retrieving payment intent after redirect:', err);
+            paymentMessage.textContent = 'Kesalahan saat mengambil status pembayaran setelah pengalihan.';
+            paymentMessage.classList.remove('hidden');
+            submitButton.disabled = false;
         });
-    </script>
-</body>
-</html>
+    }
+</script>
+@endpush

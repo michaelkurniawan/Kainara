@@ -4,94 +4,97 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Stripe\Stripe; // Import the main Stripe class
-use Stripe\StripeClient; // Import StripeClient for making API calls
-use App\Models\Order; // Import the Order model
-use App\Models\Payment; // Import the Payment model
-use Illuminate\Support\Facades\Log; // For logging errors
-use Illuminate\Support\Facades\Auth; // For accessing the authenticated user (optional)
-use Exception; // For handling general exceptions
+use Stripe\Stripe; // Import kelas utama Stripe
+use Stripe\StripeClient; // Import StripeClient untuk melakukan panggilan API
+use App\Models\Order; // Import model Order
+use App\Models\Payment; // Import model Payment
+use Illuminate\Support\Facades\Log; // Untuk logging kesalahan
+use Illuminate\Support\Facades\Auth; // Untuk mengakses pengguna yang terautentikasi (opsional)
+use Exception; // Untuk menangani pengecualian umum
 
 class StripePaymentController extends Controller
 {
     protected $stripe;
 
-    // Constructor to initialize the StripeClient with your secret key
+    /**
+     * Konstruktor untuk menginisialisasi StripeClient dengan kunci rahasia Anda.
+     */
     public function __construct()
     {
-        // Set the Stripe API key globally from your config/services.php file
+        // Tetapkan kunci API Stripe secara global dari file config/services.php Anda
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        // Create an instance of the StripeClient
+        // Buat instance StripeClient
         $this->stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
     }
 
     /**
-     * Display the Stripe payment form and create/retrieve a PaymentIntent.
-     * This method is called after the initial checkout process if 'credit_card' is chosen.
+     * Menampilkan formulir pembayaran Stripe dan membuat/mengambil PaymentIntent.
+     * Metode ini dipanggil setelah proses checkout awal jika 'credit_card' dipilih.
      *
      * @param \App\Models\Order $order
      * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
     public function showPaymentForm(Order $order)
     {
-        // First, check if the order is actually awaiting payment
+        // Pertama, periksa apakah pesanan benar-benar menunggu pembayaran
         if ($order->status !== 'Awaiting Payment') {
-            return redirect()->route('order.details', $order->id)->with('error', 'This order is not awaiting payment or has already been processed.');
+            return redirect()->route('order.details', $order->id)->with('error', 'Pesanan ini tidak menunggu pembayaran atau sudah diproses.');
         }
 
-        // Try to find an existing payment record for this order to see if a PaymentIntent was already created
+        // Coba temukan record pembayaran yang sudah ada untuk pesanan ini untuk melihat apakah PaymentIntent sudah dibuat
         $payment = Payment::where('order_id', $order->id)->first();
 
         try {
             $clientSecret = null;
-            // If no payment record exists or it doesn't have a Stripe Payment Intent ID, create a new one
+            // Jika tidak ada record pembayaran atau tidak memiliki Stripe Payment Intent ID, buat yang baru
             if (!$payment || !$payment->stripe_payment_intent_id) {
                 $paymentIntent = $this->stripe->paymentIntents->create([
-                    'amount' => (int)($order->grand_total * 100), // Amount must be in cents (smallest currency unit)
-                    'currency' => 'idr', // Specify currency, e.g., 'idr' for Indonesian Rupiah
-                    'metadata' => ['order_id' => $order->id], // Attach order ID for future reference in Stripe
-                    'description' => 'Payment for Order #' . $order->id,
-                    'receipt_email' => Auth::check() ? Auth::user()->email : $order->customer_email, // Send receipt to this email
-                    'automatic_payment_methods' => ['enabled' => true], // Enable automatic payment methods for a simpler integration
+                    'amount' => (int)($order->grand_total * 100), // Jumlah harus dalam cent (unit mata uang terkecil)
+                    'currency' => 'idr', // Tentukan mata uang, misalnya, 'idr' untuk Rupiah Indonesia
+                    'metadata' => ['order_id' => $order->id], // Lampirkan ID order untuk referensi di Stripe
+                    'description' => 'Pembayaran untuk Order #' . $order->id,
+                    // Kirim resi ke email pengguna yang terautentikasi atau email asli di order
+                    'receipt_email' => Auth::check() ? Auth::user()->email : $order->original_user_email,
+                    'automatic_payment_methods' => ['enabled' => true], // Aktifkan metode pembayaran otomatis untuk integrasi yang lebih sederhana
                 ]);
 
-                // Store the new PaymentIntent details in your local database
+                // Simpan detail PaymentIntent baru di database lokal Anda
                 Payment::create([
                     'order_id' => $order->id,
                     'stripe_payment_intent_id' => $paymentIntent->id,
-                    'status' => $paymentIntent->status, // Initial status from Stripe (e.g., 'requires_payment_method')
-                    'amount_paid' => $order->grand_total, // Store the amount, will be confirmed after success
+                    'status' => $paymentIntent->status, // Status awal dari Stripe (misalnya, 'requires_payment_method')
+                    'amount_paid' => $order->grand_total, // Simpan jumlah, akan dikonfirmasi setelah berhasil
                     'currency' => strtoupper($paymentIntent->currency),
-                    'payment_method_type' => 'card', // Assuming this route is for card payments
-                    'card_details' => null,             // These will be populated after successful payment
-                    'payment_method_details' => null,   // These will be populated after successful payment
+                    'payment_method_type' => 'card', // Diasumsikan rute ini untuk pembayaran kartu
+                    'card_details' => null,             // Ini akan diisi setelah pembayaran berhasil
+                    'payment_method_details' => null,   // Ini akan diisi setelah pembayaran berhasil
                 ]);
                 $clientSecret = $paymentIntent->client_secret;
 
             } else {
-                // If a payment record and Stripe Payment Intent ID exist, retrieve the existing PaymentIntent from Stripe
+                // Jika record pembayaran dan Stripe Payment Intent ID sudah ada, ambil PaymentIntent yang ada dari Stripe
                 $paymentIntent = $this->stripe->paymentIntents->retrieve($payment->stripe_payment_intent_id);
 
-                // If the existing PaymentIntent is already succeeded or processing, redirect to success page
+                // Jika PaymentIntent yang ada sudah sukses atau sedang diproses, arahkan ke halaman sukses
                 if (in_array($paymentIntent->status, ['succeeded', 'processing'])) {
-                    return redirect()->route('order.success', $order->id)->with('success', 'Payment for this order has already been processed.');
+                    return redirect()->route('order.success', $order->id)->with('success', 'Pembayaran untuk pesanan ini sudah diproses.');
                 }
 
-                // If the amount of the PaymentIntent doesn't match the current order grand total (e.g., price change), update it
+                // Jika jumlah PaymentIntent tidak cocok dengan grand_total order saat ini (misalnya, perubahan harga), perbarui
                 if ($paymentIntent->amount !== (int)($order->grand_total * 100)) {
                     $paymentIntent = $this->stripe->paymentIntents->update(
                         $payment->stripe_payment_intent_id,
                         ['amount' => (int)($order->grand_total * 100)]
                     );
-                    // Also update the amount_paid in your local Payment record
+                    // Juga perbarui amount_paid di record Pembayaran lokal Anda
                     $payment->amount_paid = $order->grand_total;
                     $payment->save();
                 }
                 $clientSecret = $paymentIntent->client_secret;
             }
 
-            // Pass order data, Stripe public key, and client secret to the payment view
+            // Teruskan data order, kunci publik Stripe, dan client secret ke view pembayaran
             return view('payment.stripe', [
                 'order' => $order,
                 'stripePublicKey' => config('services.stripe.key'),
@@ -99,15 +102,15 @@ class StripePaymentController extends Controller
             ]);
 
         } catch (Exception $e) {
-            // Log any errors that occur during PaymentIntent creation/retrieval
+            // Log setiap kesalahan yang terjadi selama pembuatan/pengambilan PaymentIntent
             Log::error('Stripe Payment Intent creation/retrieval failed: ' . $e->getMessage(), ['order_id' => $order->id]);
-            return redirect()->route('checkout.show')->with('error', 'Failed to initialize payment. Please try again. ' . $e->getMessage());
+            return redirect()->route('checkout.show')->with('error', 'Gagal memulai pembayaran. Silakan coba lagi. ' . $e->getMessage());
         }
     }
 
     /**
-     * Confirms the payment after client-side Stripe JavaScript completes the payment flow.
-     * This method is typically called via an AJAX request from the frontend.
+     * Mengonfirmasi pembayaran setelah JavaScript Stripe sisi klien menyelesaikan alur pembayaran.
+     * Metode ini biasanya dipanggil melalui permintaan AJAX dari frontend.
      *
      * @param \Illuminate\Http\Request $request
      * @param \App\Models\Order $order
@@ -115,20 +118,20 @@ class StripePaymentController extends Controller
      */
     public function confirmPayment(Request $request, Order $order)
     {
-        // Validate the incoming request for required Stripe Payment Intent details
+        // Validasi permintaan masuk untuk detail Payment Intent Stripe yang diperlukan
         $request->validate([
             'payment_intent_id' => 'required|string',
-            'payment_intent_status' => 'required|string', // This is the status reported by client-side Stripe JS
+            'payment_intent_status' => 'required|string', // Ini adalah status yang dilaporkan oleh Stripe JS sisi klien
         ]);
 
         try {
             $paymentIntentId = $request->input('payment_intent_id');
             $reportedPaymentIntentStatus = $request->input('payment_intent_status');
 
-            // Retrieve the PaymentIntent from Stripe's API to get the authoritative status and details
+            // Ambil PaymentIntent dari API Stripe untuk mendapatkan status dan detail otentik
             $stripePaymentIntent = $this->stripe->paymentIntents->retrieve($paymentIntentId);
 
-            // Find the corresponding local Payment record in your database
+            // Temukan record Payment lokal yang sesuai di database Anda
             $payment = Payment::where('order_id', $order->id)
                               ->where('stripe_payment_intent_id', $paymentIntentId)
                               ->first();
@@ -136,21 +139,21 @@ class StripePaymentController extends Controller
             if (!$payment) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Payment record not found for this order and intent ID in our system.',
-                    'redirect_url' => route('checkout.show') // Redirect to checkout if local record is missing
+                    'message' => 'Record pembayaran tidak ditemukan untuk pesanan ini dan ID intent di sistem kami.',
+                    'redirect_url' => route('checkout.show') // Arahkan ke checkout jika record lokal tidak ada
                 ], 404);
             }
 
-            // Update the local Payment record with the latest status from Stripe
+            // Perbarui record Payment lokal dengan status terbaru dari Stripe
             $payment->status = $stripePaymentIntent->status;
-            // Capture the first payment method type used for the transaction
+            // Tangkap tipe metode pembayaran pertama yang digunakan untuk transaksi
             $payment->payment_method_type = $stripePaymentIntent->payment_method_types[0] ?? 'card';
 
-            // Extract and store payment method details, especially for card payments
+            // Ekstrak dan simpan detail metode pembayaran, terutama untuk pembayaran kartu
             if (isset($stripePaymentIntent->charges->data[0]->payment_method_details)) {
                 $payment->payment_method_details = $stripePaymentIntent->charges->data[0]->payment_method_details;
                 if ($payment->payment_method_details['type'] === 'card') {
-                    // Store specific card details for record-keeping
+                    // Simpan detail kartu spesifik untuk pencatatan
                     $payment->card_details = [
                         'last4' => $payment->payment_method_details['card']['last4'],
                         'brand' => $payment->payment_method_details['card']['brand'],
@@ -162,53 +165,52 @@ class StripePaymentController extends Controller
                 }
             }
 
-            // Handle different PaymentIntent statuses as reported by Stripe
+            // Tangani berbagai status PaymentIntent yang dilaporkan oleh Stripe
             if ($stripePaymentIntent->status === 'succeeded') {
-                $payment->paid_at = now(); // Set the payment timestamp
-                $order->status = 'Order Confirmed'; // Update order status to confirmed
+                $payment->paid_at = now(); // Atur timestamp pembayaran
+                $order->status = 'Order Confirmed'; // Perbarui status order menjadi dikonfirmasi
                 $order->save();
-                $payment->save(); // Save the updated payment record
+                $payment->save(); // Simpan record pembayaran yang diperbarui
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Payment successful!',
-                    'redirect_url' => route('order.success', $order->id) // Redirect to success page
+                    'message' => 'Pembayaran berhasil!',
+                    'redirect_url' => route('order.success', $order->id) // Arahkan ke halaman sukses
                 ]);
             } elseif ($stripePaymentIntent->status === 'requires_action' || $stripePaymentIntent->status === 'requires_source_action') {
                 $payment->save();
-                // For 'requires_action', Stripe.js usually handles the necessary redirects (e.g., 3D Secure)
-                // This JSON response tells the frontend that more action is needed and provides a potential redirect URL
+                // Untuk 'requires_action', Stripe.js biasanya menangani pengalihan yang diperlukan (misal: 3D Secure)
+                // Respons JSON ini memberitahu frontend bahwa tindakan lebih lanjut diperlukan dan menyediakan URL pengalihan potensial
                 return response()->json([
                     'success' => false,
-                    'message' => 'Payment requires additional action. Please complete it on Stripe.',
-                    'redirect_url' => $stripePaymentIntent->next_action->redirect_to_url->url ?? route('checkout.show') // Fallback redirect if no specific action URL
+                    'message' => 'Pembayaran memerlukan tindakan tambahan. Harap selesaikan di Stripe.',
+                    // Fallback redirect jika tidak ada URL tindakan spesifik
+                    'redirect_url' => $stripePaymentIntent->next_action->redirect_to_url->url ?? route('checkout.show')
                 ]);
             } else {
-                // Handle all other non-successful statuses (e.g., 'failed', 'canceled', 'requires_payment_method' if not handled previously)
-                // In a real application, you might want to revert stock for 'failed' or 'canceled' payments here,
-                // or handle such reversals via Stripe webhooks for more robustness.
-                $order->status = 'Canceled'; // Mark the order as canceled due to payment failure
+                // Tangani semua status tidak sukses lainnya (misalnya, 'failed', 'canceled', 'requires_payment_method' jika tidak ditangani sebelumnya)
+                $order->status = 'Canceled'; // Tandai order sebagai dibatalkan karena kegagalan pembayaran
                 $order->save();
-                $payment->save(); // Save the final status of the payment record
+                $payment->save(); // Simpan status akhir record pembayaran
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Payment failed or was not completed: ' . $stripePaymentIntent->status,
-                    'redirect_url' => route('order.fail', $order->id) // Redirect to failure page
+                    'message' => 'Pembayaran gagal atau tidak selesai: ' . $stripePaymentIntent->status,
+                    'redirect_url' => route('order.fail', $order->id) // Arahkan ke halaman kegagalan
                 ]);
             }
         } catch (Exception $e) {
-            // Catch any exceptions during the confirmation process (e.g., network issues, invalid API keys)
+            // Tangkap setiap pengecualian selama proses konfirmasi (misalnya, masalah jaringan, kunci API tidak valid)
             Log::error('Stripe Payment confirmation failed: ' . $e->getMessage(), [
                 'payment_intent_id' => $request->input('payment_intent_id'),
                 'order_id' => $order->id,
-                'request_data' => $request->all() // Include request data for debugging
+                'request_data' => $request->all() // Sertakan data permintaan untuk debugging
             ]);
             return response()->json([
                 'success' => false,
-                'message' => 'An unexpected error occurred during payment confirmation. Please try again.',
-                'redirect_url' => route('checkout.show') // Redirect to checkout as a safe fallback
-            ], 500); // Internal Server Error status
+                'message' => 'Terjadi kesalahan tak terduga selama konfirmasi pembayaran. Silakan coba lagi.',
+                'redirect_url' => route('checkout.show') // Arahkan ke checkout sebagai fallback aman
+            ], 500); // Status Kesalahan Server Internal
         }
     }
 }

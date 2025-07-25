@@ -69,9 +69,6 @@
         }
 
         header .nav-group-left .dropdown > .dropdown-toggle::after {
-            /* Contoh: Mengubah warna panah agar serasi dengan teks navigasi */
-            /* border-top-color: var(--color-text-nav); */
-            /* vertical-align: 0.15em; */ /* Sedikit penyesuaian vertikal jika perlu */
             margin-left: 0.4em; /* Jarak antara teks "Store" dan panah */
             vertical-align: 0.1em; 
         }
@@ -79,15 +76,11 @@
         header .nav-group-left .dropdown > a.nav-link.dropdown-toggle::after {
             margin-left: 0.3em;  /* Jarak antara teks "Store" dan panah */
             margin-top: 0.2em;
-            /* vertical-align: 100em; /* COBA SESUAIKAN NILAI INI (misal: 0, 0.05em, 0.15em, -0.05em, atau 'middle') */
             transition: transform 0.25s ease-in-out; /* Transisi untuk animasi balik panah */
-            /* border-top-color: var(--color-text-nav); // Jika ingin mengubah warna panah */
         }
 
         header .nav-group-left .nav-link,
         header .icon-group-right .nav-icon-link {
-            /* Pastikan padding dan line-height konsisten agar alignment vertikal baik */
-            /* Sudah diatur di CSS header sebelumnya, cek kembali jika perlu */
         }
         header .nav-group-left .dropdown > .nav-link.dropdown-toggle {
             display: inline-flex; /* 1. Jadikan link sebagai flex container */
@@ -101,7 +94,7 @@
             transform: translate(-50%, -50%);
             z-index: 1031;
             width: 180px;
-            display: flex; /* Untuk memusatkan gambar di dalamnya jika perlu */
+            display: flex; 
             align-items: center;
             justify-content: center;
         }
@@ -122,7 +115,7 @@
         }
         
         header img.logo-size-medium { height: var(--logo-height-medium, 70px) !important; }
-        header img.logo-size-large { height: var(--logo-height-large, 90px) !important; }
+        header img.logo-size-large { height: var(--logo-height-large, 100px) !important; }
 
         header img#rotating-logo {
              width: auto; display: block; vertical-align: middle;

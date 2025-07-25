@@ -11,6 +11,7 @@ class PaymentSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     * Metode ini membuat contoh pembayaran untuk pesanan yang menunggu pembayaran.
      */
     public function run(): void
     {
@@ -21,7 +22,7 @@ class PaymentSeeder extends Seeder
         foreach ($ordersAwaitingPayment as $order) {
             $payment = Payment::factory()->create([
                 'order_id' => $order->id,
-                'amount_paid' => $order->grand_total, // Pastikan jumlah pembayaran sesuai dengan grand_total order
+                'amount_paid' => $order->grand_total, // Ini akan menggunakan accessor Order::getGrandTotalAttribute()
             ]);
 
             if ($payment->status === 'succeeded') {
@@ -31,10 +32,7 @@ class PaymentSeeder extends Seeder
                 $order->status = 'Canceled';
                 $order->save();
             }
-            // Untuk status 'pending' atau 'requires_action', status order akan tetap 'Awaiting Payment'
         }
 
-        // Opsional: Buat beberapa payment sukses tambahan yang tidak terkait dengan order 'Awaiting Payment'
-        // Payment::factory()->count(5)->succeeded()->create();
     }
 }
