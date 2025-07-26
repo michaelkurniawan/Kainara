@@ -40,7 +40,7 @@ Route::get('/tentangkainara', function () {
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/gender/{gender}', [ProductController::class, 'index'])->name('products.gender.index');
 Route::get('/products/category/{category_name}', [ProductController::class, 'index'])->name('products.category.index');
-Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show'); // Rute untuk detail produk
+Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show'); 
 
 // Rute Cerita/Blog
 Route::get('/stories', [StoriesController::class, 'index'])->name('Stories.ListStories');
@@ -68,8 +68,6 @@ Route::get('/order/{order}/fail', [OrderController::class, 'showOrderFail'])->na
 Route::get('/order/{order}/awaiting-payment', [OrderController::class, 'showOrderAwaitingPayment'])->name('order.awaitingPayment');
 
 
-// Rute Pembayaran Stripe (Pastikan berada dalam middleware 'web' jika diperlukan, atau langsung di sini)
-// Middleware 'web' sudah diterapkan secara default untuk semua rute di routes/web.php
 Route::get('/payment/stripe/{order}', [StripePaymentController::class, 'showPaymentForm'])->name('stripe.payment.form');
 Route::post('/payment/stripe/{order}/confirm', [StripePaymentController::class, 'confirmPayment'])->name('stripe.payment.confirm');
 
@@ -85,6 +83,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::post('/logout', [LoginController::class, 'logout']);
+    Route::get('/my-orders', [OrderController::class, 'myOrders'])->name('my.orders');
 });
 
 require __DIR__.'/admin.php';
