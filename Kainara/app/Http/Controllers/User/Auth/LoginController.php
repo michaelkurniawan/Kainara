@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth; // Penting untuk fasilitas autentikasi Laravel
+use Illuminate\Support\Carbon; // Import Carbon untuk timestamp
 
 class LoginController extends Controller
 {
@@ -36,15 +37,20 @@ class LoginController extends Controller
         ]);
 
         // 2. Mencoba proses autentikasi
-        // Auth::attempt() akan mencoba menemukan user berdasarkan kredensial
-        // dan memverifikasi password. Jika berhasil, user akan di-login.
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) { // 'remember' untuk fungsionalitas remember me
             $request->session()->regenerate();
 
+            // --- LOGIKA UNTUK MEMPERBARUI LAST_LOGIN DIMULAI DI SINI ---
+            $user = Auth::user(); // Dapatkan user yang sedang login
+            if ($user) {
+                $user->last_login = Carbon::now(); // Set last_login ke waktu sekarang
+                $user->save(); // Simpan perubahan ke database
+            }
+            // --- LOGIKA UNTUK MEMPERBARUI LAST_LOGIN BERAKHIR DI SINI ---
+
             // Redirect ke halaman yang dituju setelah login
-            // Anda bisa mengubahnya ke 'home' atau rute lain yang Anda inginkan
             return redirect()->intended('/'); // intended akan mengarahkan user ke URL yang ingin mereka akses sebelum login
         }
 

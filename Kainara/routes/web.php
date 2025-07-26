@@ -13,6 +13,7 @@ use App\Http\Controllers\User\StripePaymentController;
 use App\Http\Controllers\User\ProfileController;
 use App\Http\Controllers\User\Auth\LoginController;
 use App\Http\Controllers\User\Auth\RegisterController;
+use App\Http\Controllers\User\Auth\EmailVerificationController; // Pastikan ini sudah diimpor
 
 Route::get('/', [LatestStoriesController::class, 'index'])->name('welcome');
 
@@ -53,8 +54,7 @@ Route::middleware('web')->group(function () {
     Route::post('/payment/stripe/{order}/confirm', [StripePaymentController::class, 'confirmPayment'])->name('stripe.payment.confirm');
 });
 
-
-
+// Authentication Routes
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -64,10 +64,24 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [RegisterController::class, 'register']);
 });
 
+// Rute Verifikasi Email
+Route::get('/email/verify', [EmailVerificationController::class, 'show']) // Arahkan ke method show di controller Anda
+    ->middleware('auth')
+    ->name('verification.notice');
+
+// INI PERUBAHAN UTAMA: Hapus middleware 'auth' dari sini
+Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->middleware(['signed', 'throttle:6,1']) // Hanya 'signed' dan 'throttle'
+    ->name('verification.verify');
+
+// Kirim notifikasi verifikasi lagi
+Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend']) // Arahkan ke method resend di controller Anda
+    ->middleware(['auth', 'throttle:6,1'])
+    ->name('verification.send');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
-    Route::post('/logout', [LoginController::class, 'logout']);
+    Route::post('/logout', [LoginController::class, 'logout']); // Asumsi LoginController menangani logout
 });
-
 
 require __DIR__.'/admin.php';
