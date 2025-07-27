@@ -125,7 +125,7 @@ class ProductController extends Controller
             $productNameLower = Str::lower($product->name); 
 
             if ($product->gender->name === 'Male') {
-                if (Str::startsWith($productNameLower, "men's vest")) {
+                if (Str::startsWith($productNameLower, "men's woven vest")) {
                     $sizeChartComponent = 'components.popupsizechart.menvest';
                 } elseif (Str::startsWith($productNameLower, "men's outerwear")) {
                     $sizeChartComponent = 'components.popupsizechart.menouterwear';
