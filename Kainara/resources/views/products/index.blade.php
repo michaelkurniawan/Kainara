@@ -4,6 +4,10 @@
 
 @push('styles')
     <style>
+        :root {
+            --font-primary: 'Ancizar Serif', serif;
+            --font-secondary: 'Ancizar Serif', serif;
+        }
         .product-card {
             background-color: #e9dfcf;
             text-align: center;
@@ -52,39 +56,13 @@
             position: relative;
         }
 
-        .origin-dropdown-menu {
-            min-width: 92.5vw;
-            max-width: 1382px;
-        }
-
-        .color-dropdown-menu {
-            min-width: 85.2vw;
-            max-width: 1277px;
-        }
-
-        .filter-dropdown-menu {
-            min-width: 78.7vw;
-            max-width: 1179px;
-        }
-
-        @media (max-width: 1200px) {
-            .origin-dropdown-menu {
-                max-width: 98vw;
-            }
-            .color-dropdown-menu {
-                max-width: 95vw;
-            }
-            .filter-dropdown-menu {
-                max-width: 80vw;
-            }
-        }
-
         .dropdown-toggle::after {
             display: none;
         }
 
         .filter-label {
             font-size: 1.5rem;
+            cursor: pointer;
         }
 
         .custom-caret {
@@ -95,6 +73,7 @@
 
         .btn.border {
             background-color: #fff;
+            border: 1px solid #dee2e6; /* Ensure border is visible */
             font-size: 1rem;
         }
 
@@ -122,21 +101,123 @@
             border-color: #AD9D6C;
         }
 
-        .dropdown-item:active,
-        .dropdown-item.active,
-        .dropdown-item:hover {
-            background-color: #AD9D6C !important;
-            color: white !important;
+        .filter-modal .modal-content {
+            background-color: #FFFFFF;
+            overflow: hidden;
+            border-radius: 0;
         }
 
-        .color-option.selected {
-            background-color: #AD9D6C;
-            color: white;
+        .filter-modal .modal-header {
+            background-color: #FFFFFF;
+            border-bottom: 1px solid #ddd;
+            border-radius: 0;
         }
 
-        .color-option:hover {
-            background-color: #AD9D6C;
+        .filter-modal .modal-header h5 {
+            font-family: 'AncizarSerif', serif;
+            font-weight: bold;
+            font-size: 2.2rem;
+            color: #333;
+        }
+
+        .filter-modal .modal-body {
+            padding: 1.5rem 2rem;
+            color: #333;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .filter-modal .form-check-label {
+            font-size: 1rem;
+        }
+
+        .filter-modal .modal-footer {
+            border-top: 1px solid #ddd;
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: flex-end;
+            background-color: #FFFFFF;
+            gap: 1rem;
+            border-radius: 0;
+        }
+
+        .filter-modal .btn-apply,
+        .filter-modal .btn-clear {
+            padding: 0.5rem 1.5rem;
+            border-radius: 0;
+            font-size: 1rem;
+            font-weight: normal;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        .filter-modal .btn-apply {
+            background-color: #B6B09F;
             color: white;
+            border: none;
+        }
+
+        .filter-modal .btn-apply:hover {
+            background-color: #A09A87;
+        }
+
+        .filter-modal .btn-clear {
+            background-color: transparent;
+            border: 1px solid #ccc;
+            color: #333;
+        }
+
+        .filter-modal .btn-clear:hover {
+            background-color: #f0f0f0;
+            border-color: #999;
+            color: #000;
+        }
+
+        .filter-modal .color-option-label {
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-modal .color-option-label .color-circle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 1px solid #999;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .filter-modal .modal-dialog {
+            margin: 0;
+            max-width: none;
+            position: absolute;
+            transform: none !important;
+        }
+
+        #sortFilterModal .modal-dialog {
+            width: 300px;
+            right: 0;
+            left: auto;
+            top: var(--filter-line-bottom);
+        }
+
+        #originFilterModal .modal-dialog,
+        #colorFilterModal .modal-dialog {
+            width: var(--filter-line-width);
+            left: var(--filter-line-left);
+            top: var(--filter-line-bottom);
+            right: auto;
+        }
+
+        .filter-modal.fade .modal-dialog {
+            transition: none;
+        }
+        .filter-modal.show .modal-dialog {
+            transform: none;
+        }
+
+        .modal-backdrop {
+            opacity: 0 !important;
+            background-color: transparent !important;
         }
     </style>
 @endpush
@@ -144,91 +225,83 @@
 @section('content')
     <div class="container-fluid py-5 px-5">
         <x-bangga title="Kainara's Products" subtitle="Bangga Pakai Karya UMKM" />
-        <div class="filter-header d-flex mt-4">
-            <div class="d-flex justify-content-end mb-1">
-                <div class="filter-group position-relative me-4">
+        <div class="filter-header d-flex mt-4" id="filterHeader">
+            <div class="d-flex justify-content-start mb-1 flex-grow-1">
+                <div class="filter-group position-relative me-5">
                     <div class="dropdown">
                         <a class="dropdown-toggle text-dark text-decoration-none filter-label d-flex align-items-center"
-                            href="#" role="button" id="originDropdown" data-bs-toggle="dropdown" aria-expanded="false"
-                            data-bs-display="static">
-                            Origin <i class="bi bi-caret-down-fill custom-caret ms-1"></i>
+                            href="#" role="button" id="originDropdown" data-bs-toggle="modal"
+                            data-bs-target="#originFilterModal" data-caret-id="originCaret">
+                            Origin <i class="bi bi-caret-down-fill custom-caret ms-2" id="originCaret"></i>
                         </a>
-                        <ul class="dropdown-menu origin-dropdown-menu fs-6 text-start mt-2 p-3" aria-labelledby="colorDropdown" style="max-width: 1382px;">
-                            <div class="row row-cols-2 row-cols-md-6 g-2">
-                                @foreach(collect($availableOrigins)->sort() as $origin)
-                                    <div class="col">
-                                        <div class="form-check d-flex align-items-center">
-                                            <input class="form-check-input origin-checkbox me-2" type="checkbox"
-                                                data-origin="{{ $origin }}"
-                                                {{ in_array($origin, request()->input('origins', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label">{{ $origin }}</label>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <div class="d-flex justify-content-end mt-3">
-                                <button class="btn btn-sm btn-custom apply-origin">Apply</button>
-                            </div>
-                        </ul>
                     </div>
                 </div>
 
                 <div class="filter-group position-relative me-4">
                     <div class="dropdown">
                         <a class="dropdown-toggle text-dark text-decoration-none filter-label d-flex align-items-center"
-                            href="#" role="button" id="colorDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            href="#" role="button" id="colorDropdown" data-bs-toggle="modal"
+                            data-bs-target="#colorFilterModal" data-caret-id="colorCaret">
                             Color
-                            <i class="bi bi-caret-down-fill custom-caret ms-1"></i>
+                            <i class="bi bi-caret-down-fill custom-caret ms-2" id="colorCaret"></i>
                         </a>
-                       <ul class="dropdown-menu color-dropdown-menu fs-6 text-start mt-1 p-3" aria-labelledby="colorDropdown" style="max-width: 1277px;">
-                            <div class="row row-cols-2 row-cols-md-6 g-2">
-                                @foreach(collect($availableColors)->sort() as $color)
-                                    <div class="col">
-                                        <div class="form-check d-flex align-items-center">
-                                            <input class="form-check-input color-checkbox me-2" type="checkbox"
-                                                data-color="{{ $color }}"
-                                                {{ in_array($color, request()->input('colors', [])) ? 'checked' : '' }}>
-                                            <span class="rounded-circle d-inline-block"
-                                                style="width: 16px; height: 16px; background-color: {{ strtolower($color) }}; border: 1px solid #999;"></span>
-                                            <span class="text-capitalize ms-2">{{ $color }}</span>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <div class="d-flex justify-content-end mt-3">
-                                <button class="btn btn-sm btn-custom apply-color">Apply</button>
-                            </div>
-                        </ul>
                     </div>
                 </div>
+            </div>
 
-                <div class="filter-group position-relative">
-                    <div class="dropdown">
-                        <a class="dropdown-toggle text-dark text-decoration-none filter-label d-flex align-items-center"
-                            href="#" role="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-sliders2-vertical me-1"></i>
-                            Filter
-                            <i class="bi bi-caret-down-fill custom-caret ms-1"></i>
-                        </a>
-                        <ul class="dropdown-menu filter-dropdown-menu fs-6 text-start mt-1" aria-labelledby="filterDropdown" style="max-width: 1179px;">
-                            <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['sort' => 'az']) }}">Alphabetically, A-Z</a></li>
-                            <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['sort' => 'za']) }}">Alphabetically, Z-A</a></li>
-                            <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['sort' => 'price_low']) }}">Price, Low to High</a></li>
-                            <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['sort' => 'price_high']) }}">Price, High to Low</a></li>
-                        </ul>
-                    </div>
+            <div class="filter-group position-relative mb-1">
+                <div class="dropdown">
+                    <a class="dropdown-toggle text-dark text-decoration-none filter-label d-flex align-items-center"
+                        href="#" role="button" id="filterDropdown" data-bs-toggle="modal"
+                        data-bs-target="#sortFilterModal" data-caret-id="sortCaret">
+                        <i class="bi bi-sliders2-vertical me-2"></i>
+                        Filter
+                        <i class="bi bi-caret-down-fill custom-caret ms-2" id="sortCaret"></i>
+                    </a>
                 </div>
             </div>
 
             <div class="w-100 position-absolute start-0" style="bottom: 0;">
-                <div class="filter-line"></div>
+                <div class="filter-line" id="filterLine"></div>
             </div>
         </div>
 
-        @if (!empty($originFilter) || !empty($colorFilter) || request()->has('sort'))
-            <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+        {{-- Displaying active filters --}}
+        {{-- Kondisi utama untuk menampilkan bagian "Filtered by:"
+             Sekarang hanya akan muncul jika ada filter Origin, Color, Sort, atau Category (jika Category dari query).
+             Gender filter TIDAK akan pernah memicu tampilan "Filtered by". --}}
+        @if (!empty($originFilter) || !empty($colorFilter) || request()->has('sort') || (request()->has('category_name') && !request()->route('category_name')))
+            <div class="d-flex flex-wrap align-items-center gap-3 mb-3 mt-3">
                 <h4 class="me-1" style="font-size: 1.25rem;">Filtered by:</h4>
 
+                {{-- Chip filter Gender telah Dihapus sepenuhnya dari tampilan ini,
+                     karena permintaan Anda adalah tidak menampilkannya sama sekali. --}}
+
+                {{-- Category Name Filter chip (ONLY show if from query param, NOT route param) --}}
+                @if (request()->has('category_name') && !request()->route('category_name'))
+                    <form method="GET" action="{{ route('products.index') }}" class="d-inline">
+                        {{-- Preserve all other filters --}}
+                        @foreach ((array) $originFilter as $origin)
+                            <input type="hidden" name="origins[]" value="{{ $origin }}">
+                        @endforeach
+                        @foreach ((array) $colorFilter as $color)
+                            <input type="hidden" name="colors[]" value="{{ $color }}">
+                        @endforeach
+                        @if (request()->has('sort'))
+                            <input type="hidden" name="sort" value="{{ is_array(request('sort')) ? request('sort')[0] : request('sort') }}">
+                        @endif
+                        {{-- Preserve gender if it's active (from route or query, if it somehow gets back in query) --}}
+                        @if ($genderFilter)
+                            <input type="hidden" name="gender" value="{{ $genderFilter }}">
+                        @endif
+                        <button type="submit" class="btn border d-flex align-items-center px-3 py-2" style="font-size: 1.1rem;">
+                            <span class="me-3">Category: {{ $categoryNameFilter }}</span>
+                            <i class="bi bi-x-lg" style="font-size: 0.7rem;"></i>
+                        </button>
+                    </form>
+                @endif
+
+                {{-- Origin Filters --}}
                 @foreach ((array) $originFilter as $selectedOrigin)
                     <form method="GET" action="{{ route('products.index') }}" class="d-inline">
                         @foreach ((array) $originFilter as $origin)
@@ -237,10 +310,17 @@
                             @endif
                         @endforeach
                         @foreach ((array) $colorFilter as $color)
-                                <input type="hidden" name="colors[]" value="{{ $color }}">
+                            <input type="hidden" name="colors[]" value="{{ $color }}">
                         @endforeach
                         @if (request()->has('sort'))
-                            <input type="hidden" name="sort" value="{{ is_array(request('sort')) ? request('sort')[0] : request('sort') }}">
+                            <input type="hidden" name="sort"
+                                value="{{ is_array(request('sort')) ? request('sort')[0] : request('sort') }}">
+                        @endif
+                        @if ($genderFilter)
+                            <input type="hidden" name="gender" value="{{ $genderFilter }}">
+                        @endif
+                        @if ($categoryNameFilter)
+                            <input type="hidden" name="category_name" value="{{ $categoryNameFilter }}">
                         @endif
                         <button type="submit" class="btn border d-flex align-items-center px-3 py-2"
                             style="font-size: 1.1rem;">
@@ -264,9 +344,15 @@
                         @endforeach
 
                         @if (request()->has('sort'))
-                            <input type="hidden" name="sort" value="{{ is_array(request('sort')) ? request('sort')[0] : request('sort') }}">
+                            <input type="hidden" name="sort"
+                                value="{{ is_array(request('sort')) ? request('sort')[0] : request('sort') }}">
                         @endif
-
+                        @if ($genderFilter)
+                            <input type="hidden" name="gender" value="{{ $genderFilter }}">
+                        @endif
+                        @if ($categoryNameFilter)
+                            <input type="hidden" name="category_name" value="{{ $categoryNameFilter }}">
+                        @endif
                         <button type="submit" class="btn border d-flex align-items-center px-3 py-2"
                             style="font-size: 1.1rem;">
                             <span class="me-2 d-flex align-items-center">
@@ -278,7 +364,6 @@
                         </button>
                     </form>
                 @endforeach
-
 
                 {{-- Sort Filter --}}
                 @php
@@ -300,7 +385,12 @@
                         @foreach ((array) $colorFilter as $color)
                             <input type="hidden" name="colors[]" value="{{ $color }}">
                         @endforeach
-
+                        @if ($genderFilter)
+                            <input type="hidden" name="gender" value="{{ $genderFilter }}">
+                        @endif
+                        @if ($categoryNameFilter)
+                            <input type="hidden" name="category_name" value="{{ $categoryNameFilter }}">
+                        @endif
                         <button type="submit" class="btn border d-flex align-items-center px-3 py-2"
                             style="font-size: 1.1rem;">
                             <span class="me-3">{{ $sortLabel[$sort] }}</span>
@@ -310,18 +400,31 @@
                 @endif
 
                 <div class="ms-auto">
-                    <a href="{{ route('products.index') }}" class="btn btn-outline-danger px-4 py-1"
+                    {{-- Updated Clear All button: Resets all query filters, but retains gender/category if they are in the route. --}}
+                    @php
+                        $clearAllParams = [];
+                        // If gender is set via route, keep it in the URL when clearing all.
+                        if (request()->route('gender')) {
+                            $clearAllParams['gender'] = request()->route('gender');
+                        }
+                        // If category_name is set via route, keep it in the URL when clearing all.
+                        if (request()->route('category_name')) {
+                            $clearAllParams['category_name'] = request()->route('category_name');
+                        }
+                    @endphp
+                    <a href="{{ route('products.index', $clearAllParams) }}" class="btn btn-outline-danger px-4 py-1"
                         style="font-size: 1.25rem;">Clear All</a>
                 </div>
             </div>
         @endif
+        {{-- End of Filtered By Section --}}
 
         <div class="row g-4 py-4 mb-4">
             @forelse ($products as $product)
                 <div class="col-12 col-sm-6 col-md-4">
                     <a href="{{ route('products.show', $product->slug) }}" class="text-decoration-none text-dark">
                         <div class="product-container card h-100">
-                            <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="img-fluid" />
+                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="img-fluid" />
                             <div class="product-card">
                                 <div class="product-title">{{ $product->name }}</div>
                                 <div class="product-price">IDR {{ number_format($product->price, 0, ',', '.') }}</div>
@@ -336,135 +439,268 @@
             @endforelse
         </div>
 
-        @include('Pagination.pagination-components', ['paginator' => $products])
+        {{-- Pagination Component --}}
+        {{-- Pass the paginator, genderFilter, and categoryNameFilter to the pagination component --}}
+        @include('Pagination.pagination-components', ['paginator' => $products, 'genderFilter' => $genderFilter, 'categoryNameFilter' => $categoryNameFilter])
     </div>
 
+    {{-- Filter Modals (Hidden Forms for JS) --}}
     <form id="filterForm" method="GET" class="d-none">
-        {{-- These are for JavaScript to build the query parameters --}}
+        {{-- These are placeholders for JS to read initial values and for "clear all" logic --}}
+        {{-- They are disabled because the JS reconstructs the URL directly --}}
         @foreach($availableOrigins as $origin)
             <input type="hidden" name="origins[]" value="{{ $origin }}" disabled>
         @endforeach
         @foreach($availableColors as $color)
             <input type="hidden" name="colors[]" value="{{ $color }}" disabled>
         @endforeach
-        {{-- Add a hidden input for sort if it's currently active, so it can be preserved by JS --}}
         @if (request()->has('sort'))
             <input type="hidden" name="sort" value="{{ is_array(request('sort')) ? request('sort')[0] : request('sort') }}" disabled>
         @endif
+        {{-- These capture the gender/category from route/query params passed by the controller --}}
+        @if ($genderFilter)
+            <input type="hidden" name="gender" value="{{ $genderFilter }}" disabled>
+        @endif
+        @if ($categoryNameFilter)
+            <input type="hidden" name="category_name" value="{{ $categoryNameFilter }}" disabled>
+        @endif
     </form>
+
+    <div class="modal filter-modal" id="originFilterModal" tabindex="-1" aria-labelledby="originFilterModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="row row-cols-2 row-cols-md-3 g-3">
+                        @foreach(collect($availableOrigins)->sort() as $origin)
+                            <div class="col">
+                                <div class="form-check">
+                                    <input class="form-check-input origin-checkbox me-2" type="checkbox"
+                                        id="origin-{{ Str::slug($origin) }}" data-origin="{{ $origin }}"
+                                        {{ in_array($origin, request()->input('origins', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="origin-{{ Str::slug($origin) }}">
+                                        {{ $origin }}
+                                    </label>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-apply apply-origin">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal filter-modal" id="colorFilterModal" tabindex="-1" aria-labelledby="colorFilterModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="row row-cols-2 row-cols-md-3 g-3">
+                        @foreach(collect($availableColors)->sort() as $color)
+                            <div class="col">
+                                <div class="form-check">
+                                    <input class="form-check-input color-checkbox me-2" type="checkbox"
+                                        id="color-{{ Str::slug($color) }}" data-color="{{ $color }}"
+                                        {{ in_array($color, request()->input('colors', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label color-option-label" for="color-{{ Str::slug($color) }}">
+                                        <span class="color-circle" style="background-color: {{ strtolower($color) }};"></span>
+                                        <span class="text-capitalize">{{ $color }}</span>
+                                    </label>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-apply apply-color">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal filter-modal" id="sortFilterModal" tabindex="-1" aria-labelledby="sortFilterModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-body">
+                    @php
+                        $sortOptions = [
+                            'az' => 'Alphabetically, A-Z',
+                            'za' => 'Alphabetically, Z-A',
+                            'price_low' => 'Price, Low to High',
+                            'price_high' => 'Price, High to Low',
+                        ];
+                        $currentSort = request('sort');
+                    @endphp
+                    <div class="d-flex flex-column gap-2">
+                        @foreach($sortOptions as $value => $label)
+                            <div class="form-check">
+                                <input class="form-check-input sort-radio" type="radio" name="sort_option" id="sort-{{ $value }}" value="{{ $value }}" {{ $currentSort == $value ? 'checked' : '' }}>
+                                <label class="form-check-label" for="sort-{{ $value }}">
+                                    {{ $label }}
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-apply apply-sort">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
-{{-- Push page-specific scripts here --}}
+
 @push('scripts')
     <script>
-        const form = document.getElementById('filterForm');
-        const colorInputs = Array.from(form.querySelectorAll('input[name="colors[]"]'));
-        const originInputs = Array.from(form.querySelectorAll('input[name="origins[]"]'));
+        const filterForm = document.getElementById('filterForm');
+        const filterHeader = document.getElementById('filterHeader');
+        const filterLine = document.getElementById('filterLine');
 
-        // Helper to get current URL parameters
         function getUrlParams() {
             return new URLSearchParams(window.location.search);
         }
 
-        // Helper to redirect with intact filters
-        function redirectWithFilters(updated = {}) {
+        function buildAndRedirect(updatedParams = {}) {
             const params = getUrlParams();
 
-            // Clear parameters that will be updated
-            Object.keys(updated).forEach(key => {
-                if (key === 'sort') {
-                    params.delete(key); // 'sort' is not an array parameter
-                } else {
-                    params.delete(`${key}[]`); // Array parameters
-                }
-            });
+            params.delete('page');
 
-            // Add new values without duplicates
-            for (const [key, values] of Object.entries(updated)) {
-                if (key === 'sort') {
-                    if (values[0]) { // Only append if there's a sort value
-                        params.append(key, values[0]);
-                    }
-                } else {
-                    [...new Set(values)].forEach(val => {
-                        params.append(`${key}[]`, val);
-                    });
-                }
+            const currentOrigins = params.getAll('origins[]');
+            const currentColors = params.getAll('colors[]');
+            const currentSort = params.get('sort');
+
+            params.delete('origins[]');
+            params.delete('colors[]');
+            params.delete('sort');
+
+            const newOrigins = updatedParams.origins !== undefined ? updatedParams.origins : currentOrigins;
+            newOrigins.forEach(o => params.append('origins[]', o));
+
+            const newColors = updatedParams.colors !== undefined ? updatedParams.colors : currentColors;
+            newColors.forEach(c => params.append('colors[]', c));
+
+            const newSort = updatedParams.sort !== undefined ? updatedParams.sort : currentSort;
+            if (newSort) {
+                params.append('sort', newSort);
             }
 
-            // Redirect with all parameters intact
             const url = new URL(window.location.href);
             url.search = params.toString();
             window.location.href = url.toString();
         }
 
-        // Apply Origin button handler
-        document.querySelector('.apply-origin')?.addEventListener('click', () => {
-            const selectedOrigins = Array.from(document.querySelectorAll('.origin-checkbox:checked'))
+        function setModalPositionAndWidth() {
+            const filterLineRect = filterLine.getBoundingClientRect();
+            const bodyRect = document.body.getBoundingClientRect();
+
+            const topPosition = filterLineRect.bottom;
+            const leftPosition = filterLineRect.left;
+            const width = filterLineRect.width;
+
+            document.documentElement.style.setProperty('--filter-line-width', `${width}px`);
+            document.documentElement.style.setProperty('--filter-line-left', `${leftPosition}px`);
+            document.documentElement.style.setProperty('--filter-line-bottom', `${topPosition}px`);
+
+            const sortFilterModalDialog = document.querySelector('#sortFilterModal .modal-dialog');
+            if (sortFilterModalDialog) {
+                const filterLineRight = filterLineRect.right;
+                const modalWidth = 300; // This should match the width set in CSS
+                const desiredLeft = filterLineRight - modalWidth;
+
+                sortFilterModalDialog.style.left = `${desiredLeft}px`;
+                sortFilterModalDialog.style.top = `${topPosition}px`;
+                sortFilterModalDialog.style.right = 'auto'; // Ensure it doesn't conflict with 'right: 0' in CSS if not handled
+            }
+        }
+
+        window.addEventListener('load', setModalPositionAndWidth);
+        window.addEventListener('resize', setModalPositionAndWidth);
+
+        const filterModals = document.querySelectorAll('.filter-modal');
+        filterModals.forEach(modal => {
+            modal.addEventListener('show.bs.modal', setModalPositionAndWidth);
+        });
+
+        filterModals.forEach(modal => {
+            modal.addEventListener('show.bs.modal', function(event) {
+                const triggerButton = event.relatedTarget; // The button that triggered the modal
+                const caretId = triggerButton.dataset.caretId;
+                if (caretId) {
+                    const caretIcon = document.getElementById(caretId);
+                    if (caretIcon) {
+                        caretIcon.classList.remove('bi-caret-down-fill');
+                        caretIcon.classList.add('bi-caret-up-fill');
+                    }
+                }
+            });
+
+            modal.addEventListener('hidden.bs.modal', function(event) {
+                let caretIdToReset;
+                if (modal.id === 'originFilterModal') {
+                    caretIdToReset = 'originCaret';
+                } else if (modal.id === 'colorFilterModal') {
+                    caretIdToReset = 'colorCaret';
+                } else if (modal.id === 'sortFilterModal') {
+                    caretIdToReset = 'sortCaret';
+                }
+
+                if (caretIdToReset) {
+                    const caretIcon = document.getElementById(caretIdToReset);
+                    if (caretIcon) {
+                        caretIcon.classList.remove('bi-caret-up-fill');
+                        caretIcon.classList.add('bi-caret-down-fill');
+                    }
+                }
+            });
+        });
+
+        document.querySelector('#originFilterModal .apply-origin')?.addEventListener('click', () => {
+            const selectedOrigins = Array.from(document.querySelectorAll('#originFilterModal .origin-checkbox:checked'))
                 .map(cb => cb.dataset.origin);
-
-            const updated = {
+            buildAndRedirect({
                 origins: selectedOrigins
-            };
-
-            // Preserve other filters
-            const params = getUrlParams();
-            if (params.has('colors[]')) {
-                updated.colors = params.getAll('colors[]');
-            }
-            if (params.has('sort')) {
-                updated.sort = [params.get('sort')];
-            }
-
-            redirectWithFilters(updated);
+            });
         });
 
-        // Apply Color button handler
-        document.querySelector('.apply-color')?.addEventListener('click', () => {
-            const selectedColors = Array.from(document.querySelectorAll('.color-checkbox:checked'))
+        document.querySelector('#colorFilterModal .apply-color')?.addEventListener('click', () => {
+            const selectedColors = Array.from(document.querySelectorAll('#colorFilterModal .color-checkbox:checked'))
                 .map(cb => cb.dataset.color);
-
-            const updated = {
+            buildAndRedirect({
                 colors: selectedColors
-            };
-
-            // Preserve other filters
-            const params = getUrlParams();
-            if (params.has('origins[]')) {
-                updated.origins = params.getAll('origins[]');
-            }
-            if (params.has('sort')) {
-                updated.sort = [params.get('sort')];
-            }
-
-            redirectWithFilters(updated);
+            });
         });
 
-        // Initialize hidden form inputs based on current URL parameters
-        window.addEventListener('load', () => {
-            // Disable all hidden inputs in the form first
-            originInputs.forEach(i => i.disabled = true);
-            colorInputs.forEach(i => i.disabled = true);
-            // Also handle the sort input if it exists
-            const sortInput = form.querySelector('input[name="sort"]');
-            if (sortInput) sortInput.disabled = true;
-
-            // Enable only the ones that are currently checked/active
-            document.querySelectorAll('.origin-checkbox:checked').forEach(cb => {
-                const match = originInputs.find(i => i.value === cb.dataset.origin);
-                if (match) match.disabled = false;
+        document.querySelector('#sortFilterModal .apply-sort')?.addEventListener('click', () => {
+            const selectedSort = document.querySelector('#sortFilterModal .sort-radio:checked')?.value || null;
+            buildAndRedirect({
+                sort: selectedSort
             });
+        });
 
-            document.querySelectorAll('.color-checkbox:checked').forEach(cb => {
-                const match = colorInputs.find(i => i.value === cb.dataset.color);
-                if (match) match.disabled = false;
+        document.getElementById('originFilterModal').addEventListener('show.bs.modal', () => {
+            const currentOrigins = getUrlParams().getAll('origins[]');
+            document.querySelectorAll('#originFilterModal .origin-checkbox').forEach(cb => {
+                cb.checked = currentOrigins.includes(cb.dataset.origin);
             });
+        });
 
+        document.getElementById('colorFilterModal').addEventListener('show.bs.modal', () => {
+            const currentColors = getUrlParams().getAll('colors[]');
+            document.querySelectorAll('#colorFilterModal .color-checkbox').forEach(cb => {
+                cb.checked = currentColors.includes(cb.dataset.color);
+            });
+        });
+
+        document.getElementById('sortFilterModal').addEventListener('show.bs.modal', () => {
             const currentSort = getUrlParams().get('sort');
-            if (sortInput && currentSort) {
-                sortInput.value = currentSort;
-                sortInput.disabled = false;
-            }
+            document.querySelectorAll('#sortFilterModal .sort-radio').forEach(radio => {
+                radio.checked = (radio.value === currentSort);
+            });
         });
     </script>
 @endpush

@@ -24,12 +24,14 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'category_id' => ['required', 'exists:categories,id'],
+            'gender_id' => ['nullable', 'exists:genders,id'],
             'name' => ['required', 'string', 'max:255', 'unique:products,name'],
             'origin' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
             'material' => ['nullable', 'string', 'max:255'],
+            'vendor_id' => ['nullable', 'exists:vendors,id'], // Make it nullable if 'Shirt' category handles it automatically
 
             // Rules for variants array
             'variants' => ['required', 'array', 'min:1'],

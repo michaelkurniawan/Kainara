@@ -2,42 +2,28 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Model;
 
 class Refund extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'payment_id',
+        'stripe_refund_id',
         'refunded_amount',
         'reason',
         'refunded_at',
-        'refund_reference',
+        'status',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        'refunded_amount' => 'decimal:2',
         'refunded_at' => 'datetime',
     ];
 
-    /**
-     * Get the payment that the refund belongs to.
-     */
-    public function payment(): BelongsTo
+    public function payment()
     {
-        return $this->belongsTo(Payment::class, 'payment_id');
+        return $this->belongsTo(Payment::class);
     }
 }

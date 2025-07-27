@@ -23,6 +23,8 @@
                         {{-- Product Information --}}
                         <div>
                             <p class="mb-2"><strong>Category:</strong> {{ $product->category->name ?? 'N/A' }}</p>
+                            <p class="mb-2"><strong>Vendor:</strong> {{ $product->vendor->name ?? 'N/A' }}</p>
+                            <p class="mb-2"><strong>Gender:</strong> {{ $product->gender->name ?? 'N/A' }}</p> {{-- Display Gender Name --}}
                             <p class="mb-2"><strong>Origin:</strong> {{ $product->origin }}</p>
                             <p class="mb-2"><strong>Price:</strong> IDR {{ number_format($product->price, 0, ',', '.') }}</p>
                             <p class="mb-2"><strong>Material:</strong> {{ $product->material ?? 'N/A' }}</p>

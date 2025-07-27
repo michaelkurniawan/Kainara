@@ -1,9 +1,9 @@
 <style>
-    /* Karena nav membungkus .custom-pagination, maka target langsung .custom-pagination ul... */
+    /* Because nav wraps .custom-pagination, target directly .custom-pagination ul... */
     .custom-pagination{
         margin-top: 2vh;
     }
-    
+
     .custom-pagination ul.pagination li.page-item a.page-link {
         font-family: 'AncizarSerif', serif;
         color: #333;
@@ -33,9 +33,9 @@
     }
 </style>
 
+{{-- Check if paginator has pages before rendering the wrapper --}}
 @if ($paginator->hasPages())
     <div class="custom-pagination">
-        {{-- Gunakan custom view agar pagination hanya muncul satu --}}
-        {{ $paginator->links('Pagination.pagination') }}
+        {{ $paginator->appends(request()->except(['page']))->links('Pagination.pagination') }}
     </div>
 @endif

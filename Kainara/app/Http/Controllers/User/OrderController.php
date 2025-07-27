@@ -1,0 +1,224 @@
+<?php
+
+namespace App\Http\Controllers\User;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+
+class OrderController extends Controller
+{
+    public function processCheckout(Request $request)
+    {
+        $validatedData = $request->validate([
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:20',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'payment_method' => 'required|in:transfer_bank,credit_card,e_wallet',
+            'total_amount' => 'required|numeric|min:0',
+
+            'address_type_input' => 'nullable|string',
+            'street_input' => 'nullable|string',
+            'sub_district_input' => 'nullable|string',
+            'district_input' => 'nullable|string',
+            'city_input' => 'nullable|string',
+            'province_input' => 'nullable|string',
+            'postal_code_input' => 'nullable|string',
+            'user_name_input' => 'nullable|string',
+            'user_phone_input' => 'nullable|string',
+        ]);
+
+        $cartItems = Session::get('cart', []);
+        if (empty($cartItems)) {
+            return redirect()->route('checkout.show')->with('error', 'Keranjang Anda kosong. Mohon tambahkan item sebelum checkout.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $shippingCost = 0;
+
+            $calculatedSubtotal = 0;
+            foreach ($cartItems as $item) {
+                $product = Product::find($item['product_id']);
+                if (!$product) {
+                    DB::rollBack();
+                    return redirect()->back()->with('error', 'Satu atau lebih produk di keranjang tidak ditemukan.')->withInput();
+                }
+
+                $itemPrice = $product->price;
+                $stockAvailable = 0;
+
+                if (isset($item['product_variant_id']) && $item['product_variant_id']) {
+                    $variant = ProductVariant::find($item['product_variant_id']);
+                    if (!$variant) {
+                        DB::rollBack();
+                        return redirect()->back()->with('error', 'Satu atau lebih varian produk di keranjang tidak ditemukan.')->withInput();
+                    }
+                    $itemPrice = $variant->price ?: $product->price;
+                    $stockAvailable = $variant->stock;
+
+                    if ($stockAvailable < $item['quantity']) {
+                        DB::rollBack();
+                        return redirect()->back()->with('error', 'Stok tidak cukup untuk ' . $product->name . ' (' . $variant->size . '). Tersedia: ' . $stockAvailable)->withInput();
+                    }
+                    $variant->decrement('stock', $item['quantity']);
+
+                }
+                $calculatedSubtotal += $itemPrice * $item['quantity'];
+            }
+
+            $grandTotalCalculated = $calculatedSubtotal + $shippingCost;
+
+            if (abs($validatedData['total_amount'] - $grandTotalCalculated) > 0.01) {
+                DB::rollBack();
+                Log::warning('Jumlah total frontend tidak cocok dengan perhitungan backend.', [
+                    'frontend_total' => $validatedData['total_amount'],
+                    'backend_total' => $grandTotalCalculated,
+                    'user_id' => Auth::id(),
+                ]);
+                return redirect()->back()->with('error', 'Terjadi perbedaan harga. Mohon coba lagi atau refresh halaman.')->withInput();
+            }
+
+            $shippingAddressData = [
+                'type' => $request->input('address_type_input'),
+                'name' => $request->input('user_name_input'),
+                'phone' => $request->input('user_phone_input'),
+                'street' => $request->input('street_input'),
+                'sub_district' => $request->input('sub_district_input'),
+                'district' => $request->input('district_input'),
+                'city' => $request->input('city_input'),
+                'province' => $request->input('province_input'),
+                'postal_code' => $request->input('postal_code_input'),
+                'country' => 'Indonesia',
+            ];
+
+            $order = Order::create([
+                'user_id' => Auth::id(),
+                'subtotal' => $calculatedSubtotal,
+                'shipping_cost' => $shippingCost,
+                'status' => 'Awaiting Payment',
+                'payment_method' => $validatedData['payment_method'],
+                'original_user_name' => Auth::check() ? Auth::user()->first_name . ' ' . Auth::user()->last_name : ($validatedData['first_name'] . ' ' . $validatedData['last_name']),
+                'original_user_email' => Auth::check() ? Auth::user()->email : $validatedData['email'],
+                'shipping_recipient_name' => $shippingAddressData['name'],
+                'shipping_phone' => $shippingAddressData['phone'],
+                'shipping_address' => $shippingAddressData['street'] .
+                                      ($shippingAddressData['sub_district'] ? ', ' . $shippingAddressData['sub_district'] : '') .
+                                      ($shippingAddressData['district'] ? ', ' . $shippingAddressData['district'] : ''),
+                'shipping_country' => $shippingAddressData['country'],
+                'shipping_city' => $shippingAddressData['city'],
+                'shipping_province' => $shippingAddressData['province'],
+                'shipping_postal_code' => $shippingAddressData['postal_code'],
+            ]);
+
+            foreach ($cartItems as $itemData) {
+                $product = Product::find($itemData['product_id']);
+                $productName = $product ? $product->name : 'Unknown Product';
+                $productImage = $product ? $product->image : 'https://placehold.co/80x80/cccccc/333333?text=No+Image';
+
+                $actualPrice = $product->price;
+                $variantSize = $itemData['variant_size'] ?? null;
+                $variantColor = $itemData['variant_color'] ?? null;
+
+                if (isset($itemData['product_variant_id']) && $itemData['product_variant_id']) {
+                    $variant = ProductVariant::find($itemData['product_variant_id']);
+                    if ($variant) {
+                        $actualPrice = $variant->price ?: $product->price;
+                        $variantSize = $variant->size;
+                        $variantColor = $variant->color;
+                    }
+                }
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $itemData['product_id'],
+                    'product_variant_id' => $itemData['product_variant_id'] ?? null,
+                    'quantity' => $itemData['quantity'],
+                    'price' => $actualPrice,
+                    'product_name' => $productName,
+                    'product_image' => $productImage,
+                    'variant_size' => $variantSize,
+                    'variant_color' => $variantColor,
+                ]);
+            }
+
+            Session::forget('cart');
+            DB::commit();
+
+            if ($validatedData['payment_method'] === 'credit_card') {
+                return redirect()->route('stripe.payment.form', $order->id);
+            } elseif ($validatedData['payment_method'] === 'transfer_bank') {
+                return redirect()->route('order.awaitingPayment', $order->id)->with('info', 'Mohon selesaikan transfer bank dalam 24 jam.');
+            } else {
+                return redirect()->route('order.awaitingPayment', $order->id)->with('info', 'Mohon ikuti instruksi untuk metode pembayaran yang Anda pilih.');
+            }
+
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Order processing failed: ' . $e->getMessage(), ['request' => $request->all()]);
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat memproses pesanan. Mohon coba lagi. ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function showOrderDetails(Order $order)
+    {
+        if (Auth::id() !== $order->user_id) {
+            abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk melihat pesanan ini.');
+        }
+
+        $order->load(['payment', 'orderItems.productVariant']);
+        return view('order.details', compact('order'));
+    }
+
+    public function showOrderSuccess(Order $order)
+    {
+        if (Auth::id() !== $order->user_id) {
+            abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk melihat pesanan ini.');
+        }
+        return view('order.success', compact('order'));
+    }
+
+    public function showOrderFail(Order $order)
+    {
+        if (Auth::id() !== $order->user_id) {
+            abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk melihat pesanan ini.');
+        }
+        return view('order.fail', compact('order'));
+    }
+
+    public function showOrderAwaitingPayment(Order $order)
+    {
+        if (Auth::id() !== $order->user_id) {
+            abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk melihat pesanan ini.');
+        }
+        return view('order.awaiting_payment', compact('order'));
+    }
+
+    public function myOrders()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Anda harus login untuk melihat pesanan Anda.');
+        }
+
+        $user = Auth::user();
+
+        $orders = Order::where('user_id', $user->id)
+                       ->with(['orderItems.productVariant'])
+                       ->orderByDesc('created_at')
+                       ->get();
+
+        return view('myorder', compact('orders'));
+    }
+}

@@ -26,6 +26,8 @@ class UpdateProductRequest extends FormRequest
 
         return [
             'category_id' => ['required', 'exists:categories,id'],
+            'gender_id' => ['nullable', 'exists:genders,id'],
+            'vendor_id' => ['nullable', 'exists:vendors,id'], // Make it nullable if 'Shirt' category handles it automatically
             'name' => ['required', 'string', 'max:255'],
             'origin' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
