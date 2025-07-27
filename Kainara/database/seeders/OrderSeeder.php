@@ -13,16 +13,16 @@ class OrderSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     * Metode ini membuat contoh pesanan dan item pesanan.
      */
     public function run(): void
     {
-        // Membuat 20 order dengan status acak (menggunakan definisi default factory)
+        // Membuat 20 pesanan dengan status acak (menggunakan definisi default factory)
         Order::factory(20)->create()->each(function ($order) {
             $this->createOrderItems($order);
         });
 
-        // Membuat 10 order secara spesifik dengan status 'Order Confirmed'
-        // Menggunakan state 'confirmed()' yang baru dari factory
+        // Membuat 10 pesanan secara spesifik dengan status 'Order Confirmed'
         Order::factory(10)->confirmed()->create()->each(function ($order) {
             $this->createOrderItems($order);
         });
@@ -30,6 +30,8 @@ class OrderSeeder extends Seeder
 
     /**
      * Fungsi pembantu untuk membuat item pesanan untuk pesanan tertentu.
+     * Ini juga menghitung subtotal dan menetapkan biaya pengiriman,
+     * yang akan digunakan oleh accessor grand_total.
      *
      * @param \App\Models\Order $order
      * @return void
@@ -38,14 +40,10 @@ class OrderSeeder extends Seeder
     {
         $subtotal = 0;
 
-        // Membuat antara 1 hingga 5 item pesanan untuk setiap pesanan
         for ($i = 0; $i < rand(1, 5); $i++) {
             $product = Product::inRandomOrder()->first();
 
-            // Memastikan produk ada sebelum melanjutkan
             if (!$product) {
-                // Jika tidak ada produk yang ditemukan, lewati pembuatan item pesanan untuk iterasi ini.
-                // Dalam aplikasi nyata, Anda mungkin ingin menambahkan peringatan atau memastikan produk di-seed terlebih dahulu.
                 continue;
             }
 
@@ -54,11 +52,9 @@ class OrderSeeder extends Seeder
             $variantColor = null;
             $price = $product->price;
 
-            // Memeriksa apakah produk memiliki varian dan memilih satu secara acak
             if ($product->variants()->exists()) {
                 $productVariant = $product->variants()->inRandomOrder()->first();
                 if ($productVariant) {
-                    // Menggunakan harga varian jika tersedia, jika tidak menggunakan harga produk
                     $price = $productVariant->price ?: $product->price;
                     $variantSize = $productVariant->size;
                     $variantColor = $productVariant->color;
@@ -68,7 +64,6 @@ class OrderSeeder extends Seeder
             $quantity = rand(1, 3); // Kuantitas acak untuk item
             $subtotal += $price * $quantity; // Menghitung subtotal untuk pesanan
 
-            // Membuat item pesanan
             OrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $product->id,
@@ -82,8 +77,8 @@ class OrderSeeder extends Seeder
             ]);
         }
 
-        // Memperbarui subtotal pesanan setelah semua item ditambahkan
         $order->subtotal = $subtotal;
-        $order->save();
+        $order->shipping_cost = (float)rand(0, 50000); 
+        $order->save(); 
     }
 }

@@ -117,7 +117,6 @@
         .primary-address-tag {
             background-color: #EAE4D5;
             color: #000;
-            padding: 0.25rem 0.75rem;
             border-radius: 0.75rem;
             font-size: 0.8rem;
             font-weight: bold;

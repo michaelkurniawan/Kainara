@@ -7,7 +7,7 @@
                 <img src="{{ asset('images/awan.png') }}" alt="cloud left" class="img-fluid cloud-image" />
             </div>
             <div class="col-md-6">
-                <h1 class="display-5">{{ $title }}</h1>
+                <h1 class="display-5" style="letter-spacing: 5.5px">{{ $title }}</h1>
                 <p class="text-muted lead">{{ $subtitle }}</p>
             </div>
             <div class="col-md-3 d-none d-md-block">

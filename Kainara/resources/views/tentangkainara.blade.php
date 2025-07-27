@@ -4,8 +4,9 @@
 
 @push('styles')
     <style>
-        body, h1, h2, h3, h4, h5, h6, p, a, li, span, strong, em {
-            font-family: 'AncizarSerif', serif;
+        :root {
+            --font-primary: 'Ancizar Serif', serif;
+            --font-secondary: 'Ancizar Serif', serif;
         }
 
         .hero-section-fullwidth {
@@ -55,6 +56,11 @@
         }
 
         .card-img-tangancanting-large {
+            width: 270px; 
+            height: auto;
+        }
+
+        .card-img-kainara-large {
             width: 270px; 
             height: auto;
         }
@@ -136,17 +142,18 @@
                 {{-- KOLOM 3: Card Penjelasan Kainara --}}
                 <div class="col-md-4 d-flex flex-column">
                     <div class="card card-custom shadow-sm flex-grow-1 py-5 px-3">
-                        <img src="{{ asset('images/kainara.png') }}" class="card-img-top-custom" alt="Logo Kainara">
+                        <img src="{{ asset('images/kainara.png') }}" class="card-img-top-custom card-img-kainara-large" alt="Logo Kainara">
                         <div class="card-body">
-                            <hr class="card-divider mt-2">
-                            <h3 class="card-title fw-bold fst-italic fs-3 text-center">"Kainara" is a Combination of Two Words</h3>
-                            <h3 class="card-title fst-italic fs-3 text-center"><em>kain</em> + <em>nara</h3>
-                            <p class="text-start card-text-custom-size mt-5 fs-5"><strong>Kain</strong> = Represents the main product of this start-up, namely typical Indonesian fabrics such as batik, woven fabrics, lurik, and so on.</p>
-                            <p class="text-start card-text-custom-size fs-5"><strong>Nara</strong> = Taken from the word ‘Nusantara’. Inspired by Sanskrit, which can mean “story” or “human”.</p>
+                            <hr class="card-divider">
+                            <h3 class="card-title fw-bold fst-italic fs-2 text-center">"Kainara" is a Combination of Two Words</h3>
+                            <h4 class="card-title fst-italic fs-3 text-center">Kain + Nara</h4>
+                            <p class="text-justify card-text card-text-custom-size mt-5 fs-5"><strong>Kain</strong> = Represents the main product of this start-up, namely typical Indonesian fabrics such as batik, woven fabrics, lurik, and so on.</p>
+                            <p class="text-justify card-text card-text-custom-size fs-5"><strong>Nara</strong> = Taken from the word ‘Nusantara’. Inspired by Sanskrit, which can mean “story” or “human”.</p>
                             <p class="card-text card-text-custom-size text-center mt-5 fs-5">It can be interpreted as <em>"kain yang bercerita"</em> or <em>"kain yang punya jiwa dan koneksi dengan manusia"</em>.</p>
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

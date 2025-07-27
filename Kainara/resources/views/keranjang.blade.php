@@ -4,6 +4,10 @@
 
 @push('styles')
     <style>
+        :root {
+            --font-primary: 'Ancizar Serif', serif;
+            --font-secondary: 'Ancizar Serif', serif;
+        }
         .btn-gold {
             background-color: #EAE4D5;
             color: black;

@@ -69,9 +69,6 @@
         }
 
         header .nav-group-left .dropdown > .dropdown-toggle::after {
-            /* Contoh: Mengubah warna panah agar serasi dengan teks navigasi */
-            /* border-top-color: var(--color-text-nav); */
-            /* vertical-align: 0.15em; */ /* Sedikit penyesuaian vertikal jika perlu */
             margin-left: 0.4em; /* Jarak antara teks "Store" dan panah */
             vertical-align: 0.1em; 
         }
@@ -79,15 +76,11 @@
         header .nav-group-left .dropdown > a.nav-link.dropdown-toggle::after {
             margin-left: 0.3em;  /* Jarak antara teks "Store" dan panah */
             margin-top: 0.2em;
-            /* vertical-align: 100em; /* COBA SESUAIKAN NILAI INI (misal: 0, 0.05em, 0.15em, -0.05em, atau 'middle') */
             transition: transform 0.25s ease-in-out; /* Transisi untuk animasi balik panah */
-            /* border-top-color: var(--color-text-nav); // Jika ingin mengubah warna panah */
         }
 
         header .nav-group-left .nav-link,
         header .icon-group-right .nav-icon-link {
-            /* Pastikan padding dan line-height konsisten agar alignment vertikal baik */
-            /* Sudah diatur di CSS header sebelumnya, cek kembali jika perlu */
         }
         header .nav-group-left .dropdown > .nav-link.dropdown-toggle {
             display: inline-flex; /* 1. Jadikan link sebagai flex container */
@@ -100,11 +93,8 @@
             top: 50%;
             transform: translate(-50%, -50%);
             z-index: 1031;
-            /* Penting: Beri dimensi pada #logo-rotator agar gambar di dalamnya bisa diposisikan absolut relatif terhadapnya */
-            /* Kita akan set width dan height berdasarkan logo terbesar atau target yang diinginkan */
-            width: var(--logo-height-large); /* Ambil dari variabel logo terbesar, atau set nilai tetap */
-            height: var(--logo-height-large); /* Ambil dari variabel logo terbesar, atau set nilai tetap */
-            display: flex; /* Untuk memusatkan gambar di dalamnya jika perlu */
+            width: 180px;
+            display: flex; 
             align-items: center;
             justify-content: center;
         }
@@ -116,12 +106,8 @@
             transform: translate(-50%, -50%); /* Pusatkan gambar di dalam #logo-rotator */
             opacity: 0; /* Awalnya semua transparan */
             transition: opacity 0.5s ease-in-out; /* Transisi untuk efek fade */
-            /* Tinggi dan lebar akan diatur oleh kelas spesifik ukuran (.logo-size-*) */
-            /* Atau jika Anda tidak menggunakan kelas ukuran, atur height di sini dan JS akan menimpanya jika perlu */
-            /* height: var(--logo-height-medium); */
             width: auto;
             display: block; /* atau inline-block dengan vertical-align middle */
-            /* vertical-align: middle; */
         }
 
         header #logo-rotator .logo-image.active {
@@ -129,11 +115,9 @@
         }
         
         header img.logo-size-medium { height: var(--logo-height-medium, 70px) !important; }
-        header img.logo-size-large { height: var(--logo-height-large, 90px) !important; }
+        header img.logo-size-large { height: var(--logo-height-large, 100px) !important; }
 
         header img#rotating-logo {
-             /* Default height jika tidak ada kelas, misal: */
-             /* height: var(--logo-height-medium); */
              width: auto; display: block; vertical-align: middle;
         }
 
@@ -141,7 +125,6 @@
         header .icon-group-right .nav-icon-link {
             display: inline-flex;
             align-items: center;
-            /* height: var(--target-logo-height); Hapus jika tidak relevan dengan tinggi logo yang meluber */
         }
         header .icon-group-right .header-icon {
             height: var(--target-icon-size);
@@ -155,20 +138,19 @@
     </style>
 
 
-<!-- HTML -->
 <header>
     <div class="container-fluid px-5">
         <div class="nav-group-left">
             <div class="dropdown header-dropdown me-3"> 
                 <a class="nav-link fw-bold dropdown-toggle" href="#" role="button" id="storeDropdown" data-bs-toggle="dropdown" aria-expanded="false">Store</a>
                 <ul class="dropdown-menu" aria-labelledby="storeDropdown">
-                    <li><a class="dropdown-item" href="{{ route('products.index') }}">Men</a></li>
-                    <li><a class="dropdown-item" href="#">Women</a></li>
-                    <li><a class="dropdown-item" href="#">Fabric</a></li>
+                    <li><a class="dropdown-item" href="{{ route('products.gender.index', ['gender' => 'Male']) }}">Men</a></li>
+                    <li><a class="dropdown-item" href="{{ route('products.gender.index', ['gender' => 'Female']) }}">Women</a></li>
+                    <li><a class="dropdown-item" href="{{ route('products.category.index', ['category_name' => 'Fabric']) }}">Fabric</a></li>
                 </ul>
             </div>
             <a href="{{ route('Stories.ListStories') }}" class="nav-link fw-bold me-3">Stories</a>
-            <a href="#" class="nav-link fw-bold me-3">My Order</a>
+            <a href="{{ route('my.orders') }}" class="nav-link fw-bold me-3">My Order</a>
             <a href="{{ route('tentangkainara') }}" class="nav-link fw-bold">About Us</a>
         </div>
 

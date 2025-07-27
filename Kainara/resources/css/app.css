@@ -35,9 +35,8 @@
 @tailwind utilities;
 
 :root {
-    /* Variabel untuk ukuran logo yang berputar (digunakan oleh kelas .logo-size-*) */
-    --logo-height-medium: 250px;  /* Contoh ukuran sedang */
-    --logo-height-large: 170px;   /* Contoh ukuran besar */
+    --logo-height-medium: 50px;  /* Example: Set to fit within 90px header */
+    --logo-height-large: 80px;   /* Example: Set to fit within 90px header */
 
     --target-icon-size: 24px;
     --header-actual-height: 90px; /* TARGET TINGGI BAR HEADER (tanpa memperhitungkan logo yang meluber) */

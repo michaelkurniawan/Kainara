@@ -22,7 +22,6 @@ return new class extends Migration
             $table->timestamp('completed_at')->nullable();
             $table->timestamp('auto_complete_at')->nullable();
             $table->timestamps();
-            // If the user is deleted, the order will still exist but the user_id will be set to null. This nullable column allows us to keep track of orders made by users who may no longer exist in the system.
             $table->string('original_user_name')->nullable();
             $table->string('original_user_email')->nullable();
             $table->string('shipping_label')->nullable(); 
@@ -32,7 +31,8 @@ return new class extends Migration
             $table->string('shipping_country')->nullable(); 
             $table->string('shipping_city')->nullable(); 
             $table->string('shipping_province')->nullable(); 
-            $table->string('shipping_postal_code')->nullable(); 
+            $table->string('shipping_postal_code')->nullable();
+            $table->string('payment_method')->nullable(); 
         });
 
         Schema::create('order_items', function (Blueprint $table) {

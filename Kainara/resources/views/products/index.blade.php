@@ -4,6 +4,10 @@
 
 @push('styles')
     <style>
+        :root {
+            --font-primary: 'Ancizar Serif', serif;
+            --font-secondary: 'Ancizar Serif', serif;
+        }
         .product-card {
             background-color: #e9dfcf;
             text-align: center;
@@ -467,7 +471,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-body">
-                    <div class="row row-cols-2 row-cols-md-4 g-3">
+                    <div class="row row-cols-2 row-cols-md-3 g-3">
                         @foreach(collect($availableOrigins)->sort() as $origin)
                             <div class="col">
                                 <div class="form-check">
@@ -494,7 +498,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-body">
-                    <div class="row row-cols-2 row-cols-md-4 g-3">
+                    <div class="row row-cols-2 row-cols-md-3 g-3">
                         @foreach(collect($availableColors)->sort() as $color)
                             <div class="col">
                                 <div class="form-check">
