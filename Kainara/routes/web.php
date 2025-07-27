@@ -13,7 +13,9 @@ use App\Http\Controllers\User\StripePaymentController;
 use App\Http\Controllers\User\ProfileController;
 use App\Http\Controllers\User\Auth\LoginController;
 use App\Http\Controllers\User\Auth\RegisterController;
-use App\Http\Controllers\User\Auth\EmailVerificationController; // Pastikan ini sudah diimpor
+use App\Http\Controllers\User\Auth\EmailVerificationController;
+use App\Http\Controllers\User\Auth\ForgotPasswordController;
+use App\Http\Controllers\User\Auth\ResetPasswordController;
 
 Route::get('/', [LatestStoriesController::class, 'index'])->name('welcome');
 
@@ -56,12 +58,20 @@ Route::middleware('web')->group(function () {
 
 // Authentication Routes
 
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest'])->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
 
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
     Route::post('/register', [RegisterController::class, 'register']);
+
+    // Rute Password Reset: Permintaan link
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+
+    // Rute Password Reset: Reset password
+    Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
 // Rute Verifikasi Email
