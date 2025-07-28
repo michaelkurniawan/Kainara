@@ -19,9 +19,8 @@
         justify-content: center;
         align-items: center;
         padding: 0;
-        /* Ensure default border and text color for non-selected */
-        border: 1px solid #6c757d; /* Bootstrap secondary border color */
-        color: #6c757d; /* Bootstrap secondary text color */
+        border: 1px solid #6c757d;
+        color: #6c757d;
     }
     .card .text-muted {
         font-size: 0.9rem !important;
@@ -38,7 +37,7 @@
     .review-date {
         text-align: center;
         margin-bottom: 0.5rem;
-        font-size: 0.85rem; /* Make date slightly smaller */
+        font-size: 0.85rem;
     }
     .review-rating {
         text-align: center;
@@ -55,16 +54,16 @@
     }
     #prev-review-btn:hover:not(:disabled) {
         background-color: #B6B09F;
-        border-color: #B6B09F; /* Match hover border to background */
-        color: white; /* Ensure text is white on hover */
+        border-color: #B6B09F;
+        color: white;
     }
     #next-review-btn:hover:not(:disabled) {
         background-color: #B6B09F;
-        border-color: #B6B09F; /* Match hover border to background */
-        color: white; /* Ensure text is white on hover */
+        border-color: #B6B09F;
+        color: white;
     }
     .review-nav-btn:disabled {
-        opacity: 0.5; /* Slightly less opaque than 0.6 for better contrast */
+        opacity: 0.5;
         cursor: not-allowed;
     }
 
@@ -74,7 +73,7 @@
 
     .review-name-header-wrapper {
         background-color: #B6B09F;
-        color: #333; /* Darker text for contrast */
+        color: #333;
         padding: 0.75rem 1rem;
         border-top-left-radius: calc(0.375rem - 1px);
         border-top-right-radius: calc(0.375rem - 1px);
@@ -130,7 +129,6 @@
         z-index: -1;
     }
 
-    /* Updated selected state for size buttons */
     .btn-size.selected {
         background-color: #AD9D6C !important;
         color: white !important;
@@ -144,45 +142,42 @@
         transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
     }
 
-    /* Disabled state for size buttons that are not available */
     .btn-size:disabled {
-        background-color: #e9ecef; /* Light gray background */
-        color: #6c757d; /* Standard muted text color */
-        border-color: #e9ecef; /* Match border to background */
+        background-color: #e9ecef;
+        color: #6c757d;
+        border-color: #e9ecef;
         cursor: not-allowed;
-        opacity: 0.65; /* Reduce opacity to show it's disabled */
+        opacity: 0.65;
     }
 
     .product-image-container {
         width: 100%;
-        max-width: 736px; /* Max width for consistency */
+        max-width: 736px;
         display: flex;
-        justify-content: center; /* Center the image within its container */
-        align-items: center;
+        justify-content: flex-start; 
         overflow: hidden;
-        margin: 0 auto;
+        margin: 0;
     }
 
     .product-image-container img {
-        width: 100%; /* Make image fill container width */
-        height: auto; /* Maintain aspect ratio */
-        object-fit: contain; /* Ensure image fits without cropping */
-        max-height: 736px; /* Max height to prevent overly large images on taller screens */
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+        max-height: 736px;
     }
 
-    /* Responsive adjustments for image container */
     @media (max-width: 768px) {
         .product-image-container {
-            max-width: 100%; /* Full width on smaller screens */
+            max-width: 100%;
         }
         .product-image-container img {
-            max-height: 500px; /* Adjust max height for mobile */
+            max-height: 500px;
         }
     }
 
     .btn-add-to-cart, .btn-buy-it-now {
-        font-size: 1.25rem; /* Larger font for action buttons */
-        padding: 0.75rem 1.5rem; /* More padding */
+        font-size: 1.25rem;
+        padding: 0.75rem 1.5rem;
     }
 
     .btn-add-to-cart:disabled, .btn-buy-it-now:disabled {
@@ -250,13 +245,10 @@
 
                 <p class="fs-3 fw-bold mb-2">IDR {{ number_format($product->price, 0, ',', '.') }}</p>
 
-                {{-- Average Rating Display --}}
                 <div class="d-flex align-items-center mb-4">
                     <div class="text-warning me-2 fs-4" id="average-rating-stars">
-                        {{-- Stars will be rendered here by JS --}}
                     </div>
                     <span class="text-muted fs-5 ms-2" id="average-rating-text">
-                        {{-- Text like "4.5 Stars | 10 Reviews" will be rendered here by JS --}}
                     </span>
                 </div>
 
@@ -319,7 +311,6 @@
             <h2 class="fw-bold mb-4 d-flex align-items-center justify-content-center fs-2">Customer Reviews (<span id="review-count-display">0</span>)</h2>
 
             <div id="reviews-container" class="row g-4 justify-content-center">
-                {{-- Reviews will be dynamically inserted here by JavaScript --}}
             </div>
 
             <div class="d-flex justify-content-center align-items-center mt-5 gap-3" id="pagination-controls" style="display: none;">
@@ -335,7 +326,6 @@
 
     </div>
 
-    {{-- Include the dynamically determined size chart modal --}}
     @include($sizeChartComponent)
 @endsection
 
@@ -347,8 +337,6 @@
         let maxQuantity = 0;
 
         const productVariants = @json($product->variants);
-
-        // Reviews are passed dynamically from the controller
         const productReviews = @json($productReviews);
         const reviewsPerPage = 3;
         let currentPage = 0;
@@ -386,7 +374,7 @@
 
         function updateQuantityControls() {
             quantity = Math.min(quantity, maxQuantity);
-            quantity = Math.max(1, quantity); // Ensure quantity is at least 1
+            quantity = Math.max(1, quantity);
 
             quantityDisplay.innerText = quantity;
             quantityInput.value = quantity;
@@ -395,7 +383,6 @@
             minusBtn.disabled = quantity <= 1;
             plusBtn.disabled = quantity >= maxQuantity;
 
-            // Disable Add to Cart/Buy Now if no size selected (and not one-size) or no stock
             if (maxQuantity === 0 || (!selectedSize && !hasOnlyOneSizeVariant)) {
                 addToCartButton.disabled = true;
                 buyNowButton.disabled = true;
@@ -439,7 +426,7 @@
             if (selectedSizeInput) {
                 selectedSizeInput.value = 'One Size';
             }
-            if (selectedSizeInputOneSize) { // This seems redundant if selected_size_input handles it.
+            if (selectedSizeInputOneSize) {
                 selectedSizeInputOneSize.value = 'One Size';
             }
 
@@ -454,14 +441,10 @@
             updateQuantityControls();
         }
 
-        // --- Review Display Logic ---
-
         function generateStarsHtml(rating) {
             let starsHtml = '';
             let fullStars = Math.floor(rating);
-            // Half star if fractional part is between 0.25 and 0.75
             let halfStar = (rating - fullStars) >= 0.25 && (rating - fullStars) < 0.75;
-            // Round up to a full star if fractional part is 0.75 or more
             let quarterRoundUp = (rating - fullStars) >= 0.75;
             let emptyStars = 5;
 
@@ -485,24 +468,23 @@
         }
 
         function renderReviews() {
-            reviewsContainer.innerHTML = ''; // Clear previous reviews
+            reviewsContainer.innerHTML = '';
 
-            reviewCountDisplay.textContent = productReviews.length; // Update total review count
+            reviewCountDisplay.textContent = productReviews.length;
 
             if (productReviews.length === 0) {
                 reviewsContainer.innerHTML = '<div class="col-12 text-center"><p class="text-muted fs-5">No reviews for this product yet. Be the first to review!</p></div>';
-                paginationControls.style.display = 'none'; // Hide pagination if no reviews
-                updateAverageRatingDisplay(0, 0); // Update average rating to 0
+                paginationControls.style.display = 'none';
+                updateAverageRatingDisplay(0, 0);
                 return;
             }
 
-            paginationControls.style.display = 'flex'; // Show pagination if there are reviews
+            paginationControls.style.display = 'flex';
 
             const startIndex = currentPage * reviewsPerPage;
             const endIndex = startIndex + reviewsPerPage;
             const reviewsToDisplay = productReviews.slice(startIndex, endIndex);
 
-            // Handle case where deleting/filtering makes current page empty, but other pages exist
             if (reviewsToDisplay.length === 0 && productReviews.length > 0 && currentPage > 0) {
                 currentPage--;
                 renderReviews();
@@ -511,7 +493,7 @@
 
             reviewsToDisplay.forEach(review => {
                 const colDiv = document.createElement('div');
-                colDiv.className = 'col-lg-4 col-md-6 col-12 d-flex'; // Add d-flex to ensure cards are same height
+                colDiv.className = 'col-lg-4 col-md-6 col-12 d-flex';
 
                 const cardHtml = `
                     <div class="card w-100 rounded-3 shadow-sm review-card-bg">
@@ -576,8 +558,6 @@
             averageRatingTextContainer.textContent = `${avgRating.toFixed(1)} Stars | ${reviewCount} Reviews`;
         }
 
-
-        // Event listeners for pagination
         if (nextBtn) {
             nextBtn.addEventListener('click', () => {
                 currentPage++;

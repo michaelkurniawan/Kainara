@@ -27,7 +27,7 @@
     .review-date {
         text-align: center;
         margin-bottom: 0.5rem;
-        font-size: 0.85rem; /* Make date slightly smaller */
+        font-size: 0.85rem;
     }
     .review-rating {
         text-align: center;
@@ -44,16 +44,16 @@
     }
     #prev-review-btn:hover:not(:disabled) {
         background-color: #B6B09F;
-        border-color: #B6B09F; /* Match hover border to background */
-        color: white; /* Ensure text is white on hover */
+        border-color: #B6B09F;
+        color: white;
     }
     #next-review-btn:hover:not(:disabled) {
         background-color: #B6B09F;
-        border-color: #B6B09F; /* Match hover border to background */
-        color: white; /* Ensure text is white on hover */
+        border-color: #B6B09F;
+        color: white;
     }
     .review-nav-btn:disabled {
-        opacity: 0.5; /* Slightly less opaque than 0.6 for better contrast */
+        opacity: 0.5;
         cursor: not-allowed;
     }
 
@@ -63,7 +63,7 @@
 
     .review-name-header-wrapper {
         background-color: #B6B09F;
-        color: #333; /* Darker text for contrast */
+        color: #333;
         padding: 0.75rem 1rem;
         border-top-left-radius: calc(0.375rem - 1px);
         border-top-right-radius: calc(0.375rem - 1px);
@@ -121,34 +121,33 @@
 
     .product-image-container {
         width: 100%;
-        max-width: 736px; /* Max width for consistency */
+        max-width: 736px;
         display: flex;
-        justify-content: center; /* Center the image within its container */
+        justify-content: flex-start;
         align-items: center;
         overflow: hidden;
-        margin: 0 auto;
+        margin: 0;
     }
 
     .product-image-container img {
-        width: 100%; /* Make image fill container width */
-        height: auto; /* Maintain aspect ratio */
-        object-fit: contain; /* Ensure image fits without cropping */
-        max-height: 736px; /* Max height to prevent overly large images on taller screens */
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+        max-height: 736px;
     }
 
-    /* Responsive adjustments for image container */
     @media (max-width: 768px) {
         .product-image-container {
-            max-width: 100%; /* Full width on smaller screens */
+            max-width: 100%;
         }
         .product-image-container img {
-            max-height: 500px; /* Adjust max height for mobile */
+            max-height: 500px;
         }
     }
 
     .btn-add-to-cart, .btn-buy-it-now {
-        font-size: 1.25rem; /* Larger font for action buttons */
-        padding: 0.75rem 1.5rem; /* More padding */
+        font-size: 1.25rem;
+        padding: 0.75rem 1.5rem;
     }
 
     .btn-add-to-cart:disabled, .btn-buy-it-now:disabled {
@@ -192,7 +191,6 @@
                         <div class="d-flex align-items-center gap-3 ms-2">
                             <span class="ms-2 me-2">|</span>
                             @php
-                                // Get unique colors from product variants for fabric
                                 $colors = $product->variants->pluck('color')->unique();
                             @endphp
                             @if ($colors->isNotEmpty())
@@ -205,7 +203,6 @@
                                     </div>
                                 @endforeach
                             @else
-                                {{-- If no specific colors are defined, use the primary color from the product itself, or a default --}}
                                 @if ($product->color)
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="rounded-circle d-inline-block"
@@ -214,7 +211,7 @@
                                         <span class="text-capitalize ms-2">{{ $product->color }}</span>
                                     </div>
                                 @else
-                                    <span>Multi-color</span> {{-- Fallback if no specific colors are defined --}}
+                                    <span>Multi-color</span>
                                 @endif
                             @endif
                         </div>
@@ -244,7 +241,7 @@
                     <p class="mb-2 fs-4 fw-semibold">Fabric's Vendor</p>
                     <div class="d-flex align-items-center mb-4">
                         <i class="fas fa-store fs-5 me-3" ></i>
-                        <span class="fs-5">{{ $product->vendor->name ?? 'Mitra Pengrajin' }}</span>
+                        <span class="fs-5">{{ $product->vendor->name ?? 'Craftsman Partner' }}</span>
                     </div>
 
 
@@ -270,7 +267,6 @@
             <h2 class="fw-bold mb-4 d-flex align-items-center justify-content-center fs-2">Customer Reviews (<span id="review-count-display">0</span>)</h2>
 
             <div id="reviews-container" class="row g-4 justify-content-center">
-                {{-- Reviews will be dynamically inserted here by JavaScript --}}
             </div>
 
             <div class="d-flex justify-content-center align-items-center mt-5 gap-3" id="pagination-controls" style="display: none;">
@@ -291,9 +287,8 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         let quantity = 1;
-        let maxQuantity = 0; // Initialize to 0, will be set from product stock
+        let maxQuantity = 0;
 
-        // Pass product data and reviews dynamically from the controller
         const product = @json($product);
         const productReviews = @json($productReviews);
 
@@ -317,24 +312,17 @@
         const averageRatingStarsContainer = document.getElementById('average-rating-stars');
         const averageRatingTextContainer = document.getElementById('average-rating-text');
 
-        // Set maxQuantity based on the fabric product's stock.
-        // For fabrics, we assume 'One Size' or that the 'stock' attribute of the Product model directly applies.
         if (product.variants && product.variants.length > 0) {
-            // If fabric products still use variants (e.g., for color), sum up all stock for 'One Size'
             maxQuantity = product.variants.reduce((sum, variant) => {
-                // Assuming 'One Size' is the size for all fabric variants
                 return variant.size === 'One Size' ? sum + variant.stock : sum;
             }, 0);
         } else {
-            // If fabric products do not have variants or stock is directly on the Product model
-            maxQuantity = product.stock || 100; // Fallback to 100 if stock is not defined
+            maxQuantity = product.stock || 100;
         }
         
-        // Ensure maxQuantity is at least 1 if the product exists
-        if (maxQuantity === 0 && product.id) { // If product exists but stock is 0, make it at least 1 for display logic
-            maxQuantity = 1; // Or, consider disabling buttons entirely if stock is truly 0
+        if (maxQuantity === 0 && product.id) {
+            maxQuantity = 1;
         }
-
 
         function updateQuantityControls() {
             quantity = Math.min(quantity, maxQuantity);
@@ -347,13 +335,12 @@
             minusBtn.disabled = quantity <= 1;
             plusBtn.disabled = quantity >= maxQuantity;
 
-            // Enable/disable add to cart/buy now based on maxQuantity (stock availability)
             const isAvailable = maxQuantity > 0;
             addToCartButton.disabled = !isAvailable;
             buyNowButton.disabled = !isAvailable;
         }
 
-        updateQuantityControls(); // Initial call to set up controls
+        updateQuantityControls();
 
         minusBtn.addEventListener('click', function () {
             if (quantity > 1) {
@@ -368,8 +355,6 @@
                 updateQuantityControls();
             }
         });
-
-        // --- Review Display Logic (mostly same as your existing) ---
 
         function generateStarsHtml(rating) {
             let starsHtml = '';
@@ -398,18 +383,18 @@
         }
 
         function renderReviews() {
-            reviewsContainer.innerHTML = ''; // Clear previous reviews
+            reviewsContainer.innerHTML = '';
 
-            reviewCountDisplay.textContent = productReviews.length; // Update total review count
+            reviewCountDisplay.textContent = productReviews.length;
 
             if (productReviews.length === 0) {
-                reviewsContainer.innerHTML = '<div class="col-12 text-center"><p class="text-muted fs-5">Belum ada review untuk produk ini. Jadilah yang pertama memberikan review!</p></div>';
-                paginationControls.style.display = 'none'; // Hide pagination if no reviews
-                updateAverageRatingDisplay(0, 0); // Update average rating to 0
+                reviewsContainer.innerHTML = '<div class="col-12 text-center"><p class="text-muted fs-5">No reviews for this product yet. Be the first to review!</p></div>';
+                paginationControls.style.display = 'none';
+                updateAverageRatingDisplay(0, 0);
                 return;
             }
 
-            paginationControls.style.display = 'flex'; // Show pagination if there are reviews
+            paginationControls.style.display = 'flex';
 
             const startIndex = currentPage * reviewsPerPage;
             const endIndex = startIndex + reviewsPerPage;
@@ -423,7 +408,7 @@
 
             reviewsToDisplay.forEach(review => {
                 const colDiv = document.createElement('div');
-                colDiv.className = 'col-lg-4 col-md-6 col-12 d-flex'; // Add d-flex to ensure cards are same height
+                colDiv.className = 'col-lg-4 col-md-6 col-12 d-flex';
 
                 const cardHtml = `
                     <div class="card w-100 rounded-3 shadow-sm review-card-bg">
@@ -433,13 +418,13 @@
                         <div class="card-body-content d-flex flex-column justify-content-between">
                             <div>
                                 <p class="card-text text-muted mb-2 review-date">
-                                    ${new Date(review.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                    ${new Date(review.created_at).toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                 </p>
                                 <div class="text-warning fs-5 review-rating">
                                     ${generateStarsHtml(review.rating)}
                                 </div>
                             </div>
-                            <p class="card-text fs-6 review-comment">${review.comment || '<span class="text-muted fst-italic">Tidak ada komentar.</span>'}</p>
+                            <p class="card-text fs-6 review-comment">${review.comment || '<span class="text-muted fst-italic">No comment provided.</span>'}</p>
                         </div>
                     </div>
                 `;
@@ -454,7 +439,7 @@
         function updatePaginationButtons() {
             const totalPages = Math.ceil(productReviews.length / reviewsPerPage);
             if (productReviews.length > 0) {
-                pageIndicator.textContent = `Halaman ${currentPage + 1} dari ${totalPages}`;
+                pageIndicator.textContent = `Page ${currentPage + 1} of ${totalPages}`;
             } else {
                 pageIndicator.textContent = '';
             }
@@ -485,10 +470,9 @@
 
         function updateAverageRatingDisplay(avgRating, reviewCount) {
             averageRatingStarsContainer.innerHTML = generateStarsHtml(avgRating);
-            averageRatingTextContainer.textContent = `${avgRating.toFixed(1)} Bintang | ${reviewCount} Review`;
+            averageRatingTextContainer.textContent = `${avgRating.toFixed(1)} Stars | ${reviewCount} Reviews`;
         }
 
-        // Event listeners for pagination
         if (nextBtn) {
             nextBtn.addEventListener('click', () => {
                 currentPage++;

@@ -13,6 +13,7 @@ use App\Http\Controllers\User\StripePaymentController;
 use App\Http\Controllers\User\ReviewController;
 use App\Http\Controllers\User\ProfileController;
 use App\Http\Controllers\User\AddressController;
+use App\Http\Controllers\User\RefundController;
 use App\Http\Controllers\User\Auth\LoginController;
 use App\Http\Controllers\User\Auth\RegisterController;
 use App\Http\Controllers\User\Auth\EmailVerificationController;
@@ -59,6 +60,7 @@ Route::get('/order/{order}/success', [OrderController::class, 'showOrderSuccess'
 Route::get('/order/{order}/fail', [OrderController::class, 'showOrderFail'])->name('order.fail');
 Route::get('/order/{order}/awaiting-payment', [OrderController::class, 'showOrderAwaitingPayment'])->name('order.awaitingPayment');
 Route::post('/order/{order}/complete', [OrderController::class, 'completeOrder'])->name('order.complete');
+Route::post('/order/{order}/refund', [RefundController::class, 'requestRefund'])->name('order.refund');
 Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 Route::get('/my-orders', [OrderController::class, 'myOrders'])->name('my.orders');
 
