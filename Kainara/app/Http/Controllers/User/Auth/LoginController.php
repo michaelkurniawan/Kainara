@@ -87,6 +87,12 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        // Flash a success notification to the session
+        return redirect('/')->with('notification', [
+            'type' => 'success', // Assuming you have a 'success' type for your notification component
+            'title' => 'Logout Berhasil!',
+            'message' => 'Anda telah berhasil keluar dari akun Anda.',
+            'hasActions' => false // Typically, a logout success doesn't need an action button
+        ]);
     }
 }

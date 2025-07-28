@@ -11,48 +11,46 @@ use App\Http\Controllers\User\ArtisanRegistrationController;
 use App\Http\Controllers\User\OrderController;
 use App\Http\Controllers\User\StripePaymentController;
 use App\Http\Controllers\User\ProfileController;
+use App\Http\Controllers\User\AddressController;
 use App\Http\Controllers\User\Auth\LoginController;
 use App\Http\Controllers\User\Auth\RegisterController;
 use App\Http\Controllers\User\Auth\EmailVerificationController;
 use App\Http\Controllers\User\Auth\ForgotPasswordController;
 use App\Http\Controllers\User\Auth\ResetPasswordController;
 
+// Admin Routes
+require __DIR__.'/admin.php';
+
+
+// User Routes
 Route::get('/', [LatestStoriesController::class, 'index'])->name('welcome');
 
-// Rute Pendaftaran Artisan
 Route::get('/join-as-artisan', [ArtisanRegistrationController::class, 'showForm'])->name('artisan.register');
 Route::post('/join-as-artisan', [ArtisanRegistrationController::class, 'store'])->name('artisan.register.store');
 
-// Rute Tentang Kainara
 Route::get('/tentangkainara', function () {
     return view('tentangkainara');
 })->name('tentangkainara');
 
-// Rute Produk
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/gender/{gender}', [ProductController::class, 'index'])->name('products.gender.index');
 Route::get('/products/category/{category_name}', [ProductController::class, 'index'])->name('products.category.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show'); 
 
-// Rute Cerita/Blog
 Route::get('/stories', [StoriesController::class, 'index'])->name('Stories.ListStories');
 Route::get('/stories/{slug}', [StoriesController::class, 'show'])->name('Stories.DetailStories');
 
-// Rute Notifikasi (contoh)
-Route::get('/trynotif', function () {
-    return view('Notification.try-notif');
-});
+// Route::get('/trynotif', function () {
+//     return view('Notification.try-notif');
+// });
 
-// Rute Keranjang
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
 Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
 
-// Rute Checkout
 Route::get('/checkout', [CheckoutController::class, 'showCheckoutPage'])->name('checkout.show');
 Route::post('/checkout/add', [CheckoutController::class, 'addToCheckout'])->name('checkout.add');
 
-// Rute Proses Order
 Route::post('/order/process', [OrderController::class, 'processCheckout'])->name('order.process');
 Route::get('/order/{order}/details', [OrderController::class, 'showOrderDetails'])->name('order.details');
 Route::get('/order/{order}/success', [OrderController::class, 'showOrderSuccess'])->name('order.success');
@@ -64,7 +62,6 @@ Route::get('/payment/stripe/{order}', [StripePaymentController::class, 'showPaym
 Route::post('/payment/stripe/{order}/confirm', [StripePaymentController::class, 'confirmPayment'])->name('stripe.payment.confirm');
 
 
-// Authentication Routes
 
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -73,36 +70,30 @@ Route::middleware(['guest'])->group(function () {
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
     Route::post('/register', [RegisterController::class, 'register']);
 
-    // Rute Password Reset: Permintaan link
     Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 
-    // Rute Password Reset: Reset password
     Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
     Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
-// Rute Verifikasi Email
-Route::get('/email/verify', [EmailVerificationController::class, 'show']) // Arahkan ke method show di controller Anda
+Route::get('/email/verify', [EmailVerificationController::class, 'show']) 
     ->middleware('auth')
     ->name('verification.notice');
 
-// INI PERUBAHAN UTAMA: Hapus middleware 'auth' dari sini
 Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-    ->middleware(['signed', 'throttle:6,1']) // Hanya 'signed' dan 'throttle'
+    ->middleware(['signed', 'throttle:6,1'])
     ->name('verification.verify');
 
-// Kirim notifikasi verifikasi lagi
-Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend']) // Arahkan ke method resend di controller Anda
+Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend']) 
     ->middleware(['auth', 'throttle:6,1'])
     ->name('verification.send');
 
 Route::middleware('auth')->group(function () {
     Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
-    Route::post('/logout', [LoginController::class, 'logout']); // Asumsi LoginController menangani logout
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    Route::post('/address', [AddressController::class, 'store'])->name('addresses.store');
 });
     Route::get('/my-orders', [OrderController::class, 'myOrders'])->name('my.orders');
 });
-
-require __DIR__.'/admin.php';

@@ -71,6 +71,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === 'admin';
     }
 
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(UserAddress::class, 'user_id');
+    }
+
     public function hasVerifiedEmail()
     {
         return ! is_null($this->email_verified_at);
