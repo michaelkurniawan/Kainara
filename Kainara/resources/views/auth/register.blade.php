@@ -6,83 +6,47 @@
 <style>
     body {
         background-color: #f8f9fa; /* Warna background netral */
-        margin: 0;
-        padding: 0;
     }
 
-    .background-top-fullwidth {
-        width: 100%;
-        height: 40vh; /* Sesuaikan tinggi ini sesuai kebutuhan */
-        background-image: url('{{ asset('images/BG/BG.png') }}'); /* Gambar latar belakang atas */
-        background-repeat: no-repeat;
-        background-position: top center;
-        background-size: cover;
-        position: relative;
-        z-index: 1;
-    }
-
-    .register-wrapper {
-        width: 100%;
-        min-height: calc(100vh - var(--header-actual-height) - 40vh - var(--footer-padding-y));
+    .login-container {
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        /* justify-content: center; */
         align-items: center;
-        position: relative;
-        z-index: 2;
-        background-image: url('{{ asset('images/BG/BG 2.png') }}'); /* Gambar latar belakang bawah */
+        background-image: url('{{ asset('images/BG/BG.png') }}');
         background-repeat: no-repeat;
-        background-position: bottom center;
-        background-size: contain;
-        padding-top: 50px;
-        padding-bottom: 50px;
-    }
-
-    .register-container {
+        background-position: top center;
+        background-size: 100% auto; /* Lebar penuh, tinggi mengikuti proporsi gambar */
         padding: 0;
-        height: auto;
-        flex-grow: 1;
+        height: 55vh;
     }
 
-    .register-card {
-        background-color: #ffffff;
+
+    .login-card {
+        /* background-color: #ffffff; */
         border: none;
         border-radius: 10px;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
-        padding: 40px 60px; /* Padding disesuaikan */
+        /* box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1); */
+        padding: 40px 60px; /* Padding lebih lebar di kiri/kanan untuk mengakomodasi 2 kolom */
         width: 100%;
-        max-width: 800px; /* Max-width lebih besar untuk layout 2 kolom jika diinginkan */
+        max-width: 800px; /* Max-width lebih besar untuk layout 2 kolom */
         text-align: center;
     }
 
-    .register-card h2 {
-        font-family: var(--font-primary);
-        color: var(--color-text-dark);
-        margin-bottom: 5px;
-        font-size: 2.5rem;
-        font-weight: 700;
-    }
-
-    .register-card p.text-muted {
-        font-size: 1rem;
-        margin-bottom: 50px;
-    }
-
-    /* Gaya untuk form control, label, group, dan password toggle tetap sama dengan halaman login */
     .form-control {
-        border-radius: 0;
-        padding: 10px 0;
+        border-radius: 0; /* Hilangkan border radius */
+        padding: 10px 0; /* Padding vertikal sedikit, padding horizontal nol */
         font-size: 1rem;
-        border: none;
-        border-bottom: 1px solid #ced4da;
-        background-color: transparent;
+        border: none; /* Hilangkan border penuh */
+        border-bottom: 1px solid #ced4da; /* Hanya border bawah */
+        background-color: transparent; /* Pastikan background transparan */
     }
 
     .form-control:focus {
         border-color: var(--color-brand);
-        box-shadow: none;
-        outline: none;
-        border-bottom: 2px solid var(--color-brand);
+        box-shadow: none; /* Hilangkan shadow saat focus */
+        outline: none; /* Hilangkan outline default */
+        border-bottom: 2px solid var(--color-brand); /* Border bawah lebih tebal saat focus */
         background-color: transparent;
     }
 
@@ -90,39 +54,39 @@
         color: var(--color-text-dark);
         text-align: left;
         width: 100%;
-        margin-bottom: 5px;
+        margin-bottom: 5px; /* Sesuaikan jarak label ke input */
         font-size: 18px;
     }
 
     .form-group {
-        margin-bottom: 30px;
-        position: relative;
+        margin-bottom: 30px; /* Jarak antar grup form */
+        position: relative; /* Untuk ikon mata */
     }
 
     .form-group .password-toggle {
         position: absolute;
-        right: 0;
-        top: 50%;
+        right: 0; /* Atur ke 0 agar mepet ke kanan input */
+        top: 50%; /* Sesuaikan posisi ikon mata agar pas di tengah vertikal input */
         transform: translateY(-50%);
         cursor: pointer;
         color: #6c757d;
-        padding: 0 5px;
+        padding: 0 5px; /* Sedikit padding agar ikon tidak terlalu mepet teks */
     }
 
-    .btn-register { /* Menggunakan btn-register agar terpisah dari login */
+    .btn-login {
         background-color: var(--color-brand);
         color: #ffffff;
-        padding: 10px 30px;
+        padding: 10px 30px; /* Sesuaikan padding tombol */
         border-radius: 5px;
         font-size: 1.1rem;
         font-weight: 600;
-        width: auto;
+        width: auto; /* Lebar tombol menyesuaikan konten, bukan 100% */
         transition: background-color 0.3s ease;
         border: none;
     }
 
-    .btn-register:hover {
-        background-color: #9a8a5e;
+    .btn-login:hover {
+        background-color: #9a8a5e; /* Warna sedikit lebih gelap saat hover */
         color: #ffffff;
     }
 
@@ -138,27 +102,16 @@
         text-decoration: underline;
     }
 
-    .login-link { /* Untuk link 'Already have an account?' */
-        margin-top: 20px;
+    .reset-password-link {
+        display: block;
+        text-align: left; /* Biarkan ke kiri sesuai gambar */
+        margin-top: 5px;
+        font-size: 0.9rem;
+    }
+
+    .register-link {
+        margin-top: 5px;
         font-size: 0.95rem;
-    }
-
-    /* Font Classes (tetap sama, perlu dimasukkan di app.blade.php jika belum) */
-    .font-serif-italic {
-        font-family: var(--font-primary);
-        font-weight: 400;
-        font-style: italic;
-    }
-
-    .font-sans-thin-italic {
-        font-family: var(--font-secondary);
-        font-weight: 100;
-        font-style: italic;
-    }
-
-    .font-serif-bold {
-        font-family: var(--font-primary);
-        font-weight: 700;
     }
 
     .header {
@@ -166,86 +119,114 @@
     }
 
     .sub-heading {
-        font-size: 20px;
+        font-size: 24px;
+    }
+
+    .top-img {
+        height: 40vh;
+    }
+
+    .form-control.is-invalid {
+        border-color: #dc3545; /* Warna merah untuk error */
+        background-image: none; /* Hilangkan ikon validasi default Bootstrap jika ada */
+        padding-right: 0; /* Pastikan padding tidak berubah karena ikon */
+    }
+
+    .form-control.is-invalid:focus {
+        border-color: #dc3545; /* Tetap merah saat focus */
+        box-shadow: none; /* Hilangkan box-shadow default Bootstrap */
+    }
+
+    /* Override gaya default untuk invalid-feedback jika perlu */
+    .invalid-feedback {
+        display: block; /* Pastikan pesan error selalu terlihat */
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
     }
 </style>
 @endpush
 
 @section('content')
-{{-- Gambar BG.png sebagai latar belakang lebar penuh di bagian atas --}}
-<div class="background-top-fullwidth">
-    {{-- Anda bisa menambahkan konten di sini jika diperlukan --}}
+<div class="w-100 top-img">
+    <img src='{{ asset('images/BG/BG 2.png') }}' alt="" class="w-100 top-img">
 </div>
 
-{{-- Wrapper baru untuk kartu registrasi dan gambar BG 2.png di bagian bawah --}}
-<div class="register-wrapper">
-    <div class="container-fluid register-container">
-        <div class="register-card">
-            <span class="font-serif-italic header m-0">Register</span>
-            <p class="text-muted font-sans-thin-italic mb-4">Create your new account</p>
-            <form action="{{ route('register') }}" method="POST">
-                @csrf
-                <div class="row">
-                    <div class="col-md-6 text-start"> {{-- Kolom Kiri --}}
-                        <div class="form-group">
-                            <label for="name" class="form-label font-sans-thin-italic">Name</label>
-                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required autocomplete="name" autofocus>
-                            @error('name')
-                                <div class="invalid-feedback text-start">
-                                    {{ $message }}
-                                </div>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label for="email" class="form-label font-sans-thin-italic">Email</label>
-                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required autocomplete="email">
-                            @error('email')
-                                <div class="invalid-feedback text-start">
-                                    {{ $message }}
-                                </div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="col-md-6 text-start"> {{-- Kolom Kanan --}}
-                        <div class="form-group">
-                            <label for="password" class="form-label font-sans-thin-italic">Password</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required autocomplete="new-password">
-                                <span class="password-toggle" id="password-toggle">
-                                    <i class="fa-solid fa-eye-slash"></i>
-                                </span>
-                                @error('password')
-                                    <div class="invalid-feedback text-start">
-                                        {{ $message }}
-                                    </div>
-                                @enderror
+<div class="container-fluid login-container flex-grow-1">
+    <div class="login-card mt-4">
+        <span class="font-serif-italic header m-0">Register</span>
+        <p class="text-muted font-sans-thin-italic mb-4">Create new account, it's free</p>
+        <form action="{{ route('register') }}" method="POST">
+            @csrf
+            {{-- Menggunakan satu Bootstrap Row untuk email dan password berdampingan --}}
+            <div class="row">
+                {{-- Kolom untuk First Name --}}
+                <div class="col-md-6 text-start">
+                    <div class="form-group">
+                        <label for="first_name" class="form-label font-sans-thin-italic">First Name</label>
+                        <input type="text" class="form-control @error('first_name') is-invalid @enderror font-sans-italic" id="first_name" name="first_name" value="{{ old('first_name') }}" required autocomplete="first_name" autofocus>
+                        @error('first_name')
+                            <div class="invalid-feedback text-start">
+                                {{ $message }}
                             </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="password-confirm" class="form-label font-sans-thin-italic">Confirm Password</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="password-confirm" name="password_confirmation" required autocomplete="new-password">
-                                <span class="password-toggle" id="password-confirm-toggle">
-                                    <i class="fa-solid fa-eye-slash"></i>
-                                </span>
-                            </div>
-                        </div>
+                        @enderror
                     </div>
-                </div> {{-- End of Row --}}
-
-                <div class="d-flex justify-content-start mt-3"> {{-- Tombol Register --}}
-                    <button type="submit" class="btn btn-register font-serif-bold">Register</button>
                 </div>
 
-                {{-- Link Login --}}
-                @if (Route::has('login'))
-                    <p class="login-link text-muted text-start">Already have an account? <a href="{{ route('login') }}" class="text-link">Login here</a></p>
-                @endif
-            </form>
-        </div>
+                {{-- Kolom untuk Last Name --}}
+                <div class="col-md-6 text-start">
+                    <div class="form-group">
+                        <label for="last_name" class="form-label font-sans-thin-italic">Last Name</label>
+                        <input type="text" class="form-control @error('last_name') is-invalid @enderror font-sans-italic" id="last_name" name="last_name" value="{{ old('last_name') }}" required autocomplete="last_name" autofocus>
+                        @error('last_name')
+                            <div class="invalid-feedback text-start">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+                </div>
+
+                {{-- Kolom untuk Email --}}
+                <div class="col-md-6 text-start">
+                    <div class="form-group">
+                        <label for="email" class="form-label font-sans-thin-italic">Email</label>
+                        <input type="email" class="form-control @error('email') is-invalid @enderror font-sans-italic" id="email" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+                        @error('email')
+                            <div class="invalid-feedback text-start">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+                </div>
+
+                {{-- Kolom untuk Password --}}
+                <div class="col-md-6 text-start">
+                    <div class="form-group">
+                        <label for="password" class="form-label font-sans-thin-italic">Password</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control @error('password') is-invalid @enderror font-sans-italic" id="password" name="password" required autocomplete="current-password">
+                            <span class="password-toggle" id="password-toggle">
+                                <i class="fa-solid fa-eye-slash"></i>
+                            </span>
+                            @error('password')
+                                <div class="invalid-feedback text-start">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+            <div class="d-flex justify-content-start mt-2">
+                <button type="submit" class="btn btn-login font-serif-bold">Register</button>
+            </div>
+
+            @if (Route::has('register'))
+                <p class="register-link text-muted text-start font-sans-light-italic">Already have an account? <a href="{{ route('register') }}" class="text-link font-sans-italic">Login</a></p>
+            @endif
+
+        </form>
     </div>
 </div>
 @endsection

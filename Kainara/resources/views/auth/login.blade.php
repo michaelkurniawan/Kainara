@@ -119,7 +119,7 @@
     }
 
     .sub-heading {
-        font-size: 20px;
+        font-size: 24px;
     }
 
     .top-img {
@@ -201,7 +201,7 @@
             </div>
 
             @if (Route::has('register'))
-                <p class="register-link text-muted text-start">Don't have an account yet? <a href="{{ route('register') }}" class="text-link">Register now</a></p>
+                <p class="register-link text-muted text-start font-sans-light-italic">Don't have an account yet? <a href="{{ route('register') }}" class="text-link font-sans-italic">Register now</a></p>
             @endif
 
         </form>

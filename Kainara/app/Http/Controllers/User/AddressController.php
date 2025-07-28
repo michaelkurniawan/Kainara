@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\User\Controllers;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator; // Tambahkan ini
@@ -35,58 +36,39 @@ class AddressController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'type' => 'required|string|max:255',
-            'name' => 'required|string|max:255',
+            $request->validate([
+            'label' => 'required|string|max:255', // Changed from 'type'
+            'recipient_name' => 'required|string|max:255', // Changed from 'name'
             'phone' => 'required|string|max:20',
-            'street' => 'required|string|max:255',
-            'sub_district' => 'required|string|max:255',
-            'district' => 'required|string|max:255',
-            'city' => 'nullable|string|max:255',
+            'address' => 'required|string|max:500', // Changed from 'street', now a text area
+            'country' => 'required|string|max:255', // New field
+            'city' => 'required|string|max:255',
             'province' => 'required|string|max:255',
             'postal_code' => 'required|string|max:10',
-            'is_primary' => 'boolean',
+            'is_default' => 'boolean', // Changed from 'is_primary'
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        $user = Auth::user();
+
+        // If the new address is set as default, unmark existing default addresses for this user
+        if ($request->has('is_default')) {
+            $user->addresses()->where('is_default', true)->update(['is_default' => false]);
         }
 
-        $userAddresses = Session::get('user_addresses', []);
-
-        $newId = count($userAddresses) > 0 ? max(array_column($userAddresses, 'id')) + 1 : 1;
-
-        $newAddress = [
-            'id' => $newId,
-            'type' => $request->type,
-            'name' => $request->name,
+        $address = $user->addresses()->create([
+            'label' => $request->label, // Changed
+            'recipient_name' => $request->recipient_name, // Changed
             'phone' => $request->phone,
-            'street' => $request->street,
-            'sub_district' => $request->sub_district,
-            'district' => $request->district,
+            'address' => $request->address, // Changed
+            'country' => $request->country, // New
             'city' => $request->city,
             'province' => $request->province,
             'postal_code' => $request->postal_code,
-            'is_primary' => (bool)$request->is_primary,
-        ];
+            'is_default' => $request->has('is_default'), // Changed
+        ]);
 
-        if ($newAddress['is_primary']) {
-            foreach ($userAddresses as &$address) {
-                $address['is_primary'] = false;
-            }
-        } elseif (empty($userAddresses)) {
-            $newAddress['is_primary'] = true;
-        }
-
-        $userAddresses[] = $newAddress;
-        Session::put('user_addresses', $userAddresses);
-
-        // Disini kita bisa kirim event atau langsung kirim data yang diperbarui
-        return response()->json([
-            'message' => 'Address added successfully!',
-            'address' => $newAddress,
-            'selected_address_id' => $newAddress['id']
-        ], 201);
+        // Redirect back to the profile page, specifically to the addresses tab
+        return redirect()->route('profile')->with('success', 'Address added successfully!')->fragment('addresses');
     }
 
     /**
