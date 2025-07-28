@@ -12,17 +12,6 @@
     .btn-link {
         text-decoration: none !important;
     }
-    .btn-size {
-        width: 48px;
-        height: 48px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 0;
-        /* Ensure default border and text color for non-selected */
-        border: 1px solid #6c757d; /* Bootstrap secondary border color */
-        color: #6c757d; /* Bootstrap secondary text color */
-    }
     .card .text-muted {
         font-size: 0.9rem !important;
     }
@@ -130,29 +119,6 @@
         z-index: -1;
     }
 
-    /* Updated selected state for size buttons */
-    .btn-size.selected {
-        background-color: #AD9D6C !important;
-        color: white !important;
-        border-color: #AD9D6C !important;
-    }
-
-    .btn-size:not(:disabled):hover {
-        background-color: #AD9D6C;
-        color: white;
-        border-color: #AD9D6C;
-        transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-    }
-
-    /* Disabled state for size buttons that are not available */
-    .btn-size:disabled {
-        background-color: #e9ecef; /* Light gray background */
-        color: #6c757d; /* Standard muted text color */
-        border-color: #e9ecef; /* Match border to background */
-        cursor: not-allowed;
-        opacity: 0.65; /* Reduce opacity to show it's disabled */
-    }
-
     .product-image-container {
         width: 100%;
         max-width: 736px; /* Max width for consistency */
@@ -217,30 +183,41 @@
             </div>
 
             <div class="col-lg-6">
-                <h1 class="fw-bold mb-3 fs-1">{{ $product->name }}</h1>
+                <h1 class="font-serif-medium mb-3 fs-1">{{ $product->name }}</h1>
 
                 <div class="d-flex align-items-center text-secondary mb-3">
                     <i class="fas fa-location-dot fs-6 me-3"></i>
                     <span class="fs-5 d-flex align-items-center gap-2">
                         <span>{{ $product->origin }}</span>
-
-                        @php
-                            $colors = $product->variants->pluck('color')->unique();
-                        @endphp
-
-                        @if ($colors->isNotEmpty())
-                            <div class="d-flex align-items-center gap-3 ms-2">
-                                <span class="ms-2 me-2">|</span>
+                        <div class="d-flex align-items-center gap-3 ms-2">
+                            <span class="ms-2 me-2">|</span>
+                            @php
+                                // Get unique colors from product variants for fabric
+                                $colors = $product->variants->pluck('color')->unique();
+                            @endphp
+                            @if ($colors->isNotEmpty())
                                 @foreach ($colors as $color)
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="rounded-circle d-inline-block"
-                                            style="width: 16px; height: 16px; background-color: {{ strtolower($color) }}; border: 1px solid #999;">
+                                            style="width: 16px; height: 16px; background-color: {{ strtolower($color) }}; border: 1px solid #999;" title="{{ $color }}">
                                         </span>
                                         <span class="text-capitalize ms-2">{{ $color }}</span>
                                     </div>
                                 @endforeach
-                            </div>
-                        @endif
+                            @else
+                                {{-- If no specific colors are defined, use the primary color from the product itself, or a default --}}
+                                @if ($product->color)
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="rounded-circle d-inline-block"
+                                            style="width: 16px; height: 16px; background-color: {{ strtolower($product->color) }}; border: 1px solid #999;" title="{{ $product->color }}">
+                                        </span>
+                                        <span class="text-capitalize ms-2">{{ $product->color }}</span>
+                                    </div>
+                                @else
+                                    <span>Multi-color</span> {{-- Fallback if no specific colors are defined --}}
+                                @endif
+                            @endif
+                        </div>
                     </span>
                 </div>
 
@@ -248,53 +225,27 @@
                     {{ $product->description }}
                 </p>
 
-                <p class="fs-3 fw-bold mb-2">IDR {{ number_format($product->price, 0, ',', '.') }}</p>
+                <p class="fs-4 font-serif-light mb-2">Size 2 x 1 Meter</p>
+                
+                <p class="fs-3 font-serif mb-2">IDR {{ number_format($product->price, 0, ',', '.') }}</p>
 
-                {{-- Average Rating Display --}}
                 <div class="d-flex align-items-center mb-4">
                     <div class="text-warning me-2 fs-4" id="average-rating-stars">
-                        {{-- Stars will be rendered here by JS --}}
                     </div>
                     <span class="text-muted fs-5 ms-2" id="average-rating-text">
-                        {{-- Text like "4.5 Stars | 10 Reviews" will be rendered here by JS --}}
                     </span>
                 </div>
-
-                <p class="mb-4 fs-6 d-flex align-items-center gap-2 text-secondary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#sizeChartModal">
-                    <i class="fas fa-shirt fs-4"></i>
-                    <span class="text-decoration-underline fs-4 ms-2">Size Chart</span>
-                </p>
 
                 <form action="{{ route('checkout.add') }}" method="POST" id="addToCheckoutForm">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
-                    <input type="hidden" name="selected_size" id="selected_size_input">
+                    <input type="hidden" name="selected_size" id="selected_size_input_one_size" value="One Size"> 
 
-                    @php
-                        $availableSizesRaw = $product->variants->pluck('size')->unique();
-                        $displayableSizes = $availableSizesRaw->filter(function ($size) {
-                            return $size !== 'One Size';
-                        })->sort()->toArray();
-                        $hasOnlyOneSizeVariant = $availableSizesRaw->count() > 0 && count($displayableSizes) === 0;
-                    @endphp
-
-                    @if (!$hasOnlyOneSizeVariant)
-                        <div class="d-flex align-items-center mb-5 fw-semibold gap-3 fs-4">
-                            <span>Size</span>
-                            <div class="d-flex gap-3">
-                                @foreach(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as $size)
-                                    @if(in_array($size, $displayableSizes))
-                                        <button type="button" class="btn btn-outline-secondary rounded-0 btn-size" data-size="{{ $size }}">{{ $size }}</button>
-                                    @else
-                                        <button type="button" class="btn btn-outline-secondary rounded-0 btn-size" disabled title="Not available for this product">{{ $size }}</button>
-                                    @endif
-                                @endforeach
-                            </div>
-                        </div>
-                    @else
-                        <p class="mb-4 fs-4 fw-semibold">Size: One Size Only</p>
-                        <input type="hidden" name="selected_size" id="selected_size_input_one_size" value="One Size">
-                    @endif
+                    <p class="mb-2 fs-4 fw-semibold">Fabric's Vendor</p>
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="fas fa-store fs-5 me-3" ></i>
+                        <span class="fs-5">{{ $product->vendor->name ?? 'Mitra Pengrajin' }}</span>
+                    </div>
 
 
                     <div class="mb-4" style="max-width: 57%;">
@@ -334,35 +285,20 @@
         </div>
 
     </div>
-
-    {{-- Include the dynamically determined size chart modal --}}
-    @include($sizeChartComponent)
 @endsection
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        let selectedSize = null;
         let quantity = 1;
-        let maxQuantity = 0;
+        let maxQuantity = 0; // Initialize to 0, will be set from product stock
 
-        const productVariants = @json($product->variants);
-
-        // Reviews are passed dynamically from the controller
+        // Pass product data and reviews dynamically from the controller
+        const product = @json($product);
         const productReviews = @json($productReviews);
+
         const reviewsPerPage = 3;
         let currentPage = 0;
-
-        const sizeStockMap = {};
-        productVariants.forEach(variant => {
-            if (variant.size) {
-                sizeStockMap[variant.size] = (sizeStockMap[variant.size] || 0) + variant.stock;
-            }
-        });
-
-        const sizeButtons = document.querySelectorAll('.btn-size');
-        const selectedSizeInput = document.getElementById('selected_size_input');
-        const selectedSizeInputOneSize = document.getElementById('selected_size_input_one_size');
 
         const minusBtn = document.querySelector('.btn-minus');
         const plusBtn = document.querySelector('.btn-plus');
@@ -371,8 +307,6 @@
 
         const addToCartButton = document.querySelector('.btn-add-to-cart');
         const buyNowButton = document.querySelector('.btn-buy-it-now');
-
-        const hasOnlyOneSizeVariant = {{ json_encode($hasOnlyOneSizeVariant) }};
 
         const reviewsContainer = document.getElementById('reviews-container');
         const prevBtn = document.getElementById('prev-review-btn');
@@ -383,10 +317,28 @@
         const averageRatingStarsContainer = document.getElementById('average-rating-stars');
         const averageRatingTextContainer = document.getElementById('average-rating-text');
 
+        // Set maxQuantity based on the fabric product's stock.
+        // For fabrics, we assume 'One Size' or that the 'stock' attribute of the Product model directly applies.
+        if (product.variants && product.variants.length > 0) {
+            // If fabric products still use variants (e.g., for color), sum up all stock for 'One Size'
+            maxQuantity = product.variants.reduce((sum, variant) => {
+                // Assuming 'One Size' is the size for all fabric variants
+                return variant.size === 'One Size' ? sum + variant.stock : sum;
+            }, 0);
+        } else {
+            // If fabric products do not have variants or stock is directly on the Product model
+            maxQuantity = product.stock || 100; // Fallback to 100 if stock is not defined
+        }
+        
+        // Ensure maxQuantity is at least 1 if the product exists
+        if (maxQuantity === 0 && product.id) { // If product exists but stock is 0, make it at least 1 for display logic
+            maxQuantity = 1; // Or, consider disabling buttons entirely if stock is truly 0
+        }
+
 
         function updateQuantityControls() {
             quantity = Math.min(quantity, maxQuantity);
-            quantity = Math.max(1, quantity); // Ensure quantity is at least 1
+            quantity = Math.max(1, quantity);
 
             quantityDisplay.innerText = quantity;
             quantityInput.value = quantity;
@@ -395,30 +347,13 @@
             minusBtn.disabled = quantity <= 1;
             plusBtn.disabled = quantity >= maxQuantity;
 
-            // Disable Add to Cart/Buy Now if no size selected (and not one-size) or no stock
-            if (maxQuantity === 0 || (!selectedSize && !hasOnlyOneSizeVariant)) {
-                addToCartButton.disabled = true;
-                buyNowButton.disabled = true;
-            } else {
-                addToCartButton.disabled = false;
-                buyNowButton.disabled = false;
-            }
+            // Enable/disable add to cart/buy now based on maxQuantity (stock availability)
+            const isAvailable = maxQuantity > 0;
+            addToCartButton.disabled = !isAvailable;
+            buyNowButton.disabled = !isAvailable;
         }
 
-        sizeButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                sizeButtons.forEach(btn => btn.classList.remove('selected'));
-                this.classList.add('selected');
-
-                selectedSize = this.dataset.size;
-                if (selectedSizeInput) {
-                    selectedSizeInput.value = selectedSize;
-                }
-
-                maxQuantity = sizeStockMap[selectedSize] || 0;
-                updateQuantityControls();
-            });
-        });
+        updateQuantityControls(); // Initial call to set up controls
 
         minusBtn.addEventListener('click', function () {
             if (quantity > 1) {
@@ -434,34 +369,12 @@
             }
         });
 
-        if (hasOnlyOneSizeVariant) {
-            selectedSize = 'One Size';
-            if (selectedSizeInput) {
-                selectedSizeInput.value = 'One Size';
-            }
-            if (selectedSizeInputOneSize) { // This seems redundant if selected_size_input handles it.
-                selectedSizeInputOneSize.value = 'One Size';
-            }
-
-            const oneSizeTotalStock = productVariants.reduce((sum, variant) => {
-                return variant.size === 'One Size' ? sum + variant.stock : sum;
-            }, 0);
-            maxQuantity = oneSizeTotalStock;
-            updateQuantityControls();
-        } else {
-            maxQuantity = 0;
-            selectedSize = null;
-            updateQuantityControls();
-        }
-
-        // --- Review Display Logic ---
+        // --- Review Display Logic (mostly same as your existing) ---
 
         function generateStarsHtml(rating) {
             let starsHtml = '';
             let fullStars = Math.floor(rating);
-            // Half star if fractional part is between 0.25 and 0.75
             let halfStar = (rating - fullStars) >= 0.25 && (rating - fullStars) < 0.75;
-            // Round up to a full star if fractional part is 0.75 or more
             let quarterRoundUp = (rating - fullStars) >= 0.75;
             let emptyStars = 5;
 
@@ -490,7 +403,7 @@
             reviewCountDisplay.textContent = productReviews.length; // Update total review count
 
             if (productReviews.length === 0) {
-                reviewsContainer.innerHTML = '<div class="col-12 text-center"><p class="text-muted fs-5">No reviews for this product yet. Be the first to review!</p></div>';
+                reviewsContainer.innerHTML = '<div class="col-12 text-center"><p class="text-muted fs-5">Belum ada review untuk produk ini. Jadilah yang pertama memberikan review!</p></div>';
                 paginationControls.style.display = 'none'; // Hide pagination if no reviews
                 updateAverageRatingDisplay(0, 0); // Update average rating to 0
                 return;
@@ -502,7 +415,6 @@
             const endIndex = startIndex + reviewsPerPage;
             const reviewsToDisplay = productReviews.slice(startIndex, endIndex);
 
-            // Handle case where deleting/filtering makes current page empty, but other pages exist
             if (reviewsToDisplay.length === 0 && productReviews.length > 0 && currentPage > 0) {
                 currentPage--;
                 renderReviews();
@@ -521,13 +433,13 @@
                         <div class="card-body-content d-flex flex-column justify-content-between">
                             <div>
                                 <p class="card-text text-muted mb-2 review-date">
-                                    ${new Date(review.created_at).toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                    ${new Date(review.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                 </p>
                                 <div class="text-warning fs-5 review-rating">
                                     ${generateStarsHtml(review.rating)}
                                 </div>
                             </div>
-                            <p class="card-text fs-6 review-comment">${review.comment || '<span class="text-muted fst-italic">No comment provided.</span>'}</p>
+                            <p class="card-text fs-6 review-comment">${review.comment || '<span class="text-muted fst-italic">Tidak ada komentar.</span>'}</p>
                         </div>
                     </div>
                 `;
@@ -542,7 +454,7 @@
         function updatePaginationButtons() {
             const totalPages = Math.ceil(productReviews.length / reviewsPerPage);
             if (productReviews.length > 0) {
-                pageIndicator.textContent = `Page ${currentPage + 1} of ${totalPages}`;
+                pageIndicator.textContent = `Halaman ${currentPage + 1} dari ${totalPages}`;
             } else {
                 pageIndicator.textContent = '';
             }
@@ -573,9 +485,8 @@
 
         function updateAverageRatingDisplay(avgRating, reviewCount) {
             averageRatingStarsContainer.innerHTML = generateStarsHtml(avgRating);
-            averageRatingTextContainer.textContent = `${avgRating.toFixed(1)} Stars | ${reviewCount} Reviews`;
+            averageRatingTextContainer.textContent = `${avgRating.toFixed(1)} Bintang | ${reviewCount} Review`;
         }
-
 
         // Event listeners for pagination
         if (nextBtn) {

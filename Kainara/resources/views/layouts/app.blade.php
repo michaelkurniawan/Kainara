@@ -22,12 +22,8 @@
 
     @include('layouts.partials._footer')
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-
-    {{-- IMPORTANT: Include your custom notification component here.
-         The JavaScript logic for displaying the notification based on session flash data
-         should now be placed directly inside 'notification.notif-components.blade.php'. --}}
+    <script src="https://js.stripe.com/v3/"></script>
     @include('notification.notif-components')
 
     @stack('scripts')

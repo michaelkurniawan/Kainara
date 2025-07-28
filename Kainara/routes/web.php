@@ -35,8 +35,13 @@ Route::get('/tentangkainara', function () {
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/gender/{gender}', [ProductController::class, 'index'])->name('products.gender.index');
+
 Route::get('/products/category/{category_name}', [ProductController::class, 'index'])->name('products.category.index');
-Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show'); 
+
+Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
+
+Route::get('/products/fabric/{slug}', [ProductController::class, 'showFabricProduct'])->name('products.detailkain');
+
 
 Route::get('/stories', [StoriesController::class, 'index'])->name('Stories.ListStories');
 Route::get('/stories/{slug}', [StoriesController::class, 'show'])->name('Stories.DetailStories');
@@ -77,7 +82,7 @@ Route::middleware(['guest'])->group(function () {
     Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
-Route::get('/email/verify', [EmailVerificationController::class, 'show']) 
+Route::get('/email/verify', [EmailVerificationController::class, 'show'])
     ->middleware('auth')
     ->name('verification.notice');
 
@@ -85,7 +90,7 @@ Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 've
     ->middleware(['signed', 'throttle:6,1'])
     ->name('verification.verify');
 
-Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend']) 
+Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
     ->middleware(['auth', 'throttle:6,1'])
     ->name('verification.send');
 

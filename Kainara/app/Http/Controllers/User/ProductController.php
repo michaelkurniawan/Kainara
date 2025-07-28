@@ -9,8 +9,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ProductReview;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use Illuminate\Support\Str; // Pastikan ini ada
 
 class ProductController extends Controller
 {
@@ -118,7 +117,11 @@ class ProductController extends Controller
 
     public function show($slug)
     {
-        $product = Product::with(['variants', 'gender'])->where('slug', $slug)->firstOrFail();
+        $product = Product::with(['variants', 'gender', 'category'])->where('slug', $slug)->firstOrFail();
+
+        if ($product->category && Str::lower($product->category->name) === 'fabric') {
+            return redirect()->route('products.detailkain', ['slug' => $slug]);
+        }
 
         $sizeChartComponent = 'components.popupsizechart.default';
 
@@ -149,23 +152,51 @@ class ProductController extends Controller
         }
 
         $productReviews = $product->reviews()
-                                  ->with('user') // Memuat relasi user
-                                  ->orderBy('created_at', 'desc')
-                                  ->get()
-                                  ->map(function($review) {
-                                      $firstName = $review->user->first_name ?? '';
-                                      $lastName = $review->user->last_name ?? '';
+                                     ->with('user') // Memuat relasi user
+                                     ->orderBy('created_at', 'desc')
+                                     ->get()
+                                     ->map(function($review) {
+                                         $firstName = $review->user->first_name ?? '';
+                                         $lastName = $review->user->last_name ?? '';
 
-                                      $fullName = trim(str_replace('  ', ' ', $firstName . ' ' . $lastName));
+                                         $fullName = trim(str_replace('  ', ' ', $firstName . ' ' . $lastName));
 
-                                      return [
-                                          'user_name' => $fullName ?: 'Pengguna Anonim', 
-                                          'rating' => (float) $review->rating,
-                                          'comment' => $review->comment,
-                                          'created_at' => $review->created_at->toDateTimeString(),
-                                      ];
-                                  });
+                                         return [
+                                             'user_name' => $fullName ?: 'Pengguna Anonim',
+                                             'rating' => (float) $review->rating,
+                                             'comment' => $review->comment,
+                                             'created_at' => $review->created_at->toDateTimeString(),
+                                         ];
+                                     });
 
         return view('products.detail', compact('product', 'sizeChartComponent', 'productReviews'));
+    }
+
+    public function showFabricProduct($slug)
+    {
+        $product = Product::with(['variants', 'gender', 'category', 'vendor'])
+                            ->where('slug', $slug)
+                            ->whereHas('category', function ($query) {
+                                $query->where('name', 'Fabric');
+                            })
+                            ->firstOrFail();
+
+        $productReviews = $product->reviews()
+                                   ->with('user') // Still load 'user' for review display
+                                   ->orderBy('created_at', 'desc')
+                                   ->get()
+                                   ->map(function($review) {
+                                       $firstName = $review->user->first_name ?? '';
+                                       $lastName = $review->user->last_name ?? '';
+                                       $fullName = trim(str_replace('  ', ' ', $firstName . ' ' . $lastName));
+                                       return [
+                                           'user_name' => $fullName ?: 'Pengguna Anonim',
+                                           'rating' => (float) $review->rating,
+                                           'comment' => $review->comment,
+                                           'created_at' => $review->created_at->toDateTimeString(),
+                                       ];
+                                   });
+
+        return view('products.detailkain', compact('product', 'productReviews'));
     }
 }
