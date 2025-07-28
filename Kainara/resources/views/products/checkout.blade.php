@@ -298,14 +298,12 @@
                         </div>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="detail">
                         <h2 class="section-title d-flex align-items-center">
                             <i class="bi bi-person-fill text-primary me-2"></i> Contact Information
                         </h2>
-                        <!-- THIS FORM WILL SEND DATA TO PROCESS THE ORDER AND REDIRECT TO STRIPE -->
                         <form action="{{ route('order.process') }}" method="POST"> {{-- This action points to the order processing logic --}}
                             @csrf
-                            <!-- Hidden inputs to send selected address details to the backend -->
                             <input type="hidden" name="address_type_input" id="address_type_input" value="{{ $address['type'] ?? '' }}">
                             <input type="hidden" name="street_input" id="street_input" value="{{ $address['street'] ?? '' }}">
                             <input type="hidden" name="sub_district_input" id="sub_district_input" value="{{ $address['sub_district'] ?? '' }}">
@@ -352,17 +350,13 @@
                                     <i class="bi bi-credit-card-fill text-success me-2"></i> Payment Method
                                 </h2>
                                 <div class="mb-3">
-                                    {{-- Hidden input to enforce 'credit_card' as the payment method --}}
                                     <input type="hidden" name="payment_method" value="credit_card">
-                                    {{-- Displayed text with custom styling to mimic a form-control --}}
                                     <p class="fixed-payment-method">Credit Card</p>
                                 </div>
                             </div>
 
-                            <!-- Hidden input for total_amount (grand_total from frontend) to be sent to the backend -->
                             <input type="hidden" name="total_amount" value="{{ $grandTotal }}">
 
-                            <!-- Hidden inputs for cart items -->
                             @foreach ($cartItems as $index => $item)
                                 <input type="hidden" name="cart_items[{{ $index }}][product_id]" value="{{ $item['product_id'] }}">
                                 <input type="hidden" name="cart_items[{{ $index }}][product_variant_id]" value="{{ $item['product_variant_id'] ?? '' }}">

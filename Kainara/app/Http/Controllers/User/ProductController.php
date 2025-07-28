@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Gender;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\ProductReview;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -23,16 +24,16 @@ class ProductController extends Controller
         $categoryNameFilter = $request->route('category_name') ?? $request->query('category_name');
 
         if ($request->has('gender') && !$request->route('gender')) {
-            $queryParams = $request->except(['gender']); // Hapus gender dari query
+            $queryParams = $request->except(['gender']);
             return redirect()->route('products.gender.index', array_merge(['gender' => $request->query('gender')], $queryParams));
         }
         if ($request->has('category_name') && !$request->route('category_name')) {
-            $queryParams = $request->except(['category_name']); // Hapus category_name dari query
+            $queryParams = $request->except(['category_name']);
             return redirect()->route('products.category.index', array_merge(['category_name' => $request->query('category_name')], $queryParams));
         }
 
         if (!$genderFilter && !$categoryNameFilter) {
-            return redirect()->route('products.gender.index', ['gender' => 'Male']); // Default to Men's products
+            return redirect()->route('products.gender.index', ['gender' => 'Male']);
         }
 
         $products = Product::query()
@@ -122,7 +123,7 @@ class ProductController extends Controller
         $sizeChartComponent = 'components.popupsizechart.default';
 
         if ($product->gender) {
-            $productNameLower = Str::lower($product->name); 
+            $productNameLower = Str::lower($product->name);
 
             if ($product->gender->name === 'Male') {
                 if (Str::startsWith($productNameLower, "men's woven vest")) {
@@ -147,6 +148,24 @@ class ProductController extends Controller
             }
         }
 
-        return view('products.detail', compact('product', 'sizeChartComponent'));
+        $productReviews = $product->reviews()
+                                  ->with('user') // Memuat relasi user
+                                  ->orderBy('created_at', 'desc')
+                                  ->get()
+                                  ->map(function($review) {
+                                      $firstName = $review->user->first_name ?? '';
+                                      $lastName = $review->user->last_name ?? '';
+
+                                      $fullName = trim(str_replace('  ', ' ', $firstName . ' ' . $lastName));
+
+                                      return [
+                                          'user_name' => $fullName ?: 'Pengguna Anonim', 
+                                          'rating' => (float) $review->rating,
+                                          'comment' => $review->comment,
+                                          'created_at' => $review->created_at->toDateTimeString(),
+                                      ];
+                                  });
+
+        return view('products.detail', compact('product', 'sizeChartComponent', 'productReviews'));
     }
 }

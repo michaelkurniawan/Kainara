@@ -55,7 +55,7 @@ class OrderController extends Controller
                 }
 
                 $itemPrice = $product->price;
-                $stockAvailable = 0;
+                $stockAvailable = $product->stock;
 
                 if (isset($item['product_variant_id']) && $item['product_variant_id']) {
                     $variant = ProductVariant::find($item['product_variant_id']);
@@ -71,8 +71,14 @@ class OrderController extends Controller
                         return redirect()->back()->with('error', 'Stok tidak cukup untuk ' . $product->name . ' (' . $variant->size . '). Tersedia: ' . $stockAvailable)->withInput();
                     }
                     $variant->decrement('stock', $item['quantity']);
-
+                } else {
+                    if ($stockAvailable < $item['quantity']) {
+                        DB::rollBack();
+                        return redirect()->back()->with('error', 'Stok tidak cukup untuk ' . $product->name . '. Tersedia: ' . $stockAvailable)->withInput();
+                    }
+                    $product->decrement('stock', $item['quantity']);
                 }
+
                 $calculatedSubtotal += $itemPrice * $item['quantity'];
             }
 
@@ -93,7 +99,7 @@ class OrderController extends Controller
                 'name' => $request->input('user_name_input'),
                 'phone' => $request->input('user_phone_input'),
                 'street' => $request->input('street_input'),
-                'sub_district' => $request->input('sub_district_input'),
+                'sub_district' => $request->input('sub_district_input'), // Ini seharusnya dari input
                 'district' => $request->input('district_input'),
                 'city' => $request->input('city_input'),
                 'province' => $request->input('province_input'),
@@ -112,8 +118,8 @@ class OrderController extends Controller
                 'shipping_recipient_name' => $shippingAddressData['name'],
                 'shipping_phone' => $shippingAddressData['phone'],
                 'shipping_address' => $shippingAddressData['street'] .
-                                      ($shippingAddressData['sub_district'] ? ', ' . $shippingAddressData['sub_district'] : '') .
-                                      ($shippingAddressData['district'] ? ', ' . $shippingAddressData['district'] : ''),
+                                        ($shippingAddressData['sub_district'] ? ', ' . $shippingAddressData['sub_district'] : '') .
+                                        ($shippingAddressData['district'] ? ', ' . $shippingAddressData['district'] : ''),
                 'shipping_country' => $shippingAddressData['country'],
                 'shipping_city' => $shippingAddressData['city'],
                 'shipping_province' => $shippingAddressData['province'],
@@ -123,7 +129,7 @@ class OrderController extends Controller
             foreach ($cartItems as $itemData) {
                 $product = Product::find($itemData['product_id']);
                 $productName = $product ? $product->name : 'Unknown Product';
-                $productImage = $product ? $product->image : 'https://placehold.co/80x80/cccccc/333333?text=No+Image';
+                $productImage = $product ? $product->image : '[https://placehold.co/80x80/cccccc/333333?text=No+Image](https://placehold.co/80x80/cccccc/333333?text=No+Image)';
 
                 $actualPrice = $product->price;
                 $variantSize = $itemData['variant_size'] ?? null;
@@ -220,5 +226,26 @@ class OrderController extends Controller
                        ->get();
 
         return view('myorder', compact('orders'));
+    }
+
+    public function completeOrder(Order $order)
+    {
+        if (Auth::id() !== $order->user_id) {
+            abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk mengubah pesanan ini.');
+        }
+
+        if ($order->status === 'Delivered') {
+            try {
+                $order->status = 'Completed';
+                $order->save();
+
+                return redirect()->back()->with('success', 'Pesanan telah berhasil diselesaikan!');
+            } catch (\Exception $e) {
+                Log::error('Gagal menyelesaikan pesanan: ' . $e->getMessage(), ['order_id' => $order->id, 'user_id' => Auth::id()]);
+                return redirect()->back()->with('error', 'Terjadi kesalahan saat mencoba menyelesaikan pesanan. Silakan coba lagi.');
+            }
+        }
+
+        return redirect()->back()->with('error', 'Pesanan tidak dapat diselesaikan dari status saat ini (' . $order->status . ').');
     }
 }

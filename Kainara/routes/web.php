@@ -10,6 +10,7 @@ use App\Http\Controllers\User\LatestStoriesController;
 use App\Http\Controllers\User\ArtisanRegistrationController;
 use App\Http\Controllers\User\OrderController;
 use App\Http\Controllers\User\StripePaymentController;
+use App\Http\Controllers\User\ReviewController;
 use App\Http\Controllers\User\ProfileController;
 use App\Http\Controllers\User\Auth\LoginController;
 
@@ -66,11 +67,12 @@ Route::get('/order/{order}/details', [OrderController::class, 'showOrderDetails'
 Route::get('/order/{order}/success', [OrderController::class, 'showOrderSuccess'])->name('order.success');
 Route::get('/order/{order}/fail', [OrderController::class, 'showOrderFail'])->name('order.fail');
 Route::get('/order/{order}/awaiting-payment', [OrderController::class, 'showOrderAwaitingPayment'])->name('order.awaitingPayment');
-
+Route::post('/order/{order}/complete', [OrderController::class, 'completeOrder'])->name('order.complete');
+Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
 Route::get('/payment/stripe/{order}', [StripePaymentController::class, 'showPaymentForm'])->name('stripe.payment.form');
 Route::post('/payment/stripe/{order}/confirm', [StripePaymentController::class, 'confirmPayment'])->name('stripe.payment.confirm');
-
+Route::get('/order/{order}/continue-payment', [StripePaymentController::class, 'showPaymentForm'])->name('payment.continue');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -85,5 +87,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout']);
     Route::get('/my-orders', [OrderController::class, 'myOrders'])->name('my.orders');
 });
+
 
 require __DIR__.'/admin.php';

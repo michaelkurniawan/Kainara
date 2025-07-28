@@ -1,4 +1,3 @@
-<!-- resources/views/myorder.blade.php -->
 @extends('layouts.app')
 
 @section('title', 'My Order')
@@ -13,7 +12,7 @@
         font-size: 4.5rem;
         font-weight: bold;
     }
-    
+
     .order-card {
         background-color: #fff;
         border: 1px solid #ddd;
@@ -114,22 +113,69 @@
         font-size: 0.9rem;
     }
     .btn-transaction-detail {
-        background-color: transparent;
-        border: 1px solid #777;
-        color: #777;
+        background-color: #B6B09F;
+        color: white;
     }
     .btn-transaction-detail:hover {
-        background-color: #eee;
-        color: #555;
+        background-color: #9c9685;
+        color: white;
     }
     .btn-track {
-        background-color: #B6B09F;
+        background-color: rgb(138, 32, 32);
         color: white;
         border: none;
     }
     .btn-track:hover {
-        background-color: #9a9a9a;
+        background-color: rgb(117, 27, 27);
+        color: white;
     }
+    /* Gaya baru untuk tombol 'Complete Order' */
+    .btn-complete-order {
+        background-color: #28a745; /* Warna hijau */
+        color: white;
+        border: none;
+    }
+    .btn-complete-order:hover {
+        background-color: #218838; /* Hijau lebih gelap saat hover */
+        color: white;
+    }
+    /* Gaya untuk tombol saat disabled */
+    .btn-complete-order:disabled {
+        background-color: #a7a7a7; /* Warna abu-abu saat disabled */
+        cursor: not-allowed;
+    }
+    .empty-order-card {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 40px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        text-align: center;
+    }
+    .empty-order-card p.lead {
+        font-size: 1.25rem;
+        color: #000;
+    }
+    .empty-order-card p {
+        color: #777;
+        margin-bottom: 10px;
+    }
+    .empty-order-card .btn {
+        font-size: 1rem;
+        padding: 10px 25px;
+    }
+
+    /* Gaya untuk bintang di modal review */
+    #stars .fa-star {
+        cursor: pointer;
+        transition: color 0.2s ease;
+        color: #ccc; /* Default empty star color */
+    }
+    #stars .fa-star.fas {
+        color: #ffc107; /* Filled star color */
+    }
+
 
     /* Responsive adjustments */
     @media (max-width: 768px) {
@@ -153,6 +199,7 @@
             margin-bottom: 10px;
             margin-right: 0;
         }
+        /* Perbaikan: Atur text-align dan padding-top hanya jika perlu pada breakpoint ini */
         .order-total {
             margin-left: 0;
             width: 100%;
@@ -215,14 +262,27 @@
                     </div>
 
                     <div class="order-actions">
-                        <a href="{{ route('order.details', $order->id) }}" class="btn btn-transaction-detail">Transaction Detail</a>
+                        @if ($order->status === 'Awaiting Payment')
+                            <a href="{{ route('payment.continue', $order->id) }}" class="btn btn-track">Continue Payment</a>
+                        @elseif ($order->status === 'Delivered')
+                            {{-- Tombol "Complete Order" memicu modal --}}
+                            <button type="button" class="btn btn-complete-order" data-bs-toggle="modal" data-bs-target="#reviewModal" data-order-id="{{ $order->id }}">
+                                Complete Order
+                            </button>
+                            {{-- Opsi: tetap tampilkan Transaction Detail meskipun status Delivered --}}
+                            <a href="{{ route('order.details', $order->id) }}" class="btn btn-transaction-detail">Transaction Detail</a>
+                        @else
+                            <a href="{{ route('order.details', $order->id) }}" class="btn btn-transaction-detail">Transaction Detail</a>
+                        @endif
+
+                        {{-- Tombol "Track" ditampilkan secara terpisah untuk status yang relevan --}}
                         @if (in_array($order->status, ['Awaiting Shipment', 'Shipped', 'In Delivery']))
                             <button class="btn btn-track">Track</button>
                         @endif
                     </div>
                 </div>
             @empty
-                <div class="text-center p-5">
+                <div class="empty-order-card">
                     <p class="lead">You don't have any orders yet.</p>
                     <p>Start shopping now and support local UMKM!</p>
                     <a href="{{ route('products.index') }}" class="btn btn-primary mt-3" style="background-color: #B6B09F; border-color: #B6B09F;">Start Shopping</a>
@@ -230,4 +290,160 @@
             @endforelse
         </div>
     </div>
+
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reviewModalLabel">Submit Review & Complete Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="reviewForm">
+                    @csrf
+                    <input type="hidden" name="order_id" id="review_order_id">
+                    <div class="modal-body">
+                        <div class="mb-3 text-center">
+                            <label for="rating" class="form-label fs-5">Your Rating</label>
+                            <div id="stars" class="text-warning fs-3">
+                                <i class="far fa-star" data-rating="1"></i>
+                                <i class="far fa-star" data-rating="2"></i>
+                                <i class="far fa-star" data-rating="3"></i>
+                                <i class="far fa-star" data-rating="4"></i>
+                                <i class="far fa-star" data-rating="5"></i>
+                            </div>
+                            <input type="hidden" name="rating" id="review_rating_input" value="0">
+                            <small class="form-text text-muted" id="rating-text">Click on stars to rate</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Your Comment (Optional)</label>
+                            <textarea class="form-control" id="comment" name="comment" rows="3" placeholder="Share your experience..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-submit-review" style="background-color: #B6B09F; border-color: #B6B09F;">Submit Review</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const reviewModalElement = document.getElementById('reviewModal');
+        // Pastikan Anda menginisialisasi modal Bootstrap dengan benar
+        const reviewModal = new bootstrap.Modal(reviewModalElement);
+        const reviewForm = document.getElementById('reviewForm');
+        const reviewOrderIdInput = document.getElementById('review_order_id');
+        const reviewRatingInput = document.getElementById('review_rating_input');
+        const starIcons = reviewModalElement.querySelectorAll('#stars i.fa-star');
+        const ratingText = document.getElementById('rating-text');
+        const commentInput = document.getElementById('comment');
+        const submitReviewButton = reviewForm.querySelector('.btn-submit-review'); // Ambil tombol submit
+
+        let currentRating = 0;
+
+        reviewModalElement.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const orderId = button.dataset.orderId;
+            reviewOrderIdInput.value = orderId;
+
+            // Reset modal fields for a fresh entry
+            currentRating = 0;
+            reviewRatingInput.value = 0;
+            updateStarsDisplay(0);
+            commentInput.value = '';
+            ratingText.textContent = 'Click on stars to rate';
+            submitReviewButton.disabled = false; // Pastikan tombol aktif saat modal dibuka
+            submitReviewButton.textContent = 'Submit Review'; // Reset teks tombol
+        });
+
+        function updateStarsDisplay(rating) {
+            starIcons.forEach(star => {
+                const starValue = parseInt(star.dataset.rating);
+                if (starValue <= rating) {
+                    star.classList.remove('far');
+                    star.classList.add('fas');
+                } else {
+                    star.classList.remove('fas');
+                    star.classList.add('far');
+                }
+            });
+        }
+
+        starIcons.forEach(star => {
+            star.addEventListener('click', function() {
+                currentRating = parseInt(this.dataset.rating);
+                reviewRatingInput.value = currentRating;
+                updateStarsDisplay(currentRating);
+                ratingText.textContent = `You rated: ${currentRating} Stars`;
+            });
+
+            star.addEventListener('mouseover', function() {
+                const hoverRating = parseInt(this.dataset.rating);
+                updateStarsDisplay(hoverRating);
+            });
+            star.addEventListener('mouseout', function() {
+                updateStarsDisplay(currentRating);
+            });
+        });
+
+        reviewForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (currentRating === 0) {
+                alert('Please select a star rating before submitting your review.');
+                return;
+            }
+
+            submitReviewButton.disabled = true; // Nonaktifkan tombol
+            submitReviewButton.textContent = 'Submitting...'; // Ubah teks tombol
+
+            const formData = new FormData(this);
+            // Tidak perlu menambahkan _token lagi karena sudah ada di FormData dari @csrf
+            // formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+            fetch('{{ route('reviews.store') }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                // Selalu coba parse sebagai JSON, karena server akan mengirim JSON untuk error juga
+                return response.json().then(data => {
+                    if (!response.ok) {
+                        // Jika respons bukan 2xx (misal 400, 403, 500)
+                        throw new Error(data.message || 'Server error occurred.');
+                    }
+                    return data; // Ini adalah data sukses
+                });
+            })
+            .then(data => {
+                // Ini akan dipanggil jika response.ok adalah true
+                if (data.success) {
+                    alert(data.message);
+                    reviewModal.hide();
+                    window.location.reload();
+                } else {
+                    // Ini seharusnya tidak terpanggil jika response.ok, tapi untuk jaga-jaga
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                // Ini akan menangani error dari network atau error yang dilempar dari .then pertama
+                console.error('Fetch error:', error);
+                alert('An error occurred: ' + error.message);
+            })
+            .finally(() => {
+                // Pastikan tombol diaktifkan kembali setelah selesai (baik sukses atau gagal)
+                submitReviewButton.disabled = false;
+                submitReviewButton.textContent = 'Submit Review';
+            });
+        });
+    });
+</script>
+@endpush
