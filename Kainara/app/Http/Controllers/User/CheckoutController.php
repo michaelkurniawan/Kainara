@@ -13,8 +13,6 @@ class CheckoutController extends Controller
     public function showCheckoutPage()
     {
         // Initialize dummy addresses in session if not already present
-        // In a real application, this data would typically come from a database,
-        // associated with the authenticated user.
         if (!Session::has('user_addresses')) {
             Session::put('user_addresses', [
                 [
@@ -25,7 +23,7 @@ class CheckoutController extends Controller
                     'street' => 'Jl. Pakuan No.3, Sumur Batu',
                     'sub_district' => 'Babakan Madang',
                     'district' => 'Kabupaten Bogor',
-                    'city' => '', // City might be empty if sub_district/district is sufficient for the region
+                    'city' => '',
                     'province' => 'Jawa Barat',
                     'postal_code' => '16810',
                     'is_primary' => true,
@@ -147,17 +145,24 @@ class CheckoutController extends Controller
             $variantColor = $productVariant->color;
             // Check stock before adding to cart/checkout
             if ($productVariant->stock < $quantity) {
-                return back()->with('error', 'Not enough stock for the selected variant.');
+                return back()->with('notification', [
+                    'type' => 'error',
+                    'title' => 'Limited Stock!',
+                    'message' => 'Not enough stock for the selected variant. Available: ' . $productVariant->stock,
+                    'hasActions' => false
+                ]);
             }
         } else {
             // If a specific size was requested but not found, or no 'One Size' variant exists for a product needing one
             if ($selectedSize && $selectedSize !== 'One Size') {
-                return back()->with('error', 'Selected size is not available for this product.');
+                return back()->with('notification', [
+                    'type' => 'error',
+                    'title' => 'Size Not Available!',
+                    'message' => 'The selected size is not available for this product.',
+                    'hasActions' => false
+                ]);
             }
-            // Fallback for products that truly have no variants and rely on product-level stock (if applicable)
-            // if ($product->stock < $quantity) { return back()->with('error', 'Not enough stock for this product.'); }
         }
-
 
         // Handle 'buy_now' action: clear the cart first
         if ($action === 'buy_now') {
@@ -196,8 +201,6 @@ class CheckoutController extends Controller
                 'quantity' => $quantity,
                 'variant_size' => $selectedSize,
                 'variant_color' => $variantColor,
-                // Include product name and image directly for convenience in checkout view;
-                // though it's still best practice to re-fetch from DB in showCheckoutPage.
                 'product_name' => $product->name,
                 'product_image' => $product->image,
             ];
@@ -205,11 +208,20 @@ class CheckoutController extends Controller
 
         Session::put('cart', $cart);
 
-        // Redirect based on the action performed
         if ($action === 'buy_now') {
-            return redirect()->route('checkout.show')->with('success', 'Proceeding to checkout with your selection!');
+            return redirect()->route('checkout.show')->with('notification', [
+                'type' => 'success',
+                'title' => 'Proceeding to Checkout!',
+                'message' => 'Your selection has been added. Please complete your purchase.',
+                'hasActions' => false
+            ]);
         } else {
-            return back()->with('success', 'Product added to cart!');
+            return back()->with('notification', [
+                'type' => 'success',
+                'title' => 'Added to Cart!',
+                'message' => 'The product has been successfully added to your shopping cart.',
+                'hasActions' => false
+            ]);
         }
     }
 }

@@ -126,6 +126,7 @@
         color: #666;
         line-height: 1.4;
         margin-bottom: 0; /* Hapus margin-bottom default p */
+        text-align: justify;
     }
 
     /* Penyesuaian footer modal untuk tombol aksi */

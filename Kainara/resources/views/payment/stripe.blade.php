@@ -46,7 +46,7 @@
         <div class="col-md-6">
             <div class="card shadow-sm p-4">
                 <h1 class="text-center mb-4">Selesaikan Pembayaran untuk Pesanan #{{ $order->id }}</h1>
-                <p class="text-center mb-4 fs-4">Total: **IDR {{ number_format($order->grand_total, 0, ',', '.') }}**</p>
+                <p class="text-center mb-4 fs-4">Total: IDR {{ number_format($order->grand_total, 0, ',', '.') }}</p>
                 {{-- $order->grand_total akan menggunakan accessor dari model Order --}}
 
                 @if (session('error'))
