@@ -17,7 +17,8 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
         $userAddresses = $user->addresses()->get();
-        return view('profile', compact(['user', 'userAddresses']));
+        $userOrders = $user->orders()->where('status', 'Completed')->get();
+        return view('profile', compact(['user', 'userAddresses', 'userOrders']));
     }
 
     /**
@@ -81,7 +82,6 @@ class ProfileController extends Controller
             $validatedData = $request->validate([
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users,email,' . $user->id, // Email must be unique, except for current user's email
                 'dob' => 'nullable|date',
             ]);
 

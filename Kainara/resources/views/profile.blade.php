@@ -136,62 +136,144 @@
         background: #a8a8a8; /* Color of the scrollbar thumb on hover */
     }
 
-    /* Order History Styling */
+    /* New Order Card Styling */
+    .card-order {
+        display: flex;
+        flex-direction: column;
+        gap: 20px; /* Space between individual order cards */
+    }
+
     .order-card {
         border: 1px solid #e0e0e0;
         border-radius: 8px;
-        margin-bottom: 20px;
-        padding: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        background-color: #fff;
         display: flex;
-        align-items: flex-start;
-        gap: 15px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        flex-direction: column;
+        gap: 15px; /* Space between sections within the card */
     }
 
-    .order-item-image {
-        width: 80px;
-        height: 80px;
-        background-color: #f0f0f0; /* Placeholder abu-abu */
+    .order-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 15px;
+        border-bottom: 1px dashed #e0e0e0; /* Dashed line separator */
+    }
+
+    .order-header .icon {
+        font-size: 1.8rem;
+        color: #AD9D6D; /* Gold color for the basket icon */
+    }
+
+    .order-header .order-info {
+        flex-grow: 1; /* Allows info to take available space */
+        text-align: left;
+        margin-left: 10px; /* Space from icon */
+    }
+
+    .order-header .order-info strong {
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .order-header .order-info span {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .order-details-summary {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px dashed #e0e0e0; /* Dashed line separator */
+    }
+
+    .order-details-summary img {
+        width: 90px; /* Slightly larger image */
+        height: 90px;
+        object-fit: cover;
         border-radius: 4px;
         flex-shrink: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 0.8rem;
-        color: #888;
     }
 
-    .order-details {
+    .order-details-summary .order-item-info {
         flex-grow: 1;
         text-align: left;
     }
 
-    .order-id {
-        font-weight: bold;
-        color: #333;
+    .order-details-summary .order-item-info h4 {
+        font-size: 1.1rem;
         margin-bottom: 5px;
+        color: #333;
     }
 
-    .order-summary {
+    .order-details-summary .order-item-info p {
         font-size: 0.9rem;
         color: #666;
-        margin-bottom: 5px;
+        margin-bottom: 3px;
     }
 
-    .order-address {
-        font-size: 0.85rem;
-        color: #888;
+    .order-total {
+        text-align: right;
+        white-space: nowrap; /* Prevent total from wrapping */
+    }
+
+    .order-total strong {
+        font-size: 1.3rem;
+        color: #AD9D6D; /* Gold color for total price */
+    }
+
+    .order-actions {
+        display: flex;
+        justify-content: flex-end; /* Align buttons to the right */
+        gap: 10px;
+    }
+
+    .btn-transaction-detail,
+    .btn-track {
+        padding: 8px 15px;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-transaction-detail {
+        background-color: #AD9D6D; /* Gold color */
+        color: white;
+        border: 1px solid #AD9D6D;
+    }
+
+    .btn-transaction-detail:hover {
+        background-color: #B39C59; /* Slightly darker gold on hover */
+        border-color: #B39C59;
+        color: white;
+    }
+
+    .btn-track {
+        background-color: transparent;
+        color: #AD9D6D; /* Gold text */
+        border: 1px solid #AD9D6D; /* Gold border */
+    }
+
+    .btn-track:hover {
+        background-color: #AD9D6D;
+        color: white;
     }
 
     .order-status {
         padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: bold;
-        color: white;
-        text-align: center;
-        white-space: nowrap; /* Mencegah teks status pecah baris */
+        border-radius: 5px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-transform: capitalize; /* Capitalize first letter of each word */
     }
+
+    /* Existing status styles (ensure these are present) */
+    .status-completed { background-color: #9ad5a8; } /* Hijau */
 
     .profile-options {
         font-size: 1.2rem; /* Ukuran font untuk tab nav-link */
@@ -482,54 +564,87 @@
             </div>
             <hr class="mb-4">
 
-            {{-- Mock Order Data (sesuai gambar) --}}
-            @php
-                $orders = [
-                    [
-                        'id' => '123456789',
-                        'items_count' => 3,
-                        'total_price' => 'IDR 2.500.000',
-                        'address' => 'Jl. Pakuan No.3, Sumur Batu, Kec. Babakan Madang, Kabupaten Bogor, Jawa Barat 16810',
-                        'status' => 'Completed',
-                        'image_placeholder' => 'Item 1'
-                    ],
-                    [
-                        'id' => '987654321',
-                        'items_count' => 1,
-                        'total_price' => 'IDR 750.000',
-                        'address' => 'Jl. Pakuan No.3, Sumur Batu, Kec. Babakan Madang, Kabupaten Bogor, Jawa Barat 16810',
-                        'status' => 'Waiting for Payment',
-                        'image_placeholder' => 'Item 2'
-                    ],
-                    [
-                        'id' => '456789012',
-                        'items_count' => 2,
-                        'total_price' => 'IDR 1.200.000',
-                        'address' => 'Jl. Pakuan No.3, Sumur Batu, Kec. Babakan Madang, Kabupaten Bogor, Jawa Barat 16810',
-                        'status' => 'Cancelled',
-                        'image_placeholder' => 'Item 3'
-                    ],
-                ];
-            @endphp
+            <div class="card-order mt-5">
+                @forelse ($userOrders as $order)
+                    <div class="order-card">
+                        <div class="order-header">
+                            <i class="fas fa-shopping-basket icon me-3"></i>
+                            <div class="order-info">
+                                <strong>Order</strong> | {{ \Carbon\Carbon::parse($order->created_at)->format('d F Y') }}
+                                <br>
+                                <span>INV/{{ \Carbon\Carbon::parse($order->created_at)->format('Ymd') }}/{{ $order->id }}</span>
+                            </div>
+                            <span class="order-status status-{{ Str::slug($order->status) }}">{{ $order->status }}</span>
+                        </div>
 
-            @forelse($orders as $order)
-                <div class="order-card">
-                    <div class="order-item-image">
-                        {{ $order['image_placeholder'] }}
+                        <div class="order-details-summary">
+                            @php
+                                $firstItem = $order->orderItems->first();
+                                $remainingItemsCount = $order->orderItems->count() - 1;
+                            @endphp
+
+                            @if ($firstItem && $firstItem->product)
+                                {{-- Assuming product_image and product_name come from the product relationship --}}
+                                <img src="{{ asset('storage/' . $firstItem->product->image) }}" alt="{{ $firstItem->product->name }}">
+                                <div class="order-item-info">
+                                    <h4>{{ $firstItem->product->name }}</h4>
+                                    <p>{{ $firstItem->quantity }} item x IDR {{ number_format($firstItem->price, 0, ',', '.') }}</p>
+                                    @if ($remainingItemsCount > 0)
+                                        <p>+ {{ $remainingItemsCount }} other items</p>
+                                    @endif
+                                </div>
+                            @else
+                                <div class="order-item-info">
+                                    <h4>No product details available.</h4>
+                                </div>
+                            @endif
+
+                            <div class="order-total">
+                                Total
+                                <br>
+                                <strong>IDR {{ number_format($order->grand_total, 0, ',', '.') }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="order-actions">
+                        <button type="button" class="btn btn-transaction-detail"
+                                data-bs-toggle="modal"
+                                data-bs-target="#transactionDetailModal"
+                                data-order="{{ json_encode([
+                                    'id' => $order->id,
+                                    'invoice' => 'INV/' . \Carbon\Carbon::parse($order->created_at)->format('Ymd') . '/' . $order->id, // Use the calculated invoice
+                                    'order_date' => \Carbon\Carbon::parse($order->created_at)->format('d F Y'),
+                                    'status' => $order->status,
+                                    'total_amount' => 'IDR ' . number_format($order->grand_total, 0, ',', '.'),
+                                    'shipping_address' => [
+                                        'recipient_name' => $order->shipping_recipient_name ?? 'N/A',
+                                        'phone' => $order->shipping_phone ?? 'N/A',
+                                        'address' => $order->shipping_address ?? 'N/A',
+                                        'city' => $order->shipping_city ?? 'N/A',
+                                        'province' => $order->shipping_province ?? 'N/A',
+                                        'country' => $order->shipping_country ?? 'N/A',
+                                        'postal_code' => $order->shipping_postal_code ?? 'N/A',
+                                    ],
+                                    'items' => $order->orderItems->map(function($item) {
+                                        return [
+                                            'product_name' => $item->product->name ?? 'Unknown Product',
+                                            'quantity' => $item->quantity,
+                                            'price' => 'IDR ' . number_format($item->price, 0, ',', '.'),
+                                            'image' => asset('storage/' . ($item->product->image ?? 'images/default-product.png')), // Default image if none
+                                        ];
+                                    })->toArray(),
+                                ]) }}">
+                            Transaction Detail
+                        </button>
                     </div>
-                    <div class="order-details">
-                        <div class="order-id">Order ID : {{ $order['id'] }}</div>
-                        <div class="order-summary">{{ $order['items_count'] }} Items</div>
-                        <div class="order-summary">{{ $order['total_price'] }}</div>
-                        <div class="order-address">{{ $order['address'] }}</div>
+                @empty
+                    <div class="text-center p-5">
+                        <p class="lead">You don't have any orders yet.</p>
+                        <p>Start shopping now and support local UMKM!</p>
+                        <a href="{{ route('products.index') }}" class="btn btn-primary mt-3" style="background-color: #B6B09F; border-color: #B6B09F;">Start Shopping</a>
                     </div>
-                    <div class="order-status status-{{ Str::slug($order['status']) }}">
-                        {{ $order['status'] }}
-                    </div>
-                </div>
-            @empty
-                <p>No orders found.</p>
-            @endforelse
+                @endforelse
+            </div>
         </div>
 
         {{-- Tab Pane: Addresses --}}
@@ -742,6 +857,8 @@
 {{-- Memanggil modal edit personal information dari komponen terpisah --}}
 @include('components.edit-personal-info-modal', ['user' => $user])
 
+{{-- Memanggil modal transaction-detail-modal dari komponen terpisah --}}
+@include('components.transaction-detail-modal')
 @endsection
 
 @push('scripts')
@@ -945,5 +1062,53 @@
             }
         });
     });
+
+    document.addEventListener('DOMContentLoaded', function () {
+    const transactionDetailModal = document.getElementById('transactionDetailModal');
+    if (transactionDetailModal) {
+        transactionDetailModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Button that triggered the modal
+            const orderData = JSON.parse(button.getAttribute('data-order'));
+
+            // Populate Order Information
+            document.getElementById('modalOrderId').textContent = orderData.id;
+            document.getElementById('modalInvoice').textContent = orderData.invoice;
+            document.getElementById('modalOrderDate').textContent = orderData.order_date;
+
+            const modalOrderStatus = document.getElementById('modalOrderStatus');
+            modalOrderStatus.textContent = orderData.status;
+            // Remove previous status classes and add the new one
+            modalOrderStatus.className = 'badge order-status'; // Reset classes
+            modalOrderStatus.classList.add(`status-${orderData.status.toLowerCase().replace(/\s/g, '-')}`);
+
+
+            // Populate Shipping Address
+            const shippingAddress = orderData.shipping_address;
+            document.getElementById('modalShippingNamePhone').innerHTML = `<strong>${shippingAddress.recipient_name}</strong> | ${shippingAddress.phone}`;
+            document.getElementById('modalShippingAddress').textContent = shippingAddress.address;
+            document.getElementById('modalShippingCityProvince').textContent = `${shippingAddress.city}, ${shippingAddress.province}`;
+            document.getElementById('modalShippingCountryPostal').textContent = `${shippingAddress.country} ${shippingAddress.postal_code}`;
+
+            // Populate Order Items
+            const modalOrderItems = document.getElementById('modalOrderItems');
+            modalOrderItems.innerHTML = ''; // Clear previous items
+            orderData.items.forEach(item => {
+                const itemHtml = `
+                    <div class="list-group-item d-flex align-items-center py-2">
+                        <img src="${item.image}" alt="${item.product_name}" class="me-3" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">${item.product_name}</h6>
+                            <small class="text-muted">${item.quantity} x ${item.price}</small>
+                        </div>
+                    </div>
+                `;
+                modalOrderItems.insertAdjacentHTML('beforeend', itemHtml);
+            });
+
+            // Populate Total Amount
+            document.getElementById('modalTotalAmount').textContent = orderData.total_amount;
+        });
+    }
+});
 </script>
 @endpush

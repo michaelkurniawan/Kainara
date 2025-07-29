@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\User; // Import the User model
 
 class OrderSeeder extends Seeder
 {
@@ -26,6 +27,23 @@ class OrderSeeder extends Seeder
         Order::factory(10)->confirmed()->create()->each(function ($order) {
             $this->createOrderItems($order);
         });
+
+        // --- THIS LOGIC ALREADY ENSURES COMPLETED STATUS FOR USER ID 2 ---
+        $userWithId2 = User::find(2);
+
+        if ($userWithId2) {
+            Order::factory(5)->completed()->create([ // The 'completed()' state sets status to 'Completed'
+                'user_id' => 2,
+                'status' => 'Completed',
+                'is_completed' => true,
+            ])->each(function ($order) {
+                $this->createOrderItems($order);
+            });
+            $this->command->info('Created 5 completed orders for user ID 2.');
+        } else {
+            $this->command->warn('User with ID 2 not found. Skipped creating completed orders for them.');
+        }
+        // --- END OF RELEVANT LOGIC ---
     }
 
     /**
@@ -78,7 +96,7 @@ class OrderSeeder extends Seeder
         }
 
         $order->subtotal = $subtotal;
-        $order->shipping_cost = (float)rand(0, 50000); 
-        $order->save(); 
+        $order->shipping_cost = (float)rand(0, 50000);
+        $order->save();
     }
 }

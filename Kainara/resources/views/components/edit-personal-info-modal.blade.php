@@ -26,13 +26,6 @@
                                 <input type="date" class="form-control" id="edit_personal_dob" name="dob">
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="edit_personal_email" class="form-label font-serif-regular">Email</label>
-                                <input type="email" class="form-control" id="edit_personal_email" name="email" required>
-                            </div>
-                            {{-- Add more fields here if needed, e.g., phone number --}}
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
