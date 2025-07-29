@@ -26,7 +26,7 @@
             height: 100%;
             display: flex; /* Make it a flex container */
             flex-direction: column; /* Stack children vertically */
-            
+
             position: sticky;
             top: 2rem;
             align-self: flex-start;
@@ -43,13 +43,36 @@
             margin-bottom: 1rem;
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center; /* <<< UBAH INI: Pusatkan semua item secara vertikal */
             border: 1px solid black;
             padding: 0.5rem;
         }
         .address-box p {
             margin: 0;
             line-height: 1.5;
+        }
+        /* Style untuk kontainer label alamat */
+        .address-box .address-label-container {
+            display: flex; /* Jadikan kontainer label sebagai flexbox juga */
+            flex-direction: column; /* Tumpuk teks jika ada margin/padding */
+            justify-content: center; /* Pusatkan konten (teks label) secara vertikal */
+            align-items: center; /* Pusatkan teks label secara horizontal */
+            min-width: 80px; /* Pertahankan lebar minimum */
+            text-align: center; /* Teks label tetap di tengah */
+            flex-shrink: 0; /* Jangan menyusutkan ini */
+            padding-left: 0.5rem; /* Sesuaikan padding agar tidak terlalu mepet kiri */
+            padding-right: 0.5rem; /* Sesuaikan padding agar tidak terlalu mepet kanan */
+        }
+        /* Style untuk elemen teks label itu sendiri, hilangkan margin default */
+        .address-box #currentAddressType {
+            margin: 0; /* Hapus margin default dari p */
+        }
+        .btn-ubah-text-only-container { /* Kontainer untuk tombol change */
+            display: flex;
+            align-items: center; /* Pastikan tombol di tengah vertikal di dalam kontainernya */
+            flex-shrink: 0; /* Jangan menyusutkan ini */
+            padding-left: 0.5rem; /* Sesuaikan padding */
+            padding-right: 0.5rem; /* Sesuaikan padding */
         }
         .btn-ubah-text-only {
             background-color: transparent;
@@ -185,21 +208,6 @@
 
 @section('content')
     @php
-        $userAddresses = [
-            ['id' => 1, 'type' => 'Home', 'name' => 'Michael Kurniawan', 'phone' => '085175059853', 'street' => 'Jl. Pakuan No.3, Sumur Batu', 'sub_district' => 'Babakan Madang', 'district' => 'Kabupaten Bogor', 'city' => '', 'province' => 'Jawa Barat', 'postal_code' => '16810', 'is_primary' => true],
-            ['id' => 2, 'type' => 'Work', 'name' => 'Michael Kurniawan', 'phone' => '085175059853', 'street' => 'Sentul City, Jl. Pakuan No.3, Sumur Batu', 'sub_district' => 'Babakan Madang', 'district' => 'Bogor Regency', 'city' => '', 'province' => 'West Java', 'postal_code' => '16810', 'is_primary' => false],
-        ];
-
-        $defaultAddress = collect($userAddresses)->firstWhere('is_primary');
-        if (!$defaultAddress && count($userAddresses) > 0) {
-            $defaultAddress = $userAddresses[0];
-        } elseif (!$defaultAddress) {
-            $defaultAddress = null;
-        }
-        $address = $defaultAddress;
-        $selectedAddressId = $defaultAddress['id'] ?? null;
-
-        $subtotal = $subtotal ?? 0;
         $shippingCost = 0;
         $grandTotal = $subtotal + $shippingCost;
     @endphp
@@ -213,18 +221,22 @@
                             <i class="bi bi-geo-alt-fill text-danger me-2"></i> Shipping Address
                         </h2>
                         <div class="address-box">
-                            <div class="d-flex w-100 justify-content-between align-items-start">
-                                <div class="d-flex flex-column justify-content-center align-items-center" style="min-width: 80px;">
-                                    <p class="fw-semibold fs-5 m-3" id="currentAddressType">{{ $address['type'] ?? '' }}</p>
-                                </div>
-                                <div class="vr mx-3"></div>
-                                <div class="text-start flex-grow-1" id="currentAddressDetails">
-                                    <p class="text-muted mb-0" data-address-line="street">{{ $address['street'] ?? '' }}{{ $address['sub_district'] ? ', ' . $address['sub_district'] : '' }}</p>
-                                    <p class="text-muted mb-0" data-address-line="district-city">{{ $address['district'] ?? '' }}{{ $address['city'] ? ', ' + $address['city'] : '' }}</p>
-                                    <p class="text-muted mb-0" data-address-line="province-postal">{{ $address['province'] ?? '' }} {{ $address['postal_code'] ?? '' }}</p>
-                                </div>
+                            {{-- Kontainer baru untuk address label --}}
+                            <div class="address-label-container">
+                                <p class="fw-semibold fs-5" id="currentAddressType">{{ $address['label'] ?? '' }}</p>
                             </div>
-                            <button type="button" class="btn-ubah-text-only" data-bs-toggle="modal" data-bs-target="#addressSelectionModal">Change</button>
+                            <div class="vr mx-3"></div>
+                            {{-- Perhatikan: div ini tidak lagi memiliki d-flex w-100 justify-content-between align-items-start --}}
+                            {{-- Karena align-items: center sudah diatur di parent .address-box --}}
+                            <div class="text-start flex-grow-1" id="currentAddressDetails">
+                                <p class="text-muted mb-0" data-address-line="address">{{ $address['address'] ?? '' }}{{ $address['sub_district'] ? ', ' . $address['sub_district'] : '' }}</p>
+                                <p class="text-muted mb-0" data-address-line="city-province">{{ $address['city'] ?? '' }}{{ $address['city'] && $address['province'] ? ', ' : '' }}{{ $address['province'] ?? '' }}</p>
+                                <p class="text-muted mb-0" data-address-line="country-postal">{{ $address['country'] ?? '' }} {{ $address['postal_code'] ?? '' }}</p>
+                            </div>
+                            {{-- Kontainer baru untuk tombol Change --}}
+                            <div class="btn-ubah-text-only-container">
+                                <button type="button" class="btn-ubah-text-only" data-bs-toggle="modal" data-bs-target="#addressSelectionModal">Change</button>
+                            </div>
                         </div>
                     </div>
 
@@ -234,15 +246,18 @@
                         </h2>
                         <form action="{{ route('order.process') }}" method="POST">
                             @csrf
-                            <input type="hidden" name="address_type_input" id="address_type_input" value="{{ $address['type'] ?? '' }}">
-                            <input type="hidden" name="street_input" id="street_input" value="{{ $address['street'] ?? '' }}">
+                            {{-- Hidden inputs for selected address details --}}
+                            <input type="hidden" name="address_id" id="address_id_input" value="{{ $address['id'] ?? '' }}">
+                            <input type="hidden" name="address_type_input" id="address_type_input" value="{{ $address['label'] ?? ($address['type'] ?? '') }}"> {{-- Updated type input --}}
+                            <input type="hidden" name="recipient_name_input" id="recipient_name_input" value="{{ $address['recipient_name'] ?? '' }}">
+                            <input type="hidden" name="phone_input_shipping" id="phone_input_shipping" value="{{ $address['phone'] ?? '' }}">
+                            <input type="hidden" name="address_input" id="address_input" value="{{ $address['address'] ?? '' }}">
                             <input type="hidden" name="sub_district_input" id="sub_district_input" value="{{ $address['sub_district'] ?? '' }}">
                             <input type="hidden" name="district_input" id="district_input" value="{{ $address['district'] ?? '' }}">
                             <input type="hidden" name="city_input" id="city_input" value="{{ $address['city'] ?? '' }}">
                             <input type="hidden" name="province_input" id="province_input" value="{{ $address['province'] ?? '' }}">
+                            <input type="hidden" name="country_input" id="country_input" value="{{ $address['country'] ?? '' }}">
                             <input type="hidden" name="postal_code_input" id="postal_code_input" value="{{ $address['postal_code'] ?? '' }}">
-                            <input type="hidden" name="user_name_input" id="user_name_input" value="{{ $address['name'] ?? '' }}">
-                            <input type="hidden" name="user_phone_input" id="user_phone_input" value="{{ $address['phone'] ?? '' }}">
 
                             <div class="row g-3 mb-5">
                                 <div class="col-md-6">
@@ -261,14 +276,14 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="first_name" class="form-label">First Name</label>
-                                    <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="first_name" name="first_name" placeholder="John" value="{{ old('first_name', Auth::user()->first_name ?? ($address['name'] ? explode(' ', $address['name'])[0] : '')) }}">
+                                    <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="first_name" name="first_name" placeholder="John" value="{{ old('first_name', Auth::user()->first_name ?? ($address['recipient_name'] ? explode(' ', $address['recipient_name'])[0] : '')) }}">
                                     @error('first_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label for="last_name" class="form-label">Last Name</label>
-                                    <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="last_name" name="last_name" placeholder="Doe" value="{{ old('last_name', Auth::user()->last_name ?? (isset(explode(' ', $address['name'])[1]) ? explode(' ', $address['name'])[1] : '')) }}">
+                                    <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="last_name" name="last_name" placeholder="Doe" value="{{ old('last_name', Auth::user()->last_name ?? (isset(explode(' ', $address['recipient_name'])[1]) ? explode(' ', $address['recipient_name'])[1] : '')) }}">
                                     @error('last_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -348,63 +363,86 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const formAddressType = document.getElementById('address_type_input');
-        const formStreet = document.getElementById('street_input');
+        // Corrected IDs for hidden inputs
+        const addressIdInput = document.getElementById('address_id_input');
+        const formAddressType = document.getElementById('address_type_input'); // Ini akan menyimpan label
+        const formRecipientName = document.getElementById('recipient_name_input');
+        const formPhoneShipping = document.getElementById('phone_input_shipping');
+        const formAddress = document.getElementById('address_input');
         const formSubDistrict = document.getElementById('sub_district_input');
         const formDistrict = document.getElementById('district_input');
         const formCity = document.getElementById('city_input');
         const formProvince = document.getElementById('province_input');
+        const formCountry = document.getElementById('country_input');
         const formPostalCode = document.getElementById('postal_code_input');
-        const userNameInput = document.getElementById('user_name_input');
-        const userPhoneInput = document.getElementById('user_phone_input');
 
-        const userAddressesData = {{ Js::from($userAddresses) }};
+        const userAddressesData = {{ Js::from($userAddresses) }}; // Tetap dibutuhkan untuk logika di `addressSelected`
 
         window.addEventListener('addressSelected', function(event) {
             const selectedAddressData = event.detail.addressData;
 
-            document.getElementById('currentAddressType').textContent = selectedAddressData.type || '';
+            // Memperbarui tampilan alamat di halaman checkout
+            // Menggunakan selectedAddressData.label untuk ditampilkan di sebelah kiri garis vertikal
+            document.getElementById('currentAddressType').textContent = selectedAddressData.label || '';
             const addressDetailsContainer = document.getElementById('currentAddressDetails');
             addressDetailsContainer.innerHTML = `
-                <p class="text-muted mb-0" data-address-line="street">${selectedAddressData.street || ''}${selectedAddressData.sub_district ? ', ' + selectedAddressData.sub_district : ''}</p>
-                <p class="text-muted mb-0" data-address-line="district-city">${selectedAddressData.district || ''}${selectedAddressData.city ? ', ' + selectedAddressData.city : ''}</p>
-                <p class="text-muted mb-0" data-address-line="province-postal">${selectedAddressData.province || ''} ${selectedAddressData.postal_code || ''}</p>
+                <p class="text-muted mb-0" data-address-line="address">${selectedAddressData.address || ''}${selectedAddressData.sub_district ? ', ' + selectedAddressData.sub_district : ''}</p>
+                <p class="text-muted mb-0" data-address-line="city-province">${selectedAddressData.city || ''}${selectedAddressData.city && selectedAddressData.province ? ', ' : ''}${selectedAddressData.province || ''}</p>
+                <p class="text-muted mb-0" data-address-line="country-postal">${selectedAddressData.country || ''} ${selectedAddressData.postal_code || ''}</p>
             `;
 
-            if (formAddressType) formAddressType.value = selectedAddressData.type || '';
-            if (formStreet) formStreet.value = selectedAddressData.street || '';
+            // Update hidden form fields for submission
+            if (addressIdInput) addressIdInput.value = selectedAddressData.id || '';
+            if (formAddressType) formAddressType.value = selectedAddressData.label || selectedAddressData.type || ''; // label atau type
+            if (formRecipientName) formRecipientName.value = selectedAddressData.recipient_name || '';
+            if (formPhoneShipping) formPhoneShipping.value = selectedAddressData.phone || '';
+            if (formAddress) formAddress.value = selectedAddressData.address || '';
             if (formSubDistrict) formSubDistrict.value = selectedAddressData.sub_district || '';
             if (formDistrict) formDistrict.value = selectedAddressData.district || '';
             if (formCity) formCity.value = selectedAddressData.city || '';
             if (formProvince) formProvince.value = selectedAddressData.province || '';
+            if (formCountry) formCountry.value = selectedAddressData.country || '';
             if (formPostalCode) formPostalCode.value = selectedAddressData.postal_code || '';
-            if (userNameInput) userNameInput.value = selectedAddressData.name || '';
-            if (userPhoneInput) userPhoneInput.value = selectedAddressData.phone || '';
 
-            document.getElementById('email').value = document.getElementById('email').value || '';
-            document.getElementById('phone').value = selectedAddressData.phone || '';
-            document.getElementById('first_name').value = selectedAddressData.name ? selectedAddressData.name.split(' ')[0] : '';
-            document.getElementById('last_name').value = selectedAddressData.name ? (selectedAddressData.name.split(' ').length > 1 ? selectedAddressData.name.split(' ')[1] : '') : '';
+            // Update visible contact information fields
+            document.getElementById('email').value = '{{ Auth::user()->email ?? '' }}';
+            document.getElementById('phone').value = selectedAddressData.phone || '{{ Auth::user()->phone ?? '' }}';
+            const recipientNameParts = (selectedAddressData.recipient_name || '').split(' ');
+            document.getElementById('first_name').value = recipientNameParts[0] || '{{ Auth::user()->first_name ?? '' }}';
+            document.getElementById('last_name').value = (recipientNameParts.length > 1 ? recipientNameParts[1] : '') || '{{ Auth::user()->last_name ?? '' }}';
         });
 
-        const currentSelectedAddressId = {{ Js::from($selectedAddressId) }};
-        if (userAddressesData.length > 0 && currentSelectedAddressId !== null) {
-            const defaultAddressFromPHP = userAddressesData.find(addr => addr.id === currentSelectedAddressId);
-            if (defaultAddressFromPHP) {
-                if (formAddressType) formAddressType.value = defaultAddressFromPHP.type || '';
-                if (formStreet) formStreet.value = defaultAddressFromPHP.street || '';
-                if (formSubDistrict) formSubDistrict.value = defaultAddressFromPHP.sub_district || '';
-                if (formDistrict) formDistrict.value = defaultAddressFromPHP.district || '';
-                if (formCity) formCity.value = defaultAddressFromPHP.city || '';
-                if (formProvince) formProvince.value = defaultAddressFromPHP.province || '';
-                if (formPostalCode) formPostalCode.value = defaultAddressFromPHP.postal_code || '';
-                if (userNameInput) userNameInput.value = defaultAddressFromPHP.name || '';
-                if (userPhoneInput) userPhoneInput.value = defaultAddressFromPHP.phone || '';
+        // Initialize contact information based on the initial $address passed from PHP
+        const initialAddress = {{ Js::from($address) }};
+        if (initialAddress) {
+            // Update the displayed address label on initial load
+            document.getElementById('currentAddressType').textContent = initialAddress.label || '';
 
-                document.getElementById('phone').value = defaultAddressFromPHP.phone || '';
-                document.getElementById('first_name').value = defaultAddressFromPHP.name ? defaultAddressFromPHP.name.split(' ')[0] : '';
-                document.getElementById('last_name').value = defaultAddressFromPHP.name ? (defaultAddressFromPHP.name.split(' ').length > 1 ? defaultAddressFromPHP.name.split(' ')[1] : '') : '';
-            }
+            document.getElementById('email').value = '{{ Auth::user()->email ?? '' }}';
+            document.getElementById('phone').value = initialAddress.phone || '{{ Auth::user()->phone ?? '' }}';
+            const initialRecipientNameParts = (initialAddress.recipient_name || '').split(' ');
+            document.getElementById('first_name').value = initialRecipientNameParts[0] || '{{ Auth::user()->first_name ?? '' }}';
+            document.getElementById('last_name').value = (initialRecipientNameParts.length > 1 ? initialRecipientNameParts[1] : '') || '{{ Auth::user()->last_name ?? '' }}';
+
+            // Set initial hidden form fields for submission
+            if (addressIdInput) addressIdInput.value = initialAddress.id || '';
+            if (formAddressType) formAddressType.value = initialAddress.label || initialAddress.type || '';
+            if (formRecipientName) formRecipientName.value = initialAddress.recipient_name || '';
+            if (formPhoneShipping) formPhoneShipping.value = initialAddress.phone || '';
+            if (formAddress) formAddress.value = initialAddress.address || '';
+            if (formSubDistrict) formSubDistrict.value = initialAddress.sub_district || '';
+            if (formDistrict) formDistrict.value = initialAddress.district || '';
+            if (formCity) formCity.value = initialAddress.city || '';
+            if (formProvince) formProvince.value = initialAddress.province || '';
+            if (formCountry) formCountry.value = initialAddress.country || '';
+            if (formPostalCode) formPostalCode.value = initialAddress.postal_code || '';
+        } else {
+            // If no address is set (e.g., brand new user), populate with Auth user's info if available
+            document.getElementById('currentAddressType').textContent = ''; // Kosongkan jika tidak ada alamat
+            document.getElementById('email').value = '{{ Auth::user()->email ?? '' }}';
+            document.getElementById('phone').value = '{{ Auth::user()->phone ?? '' }}';
+            document.getElementById('first_name').value = '{{ Auth::user()->first_name ?? '' }}';
+            document.getElementById('last_name').value = '{{ Auth::user()->last_name ?? '' }}';
         }
     });
 </script>

@@ -4,6 +4,10 @@
 
 @push('styles')
 <style>
+    :root {
+        --font-primary: 'Ancizar Serif', serif;
+        --font-secondary: 'Ancizar Serif', serif;
+    }
     body {
         background-color: #f8f9fa; /* Warna background netral */
     }
