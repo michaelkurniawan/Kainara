@@ -84,7 +84,7 @@
         .cart-col-price {
             width: 100px;
             text-align: right;
-            margin-left: 19.5rem;
+            margin-left: 19.4rem;
             flex-shrink: 0;
         }
         
@@ -161,7 +161,7 @@
         .cart-col-total {
             width: 120px;
             text-align: right;
-            margin-left: 3.6rem;
+            margin-left: 3rem;
             flex-shrink: 0;
         }
         
