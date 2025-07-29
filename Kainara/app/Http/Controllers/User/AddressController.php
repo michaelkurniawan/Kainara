@@ -1,192 +1,227 @@
 <?php
 
-namespace App\Http\User\Controllers;
+namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\UserAddress;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Validator; // Tambahkan ini
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class AddressController extends Controller
 {
     /**
-     * Display a listing of the addresses (for API).
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function index()
-    {
-        // Untuk demo, kita tambahkan URL edit dan delete langsung ke data alamat
-        $userAddresses = Session::get('user_addresses', []);
-        $addressesWithUrls = collect($userAddresses)->map(function($address) {
-            $address['edit_url'] = route('addresses.edit', ['address' => $address['id']]); // Placeholder, will be used by JS
-            $address['delete_url'] = route('addresses.destroy', ['address' => $address['id']]);
-            return $address;
-        })->toArray();
-
-        return response()->json($addressesWithUrls);
-    }
-
-    /**
-     * Store a newly created address in storage.
-     * Mengembalikan JSON untuk modal.
+     * Menyimpan alamat baru ke database.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
-            $request->validate([
-            'label' => 'required|string|max:255', // Changed from 'type'
-            'recipient_name' => 'required|string|max:255', // Changed from 'name'
-            'phone' => 'required|string|max:20',
-            'address' => 'required|string|max:500', // Changed from 'street', now a text area
-            'country' => 'required|string|max:255', // New field
-            'city' => 'required|string|max:255',
-            'province' => 'required|string|max:255',
-            'postal_code' => 'required|string|max:10',
-            'is_default' => 'boolean', // Changed from 'is_primary'
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'label' => 'required|string|max:255',
+                'recipient_name' => 'required|string|max:255',
+                'phone' => 'required|string|max:255',
+                'address' => 'required|string|max:255',
+                'city' => 'required|string|max:255',
+                'province' => 'required|string|max:255',
+                'country' => 'required|string|max:255',
+                'postal_code' => 'required|string|max:10',
+                'is_default' => 'boolean', // Ini sekarang bekerja dengan input hidden
+            ]);
 
-        $user = Auth::user();
+            $user = Auth::user();
 
-        // If the new address is set as default, unmark existing default addresses for this user
-        if ($request->has('is_default')) {
-            $user->addresses()->where('is_default', true)->update(['is_default' => false]);
+            // Jika alamat ini diatur sebagai default, set semua alamat lain user menjadi non-default
+            if (isset($validatedData['is_default']) && $validatedData['is_default']) {
+                $user->addresses()->update(['is_default' => false]);
+            } elseif ($user->addresses()->doesntExist()) {
+                // Jika ini alamat pertama user, otomatis jadikan default
+                $validatedData['is_default'] = true;
+            }
+
+            // Buat alamat baru
+            $user->addresses()->create($validatedData);
+
+            // Redirect sukses kembali ke tab 'Addresses'
+            return redirect()->route('profile.index', ['#addresses'])->with('notification', [
+                'type' => 'success',
+                'title' => 'Alamat Berhasil Ditambahkan!',
+                'message' => 'Alamat baru Anda telah berhasil disimpan.',
+                'hasActions' => false
+            ]);
+
+        } catch (ValidationException $e) {
+            // Redirect kembali dengan error validasi, tetap di tab 'Addresses'
+            return redirect()->back()->with('notification', [
+                'type' => 'error',
+                'title' => 'Gagal Menambahkan Alamat!',
+                'message' => 'Mohon periksa kembali input Anda. ' . $e->getMessage(),
+                'hasActions' => false
+            ])->withErrors($e->errors())->onlyInput($request->except(['_token']))
+              ->withFragment('addresses'); // Pertahankan tab aktif
+        } catch (\Exception $e) {
+            // Redirect kembali dengan error umum, tetap di tab 'Addresses'
+            return redirect()->back()->with('notification', [
+                'type' => 'error',
+                'title' => 'Terjadi Kesalahan!',
+                'message' => 'Gagal menambahkan alamat: ' . $e->getMessage(),
+                'hasActions' => false
+            ])->withInput()
+              ->withFragment('addresses'); // Pertahankan tab aktif
         }
-
-        $address = $user->addresses()->create([
-            'label' => $request->label, // Changed
-            'recipient_name' => $request->recipient_name, // Changed
-            'phone' => $request->phone,
-            'address' => $request->address, // Changed
-            'country' => $request->country, // New
-            'city' => $request->city,
-            'province' => $request->province,
-            'postal_code' => $request->postal_code,
-            'is_default' => $request->has('is_default'), // Changed
-        ]);
-
-        // Redirect back to the profile page, specifically to the addresses tab
-        return redirect()->route('profile')->with('success', 'Address added successfully!')->fragment('addresses');
     }
 
     /**
-     * Update the specified address in storage.
-     * Mengembalikan JSON untuk modal.
+     * Mengambil data alamat untuk mengisi modal edit.
+     * Ini diasumsikan sebagai endpoint API yang dipanggil oleh AJAX.
+     *
+     * @param  \App\Models\UserAddress  $address
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function edit(UserAddress $address)
+    {
+        // Pastikan pengguna memiliki akses ke alamat ini
+        if ($address->user_id !== Auth::id()) {
+            // Jika akses ditolak, kembalikan response JSON error
+            return response()->json([
+                'type' => 'error',
+                'title' => 'Akses Ditolak!',
+                'message' => 'Anda tidak memiliki izin untuk melakukan tindakan ini.'
+            ], 403); // Status code 403 Forbidden
+        }
+
+        // Kembalikan data alamat dalam format JSON
+        return response()->json($address);
+    }
+
+    /**
+     * Memperbarui alamat yang ada di database.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
+     * @param  \App\Models\UserAddress  $address
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, UserAddress $address)
     {
-        $validator = Validator::make($request->all(), [
-            'type' => 'required|string|max:255',
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'street' => 'required|string|max:255',
-            'sub_district' => 'required|string|max:255',
-            'district' => 'required|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'province' => 'required|string|max:255',
-            'postal_code' => 'required|string|max:10',
-            'is_primary' => 'boolean',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        // Pastikan pengguna memiliki akses ke alamat ini
+        if ($address->user_id !== Auth::id()) {
+            // Redirect kembali ke tab 'Addresses' jika akses ditolak
+            return redirect()->route('profile.index', ['#addresses'])->with('notification', [
+                'type' => 'error',
+                'title' => 'Akses Ditolak!',
+                'message' => 'Anda tidak memiliki izin untuk melakukan tindakan ini.',
+                'hasActions' => false
+            ]);
         }
 
-        $userAddresses = Session::get('user_addresses', []);
-        $updated = false;
-        $updatedAddress = null;
+        try {
+            $validatedData = $request->validate([
+                'label' => 'required|string|max:255',
+                'recipient_name' => 'required|string|max:255',
+                'phone' => 'required|string|max:255',
+                'address' => 'required|string|max:255',
+                'city' => 'required|string|max:255',
+                'province' => 'required|string|max:255',
+                'country' => 'required|string|max:255',
+                'postal_code' => 'required|string|max:10',
+                'is_default' => 'boolean', // Ini sekarang bekerja dengan input hidden
+            ]);
 
-        foreach ($userAddresses as $key => &$address) {
-            if ($address['id'] == (int)$id) {
-                $address['type'] = $request->type;
-                $address['name'] = $request->name;
-                $address['phone'] = $request->phone;
-                $address['street'] = $request->street;
-                $address['sub_district'] = $request->sub_district;
-                $address['district'] = $request->district;
-                $address['city'] = $request->city;
-                $address['province'] = $request->province;
-                $address['postal_code'] = $request->postal_code;
-                $address['is_primary'] = (bool)$request->is_primary;
-                $updated = true;
-                $updatedAddress = $address;
-                break;
-            }
-        }
+            $user = Auth::user();
 
-        if ($updatedAddress && $updatedAddress['is_primary']) {
-            foreach ($userAddresses as &$address) {
-                if ($address['id'] != (int)$id) {
-                    $address['is_primary'] = false;
+            // Logika untuk mengatur alamat default
+            if (isset($validatedData['is_default']) && $validatedData['is_default']) {
+                // Set semua alamat lain user menjadi non-default
+                $user->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
+            } else {
+                // Jika alamat yang sedang diedit adalah default dan di-uncheck,
+                // dan ada alamat lain, set alamat pertama yang ditemukan sebagai default baru.
+                if ($address->is_default && $user->addresses()->where('id', '!=', $address->id)->exists()) {
+                    $user->addresses()->where('id', '!=', $address->id)->first()->update(['is_default' => true]);
                 }
             }
-        } elseif ($updatedAddress && !$updatedAddress['is_primary'] && count($userAddresses) > 0 && !collect($userAddresses)->contains('is_primary', true)) {
-            // If the updated address is no longer primary and no other primary exists, set the first one as primary
-            if (!empty($userAddresses)) { // Ensure there's at least one address
-                $userAddresses[0]['is_primary'] = true;
-            }
+
+            // Perbarui alamat
+            $address->update($validatedData);
+
+            // Redirect sukses kembali ke tab 'Addresses'
+            return redirect()->route('profile.index', ['#addresses'])->with('notification', [
+                'type' => 'success',
+                'title' => 'Alamat Berhasil Diperbarui!',
+                'message' => 'Perubahan alamat Anda telah berhasil disimpan.',
+                'hasActions' => false
+            ]);
+
+        } catch (ValidationException $e) {
+            // Redirect kembali dengan error validasi, tetap di tab 'Addresses'
+            return redirect()->back()->with('notification', [
+                'type' => 'error',
+                'title' => 'Gagal Memperbarui Alamat!',
+                'message' => 'Mohon periksa kembali input Anda. ' . $e->getMessage(),
+                'hasActions' => false
+            ])->withErrors($e->errors())->onlyInput($request->except(['_token', '_method']))
+              ->withFragment('addresses'); // Pertahankan tab aktif
+        } catch (\Exception $e) {
+            // Redirect kembali dengan error umum, tetap di tab 'Addresses'
+            return redirect()->back()->with('notification', [
+                'type' => 'error',
+                'title' => 'Terjadi Kesalahan!',
+                'message' => 'Gagal memperbarui alamat: ' . $e->getMessage(),
+                'hasActions' => false
+            ])->withInput()
+              ->withFragment('addresses'); // Pertahankan tab aktif
         }
-
-        Session::put('user_addresses', $userAddresses);
-
-        if ($updated) {
-            return response()->json([
-                'message' => 'Address updated successfully!',
-                'address' => $updatedAddress,
-                'selected_address_id' => $updatedAddress['id']
-            ], 200);
-        }
-
-        return response()->json(['message' => 'Address not found for update.'], 404);
     }
 
     /**
-     * Remove the specified address from storage.
-     * Mengembalikan JSON untuk modal.
+     * Menghapus alamat dari database.
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
+     * @param  \App\Models\UserAddress  $address
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy($id)
+    public function destroy(UserAddress $address)
     {
-        $userAddresses = Session::get('user_addresses', []);
-        $addressWasPrimary = false;
-        $deletedAddressExists = false;
+        // Pastikan pengguna memiliki akses ke alamat ini
+        if ($address->user_id !== Auth::id()) {
+            // Redirect kembali ke tab 'Addresses' jika akses ditolak
+            return redirect()->route('profile.index', ['#addresses'])->with('notification', [
+                'type' => 'error',
+                'title' => 'Akses Ditolak!',
+                'message' => 'Anda tidak memiliki izin untuk melakukan tindakan ini.',
+                'hasActions' => false
+            ]);
+        }
 
-        // Check if the address to be deleted exists and if it was primary
-        foreach ($userAddresses as $address) {
-            if ($address['id'] == (int)$id) {
-                $deletedAddressExists = true;
-                if ($address['is_primary']) {
-                    $addressWasPrimary = true;
+        try {
+            // Jika alamat yang dihapus adalah default, cari alamat lain dan jadikan default baru
+            if ($address->is_default) {
+                $user = Auth::user();
+                $newDefaultAddress = $user->addresses()->where('id', '!=', $address->id)->first();
+                if ($newDefaultAddress) {
+                    $newDefaultAddress->update(['is_default' => true]);
                 }
-                break;
             }
+
+            // Hapus alamat
+            $address->delete();
+
+            // Redirect sukses kembali ke tab 'Addresses'
+            return redirect()->route('profile.index', ['#addresses'])->with('notification', [
+                'type' => 'success',
+                'title' => 'Alamat Berhasil Dihapus!',
+                'message' => 'Alamat telah berhasil dihapus dari daftar Anda.',
+                'hasActions' => false
+            ]);
+        } catch (\Exception $e) {
+            // Redirect kembali dengan error umum, tetap di tab 'Addresses'
+            return redirect()->back()->with('notification', [
+                'type' => 'error',
+                'title' => 'Gagal Menghapus Alamat!',
+                'message' => 'Terjadi kesalahan saat menghapus alamat: ' . $e->getMessage(),
+                'hasActions' => false
+            ])->withFragment('addresses'); // Pertahankan tab aktif
         }
-        
-        $userAddresses = array_filter($userAddresses, fn($address) => $address['id'] != (int)$id);
-        $userAddresses = array_values($userAddresses); // Re-index array
-
-        // If the deleted address was primary, set a new primary if addresses remain
-        if ($deletedAddressExists && $addressWasPrimary && !empty($userAddresses)) {
-            $userAddresses[0]['is_primary'] = true;
-        }
-
-        Session::put('user_addresses', $userAddresses);
-
-        if ($deletedAddressExists) {
-            return response()->json([
-                'message' => 'Address deleted successfully!',
-                'selected_address_id' => !empty($userAddresses) ? collect($userAddresses)->firstWhere('is_primary')['id'] ?? $userAddresses[0]['id'] : null
-            ], 200);
-        }
-
-        return response()->json(['message' => 'Address not found for deletion.'], 404);
     }
 }

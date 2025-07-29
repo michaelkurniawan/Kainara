@@ -225,7 +225,6 @@
 {{-- Skrip JavaScript untuk mengelola notifikasi --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- BAGIAN 1: AMBIL SEMUA ELEMEN DOM DAN DEKLARASIKAN VARIABEL ---
         const overlay = document.getElementById('globalNotificationOverlay');
         const closeBtn = overlay.querySelector('.btn-close');
         const iconElement = document.getElementById('globalNotificationIcon');
@@ -235,13 +234,48 @@
         const confirmBtn = document.getElementById('globalNotificationConfirmBtn');
         const cancelBtn = document.getElementById('globalNotificationCancelBtn');
 
-        let onConfirmCallback = null;
-        let onCancelCallback = null;
+        let currentOnConfirmCallback = null; // Use a distinct name for clarity
+        let currentOnCancelCallback = null; // Use a distinct name for clarity
+
+        // --- Helper function to clear previous listeners ---
+        function clearButtonListeners() {
+            confirmBtn.removeEventListener('click', handleConfirmClick);
+            cancelBtn.removeEventListener('click', handleCancelClick);
+            closeBtn.removeEventListener('click', handleCancelClick); // Also clear close button
+            overlay.removeEventListener('click', handleOverlayClick);
+        }
+
+        // --- Event handler functions ---
+        function handleConfirmClick() {
+            hideNotificationCard(); // Hide first
+            if (currentOnConfirmCallback) {
+                console.log('Notification: Executing currentOnConfirmCallback.');
+                currentOnConfirmCallback(); // Execute the specific callback
+            }
+        }
+
+        function handleCancelClick() {
+            hideNotificationCard(); // Hide first
+            if (currentOnCancelCallback) {
+                console.log('Notification: Executing currentOnCancelCallback.');
+                currentOnCancelCallback(); // Execute the specific callback
+            }
+        }
+
+        function handleOverlayClick(event) {
+            const modalContent = overlay.querySelector('.modal-content');
+            if (!modalContent.contains(event.target) && actionsDiv.style.display === 'none') {
+                handleCancelClick(); // Treats outside click as cancel for non-actionable modals
+            }
+        }
 
         // --- BAGIAN 2: DEFINISIKAN FUNGSI GLOBAL showNotificationCard dan hideNotificationCard ---
-        // PENTING: Fungsi ini harus didefinisikan SEBELUM dipanggil oleh bagian manapun di skrip ini.
         window.showNotificationCard = function(options) {
-            // Default options untuk notifikasi
+            console.log('showNotificationCard called with options:', options);
+
+            // Clear any previously set listeners
+            clearButtonListeners();
+
             const defaults = {
                 type: 'info',
                 title: '',
@@ -263,86 +297,94 @@
             titleElement.textContent = settings.title;
             messageElement.textContent = settings.message;
 
+            // Set dynamic text for buttons based on type if needed, or keep fixed
+            if (settings.type === 'confirmation') {
+                confirmBtn.textContent = 'YES';
+                cancelBtn.textContent = 'NO';
+            } else {
+                confirmBtn.textContent = 'OK'; // Default for non-confirmation
+            }
+
             if (settings.hasActions) {
                 actionsDiv.style.display = 'flex';
-                onConfirmCallback = settings.onConfirm;
-                onCancelCallback = settings.onCancel;
+                confirmBtn.style.display = 'inline-block';
+                cancelBtn.style.display = 'inline-block';
+
+                currentOnConfirmCallback = settings.onConfirm; // Store the specific callback
+                currentOnCancelCallback = settings.onCancel;
+
+                // Attach NEW listeners for this specific notification
+                confirmBtn.addEventListener('click', handleConfirmClick);
+                cancelBtn.addEventListener('click', handleCancelClick);
+
             } else {
                 actionsDiv.style.display = 'none';
-                onConfirmCallback = null;
-                onCancelCallback = null;
+                confirmBtn.style.display = 'none';
+                cancelBtn.style.display = 'none';
+
+                currentOnConfirmCallback = null;
+                currentOnCancelCallback = null;
             }
+
+            // Always attach close button and overlay listeners for basic closing
+            closeBtn.addEventListener('click', handleCancelClick); // Close button usually acts as cancel
+            overlay.addEventListener('click', handleOverlayClick);
 
             overlay.classList.add('show');
         };
 
         window.hideNotificationCard = function() {
+            console.log('hideNotificationCard called.');
             overlay.classList.remove('show');
-            onConfirmCallback = null;
-            onCancelCallback = null;
+            // Clear current callbacks only if needed,
+            // they will be set again by the next showNotificationCard call.
+            // currentOnConfirmCallback = null;
+            // currentOnCancelCallback = null;
+            clearButtonListeners(); // Ensure all listeners are removed after hiding
         };
 
         // --- BAGIAN 3: LOGIKA UNTUK MENAMPILKAN NOTIFIKASI DARI SESI FLASH ---
-        // PENTING: Blok ini harus berada SETELAH definisi fungsi showNotificationCard.
         @if(Session::has('notification'))
             const notificationData = @json(Session::get('notification'));
+            console.log('Session notification detected:', notificationData);
 
+            // Pass onConfirm/onCancel only if specifically needed for server-side
+            // For simple "OK" messages, a simple hide is enough.
             window.showNotificationCard({
                 type: notificationData.type || 'info',
                 title: notificationData.title || 'Notification',
                 message: notificationData.message || '',
                 hasActions: notificationData.hasActions || false,
-                onConfirm: () => {
-                    // Opsional: Aksi setelah tombol OK ditekan
-                },
-                onCancel: () => {
-                    // Opsional: Aksi setelah tombol NO/Close ditekan
-                }
+                onConfirm: notificationData.onConfirm ? () => { /* custom logic for flash confirm */ } : null,
+                onCancel: notificationData.onCancel ? () => { /* custom logic for flash cancel */ } : null
             });
 
-            // Kustomisasi tombol untuk notifikasi registrasi berhasil
-            if (notificationData.hasActions) {
-                if (confirmBtn) { // Pastikan confirmBtn sudah didefinisikan di Bagian 1
+            // Customize button text for server-side notifications *after* showNotificationCard
+            // This is to override the default "YES"/"NO" if needed for a simple "OK"
+            if (!notificationData.hasActions) { // If it's a simple info/error/success from server
+                 // Make sure only a single "OK" button appears and functions as close
+                if (confirmBtn) {
                     confirmBtn.textContent = 'OK';
+                    confirmBtn.style.display = 'inline-block';
+                    // Re-attach listener to simply hide the card
+                    confirmBtn.removeEventListener('click', handleConfirmClick); // Remove old one
+                    confirmBtn.addEventListener('click', window.hideNotificationCard); // Just hide
                 }
-                if (cancelBtn) { // Pastikan cancelBtn sudah didefinisikan di Bagian 1
-                    cancelBtn.style.display = 'none'; // Sembunyikan tombol 'NO'
+                if (cancelBtn) {
+                    cancelBtn.style.display = 'none';
+                }
+            } else { // If hasActions IS true from session (e.g., login verification)
+                if (confirmBtn) {
+                    confirmBtn.textContent = 'OK'; // Force to OK
+                    confirmBtn.style.display = 'inline-block';
+                    confirmBtn.removeEventListener('click', handleConfirmClick); // Remove default
+                    confirmBtn.addEventListener('click', handleConfirmClick); // Re-attach but it's now OK
+
+                }
+                if (cancelBtn) {
+                    cancelBtn.style.display = 'none'; // Only OK button for login verification
                 }
             }
         @endif
-
-        // --- BAGIAN 4: EVENT LISTENERS UNTUK TOMBOL-TOMBOL NOTIFIKASI ---
-        // PENTING: Event listeners ini juga harus berada setelah semua elemen DOM diambil (Bagian 1)
-        // dan fungsi show/hide didefinisikan (Bagian 2).
-        closeBtn.addEventListener('click', function() {
-            hideNotificationCard();
-            if (onCancelCallback) {
-                onCancelCallback();
-            }
-        });
-
-        cancelBtn.addEventListener('click', function() {
-            hideNotificationCard();
-            if (onCancelCallback) {
-                onCancelCallback();
-            }
-        });
-
-        confirmBtn.addEventListener('click', function() {
-            hideNotificationCard();
-            if (onConfirmCallback) {
-                onConfirmCallback();
-            }
-        });
-
-        overlay.addEventListener('click', function(event) {
-            const modalContent = overlay.querySelector('.modal-content');
-            if (!modalContent.contains(event.target) && actionsDiv.style.display === 'none') {
-                hideNotificationCard();
-                if (onCancelCallback) {
-                    onCancelCallback();
-                }
-            }
-        });
     });
 </script>

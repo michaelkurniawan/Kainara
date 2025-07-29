@@ -94,6 +94,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::post('/address', [AddressController::class, 'store'])->name('addresses.store');
+    Route::delete('/addresses/{address}', [AddressController::class, 'destroy'])->name('addresses.destroy');
+    Route::post('/profile/picture', [ProfileController::class, 'updateProfilePicture'])->name('profile.update_picture');
+    Route::put('/profile/personal-info', [ProfileController::class, 'updatePersonalInformation'])->name('profile.update_personal_info');
 });
     Route::get('/my-orders', [OrderController::class, 'myOrders'])->name('my.orders');
 });
