@@ -152,24 +152,31 @@ class ProductController extends Controller
         }
 
         $productReviews = $product->reviews()
-                                     ->with('user') // Memuat relasi user
-                                     ->orderBy('created_at', 'desc')
-                                     ->get()
-                                     ->map(function($review) {
-                                         $firstName = $review->user->first_name ?? '';
-                                         $lastName = $review->user->last_name ?? '';
+                                   ->with('user') // Memuat relasi user
+                                   ->orderBy('created_at', 'desc')
+                                   ->get()
+                                   ->map(function($review) {
+                                       $firstName = $review->user->first_name ?? '';
+                                       $lastName = $review->user->last_name ?? '';
 
-                                         $fullName = trim(str_replace('  ', ' ', $firstName . ' ' . $lastName));
+                                       $fullName = trim(str_replace('  ', ' ', $firstName . ' ' . $lastName));
 
-                                         return [
-                                             'user_name' => $fullName ?: 'Pengguna Anonim',
-                                             'rating' => (float) $review->rating,
-                                             'comment' => $review->comment,
-                                             'created_at' => $review->created_at->toDateTimeString(),
-                                         ];
-                                     });
+                                       return [
+                                           'user_name' => $fullName ?: 'Pengguna Anonim',
+                                           'rating' => (float) $review->rating,
+                                           'comment' => $review->comment,
+                                           'created_at' => $review->created_at->toDateTimeString(),
+                                       ];
+                                   });
 
-        return view('products.detail', compact('product', 'sizeChartComponent', 'productReviews'));
+        // Calculate hasOnlyOneSizeVariant here and pass it to the view
+        $availableSizesRaw = $product->variants->pluck('size')->unique();
+        $displayableSizes = $availableSizesRaw->filter(function ($size) {
+            return $size !== 'One Size';
+        });
+        $hasOnlyOneSizeVariant = $availableSizesRaw->count() > 0 && $displayableSizes->isEmpty();
+
+        return view('products.detail', compact('product', 'sizeChartComponent', 'productReviews', 'hasOnlyOneSizeVariant'));
     }
 
     public function showFabricProduct($slug)
@@ -197,6 +204,14 @@ class ProductController extends Controller
                                        ];
                                    });
 
-        return view('products.detailkain', compact('product', 'productReviews'));
+        // Calculate hasOnlyOneSizeVariant for fabric products as well, if needed in detailkain
+        $availableSizesRaw = $product->variants->pluck('size')->unique();
+        $displayableSizes = $availableSizesRaw->filter(function ($size) {
+            return $size !== 'One Size';
+        });
+        $hasOnlyOneSizeVariant = $availableSizesRaw->count() > 0 && $displayableSizes->isEmpty();
+
+
+        return view('products.detailkain', compact('product', 'productReviews', 'hasOnlyOneSizeVariant'));
     }
 }

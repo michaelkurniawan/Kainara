@@ -154,7 +154,7 @@
         width: 100%;
         max-width: 736px;
         display: flex;
-        justify-content: flex-start; 
+        justify-content: flex-start;
         overflow: hidden;
         margin: 0;
     }
@@ -257,6 +257,7 @@
                     <span class="text-decoration-underline fs-4 ms-2">Size Chart</span>
                 </p>
 
+                {{-- Form untuk Add to Cart / Buy Now (tidak lagi di dalam @guest/@else) --}}
                 <form action="{{ route('checkout.add') }}" method="POST" id="addToCheckoutForm">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
@@ -267,7 +268,7 @@
                         $displayableSizes = $availableSizesRaw->filter(function ($size) {
                             return $size !== 'One Size';
                         })->sort()->toArray();
-                        $hasOnlyOneSizeVariant = $availableSizesRaw->count() > 0 && count($displayableSizes) === 0;
+                        // hasOnlyOneSizeVariant is now passed from the controller, no need to recalculate here
                     @endphp
 
                     @if (!$hasOnlyOneSizeVariant)
@@ -287,7 +288,6 @@
                         <p class="mb-4 fs-4 fw-semibold">Size: One Size Only</p>
                         <input type="hidden" name="selected_size" id="selected_size_input_one_size" value="One Size">
                     @endif
-
 
                     <div class="mb-4" style="max-width: 57%;">
                         <div class="d-flex gap-2 mb-4">
@@ -359,6 +359,7 @@
 
         const addToCartButton = document.querySelector('.btn-add-to-cart');
         const buyNowButton = document.querySelector('.btn-buy-it-now');
+        const addToCheckoutForm = document.getElementById('addToCheckoutForm'); // Get the form
 
         const hasOnlyOneSizeVariant = {{ json_encode($hasOnlyOneSizeVariant) }};
 
@@ -371,6 +372,7 @@
         const averageRatingStarsContainer = document.getElementById('average-rating-stars');
         const averageRatingTextContainer = document.getElementById('average-rating-text');
 
+        const isAuthenticated = {{ Auth::check() ? 'true' : 'false' }};
 
         function updateQuantityControls() {
             quantity = Math.min(quantity, maxQuantity);
@@ -383,12 +385,13 @@
             minusBtn.disabled = quantity <= 1;
             plusBtn.disabled = quantity >= maxQuantity;
 
-            if (maxQuantity === 0 || (!selectedSize && !hasOnlyOneSizeVariant)) {
-                addToCartButton.disabled = true;
-                buyNowButton.disabled = true;
+            // Enable/disable Add to Cart and Buy Now buttons based on size selection and stock
+            if ((selectedSize || hasOnlyOneSizeVariant) && maxQuantity > 0) {
+                if (addToCartButton) addToCartButton.disabled = false;
+                if (buyNowButton) buyNowButton.disabled = false;
             } else {
-                addToCartButton.disabled = false;
-                buyNowButton.disabled = false;
+                if (addToCartButton) addToCartButton.disabled = true;
+                if (buyNowButton) buyNowButton.disabled = true;
             }
         }
 
@@ -434,12 +437,58 @@
                 return variant.size === 'One Size' ? sum + variant.stock : sum;
             }, 0);
             maxQuantity = oneSizeTotalStock;
-            updateQuantityControls();
         } else {
             maxQuantity = 0;
             selectedSize = null;
-            updateQuantityControls();
         }
+
+        // Initial call to set button states correctly on page load
+        updateQuantityControls();
+
+        // --- New Logic: Handle form submission for login check ---
+        if (addToCheckoutForm) {
+            addToCheckoutForm.addEventListener('submit', function(event) {
+                if (!isAuthenticated) {
+                    event.preventDefault(); // Stop the form from submitting
+
+                    // Show the custom notification card
+                    window.showNotificationCard({
+                        type: 'info', // Or 'error'
+                        title: 'Login Diperlukan',
+                        message: 'Anda harus login untuk menambahkan produk ke keranjang atau melanjutkan pembelian.',
+                        hasActions: false, // Tidak ada tombol YES/NO
+                        onConfirm: () => {
+                            // Opsional: Redirect ke halaman login setelah user menekan OK
+                            window.location.href = '{{ route('login') }}';
+                        }
+                    });
+
+                    // Set the OK button to redirect to login
+                    const confirmBtn = document.getElementById('globalNotificationConfirmBtn');
+                    if (confirmBtn) {
+                        confirmBtn.textContent = 'Login Sekarang';
+                        confirmBtn.style.display = 'inline-block';
+                        confirmBtn.removeEventListener('click', window.hideNotificationCard); // Remove default hide
+                        confirmBtn.addEventListener('click', () => {
+                            window.hideNotificationCard();
+                            window.location.href = '{{ route('login') }}';
+                        });
+                    }
+                    const cancelBtn = document.getElementById('globalNotificationCancelBtn');
+                    if (cancelBtn) {
+                        cancelBtn.style.display = 'none'; // Hide NO button
+                    }
+                    const actionsDiv = document.getElementById('globalNotificationActions');
+                    if (actionsDiv) {
+                        actionsDiv.style.display = 'flex'; // Ensure actions div is visible for the single button
+                    }
+
+                }
+                // If authenticated, the form will submit normally
+            });
+        }
+        // --- End of New Logic ---
+
 
         function generateStarsHtml(rating) {
             let starsHtml = '';

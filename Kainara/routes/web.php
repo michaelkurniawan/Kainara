@@ -10,10 +10,8 @@ use App\Http\Controllers\User\LatestStoriesController;
 use App\Http\Controllers\User\ArtisanRegistrationController;
 use App\Http\Controllers\User\OrderController;
 use App\Http\Controllers\User\StripePaymentController;
-use App\Http\Controllers\User\ReviewController;
 use App\Http\Controllers\User\ProfileController;
 use App\Http\Controllers\User\AddressController;
-use App\Http\Controllers\User\RefundController;
 use App\Http\Controllers\User\Auth\LoginController;
 use App\Http\Controllers\User\Auth\RegisterController;
 use App\Http\Controllers\User\Auth\EmailVerificationController;
@@ -36,13 +34,8 @@ Route::get('/tentangkainara', function () {
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/gender/{gender}', [ProductController::class, 'index'])->name('products.gender.index');
-
 Route::get('/products/category/{category_name}', [ProductController::class, 'index'])->name('products.category.index');
-
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
-
-Route::get('/products/fabric/{slug}', [ProductController::class, 'showFabricProduct'])->name('products.detailkain');
-
 
 Route::get('/stories', [StoriesController::class, 'index'])->name('Stories.ListStories');
 Route::get('/stories/{slug}', [StoriesController::class, 'show'])->name('Stories.DetailStories');
@@ -51,23 +44,29 @@ Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
 Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
 
-Route::get('/checkout', [CheckoutController::class, 'showCheckoutPage'])->name('checkout.show');
-Route::post('/checkout/add', [CheckoutController::class, 'addToCheckout'])->name('checkout.add');
 
-Route::post('/order/process', [OrderController::class, 'processCheckout'])->name('order.process');
-Route::get('/order/{order}/details', [OrderController::class, 'showOrderDetails'])->name('order.details');
-Route::get('/order/{order}/success', [OrderController::class, 'showOrderSuccess'])->name('order.success');
-Route::get('/order/{order}/fail', [OrderController::class, 'showOrderFail'])->name('order.fail');
-Route::get('/order/{order}/awaiting-payment', [OrderController::class, 'showOrderAwaitingPayment'])->name('order.awaitingPayment');
-Route::post('/order/{order}/complete', [OrderController::class, 'completeOrder'])->name('order.complete');
-Route::post('/order/{order}/refund', [RefundController::class, 'requestRefund'])->name('order.refund');
-Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
-Route::get('/my-orders', [OrderController::class, 'myOrders'])->name('my.orders');
+// Apply 'auth' middleware to the routes that require login for checkout actions
+Route::middleware('auth')->group(function () {
+    Route::get('/checkout', [CheckoutController::class, 'showCheckoutPage'])->name('checkout.show');
+    Route::post('/checkout/add', [CheckoutController::class, 'addToCheckout'])->name('checkout.add'); // This is the route to protect
 
+    Route::post('/order/process', [OrderController::class, 'processCheckout'])->name('order.process');
+    Route::get('/order/{order}/details', [OrderController::class, 'showOrderDetails'])->name('order.details');
+    Route::get('/order/{order}/success', [OrderController::class, 'showOrderSuccess'])->name('order.success');
+    Route::get('/order/{order}/fail', [OrderController::class, 'showOrderFail'])->name('order.fail');
+    Route::get('/order/{order}/awaiting-payment', [OrderController::class, 'showOrderAwaitingPayment'])->name('order.awaitingPayment');
 
-Route::get('/payment/stripe/{order}', [StripePaymentController::class, 'showPaymentForm'])->name('stripe.payment.form');
-Route::post('/payment/stripe/{order}/confirm', [StripePaymentController::class, 'confirmPayment'])->name('stripe.payment.confirm');
-Route::get('/order/{order}/continue-payment', [StripePaymentController::class, 'showPaymentForm'])->name('payment.continue');
+    Route::get('/payment/stripe/{order}', [StripePaymentController::class, 'showPaymentForm'])->name('stripe.payment.form');
+    Route::post('/payment/stripe/{order}/confirm', [StripePaymentController::class, 'confirmPayment'])->name('stripe.payment.confirm');
+
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    Route::post('/address', [AddressController::class, 'store'])->name('addresses.store');
+    Route::delete('/addresses/{address}', [AddressController::class, 'destroy'])->name('addresses.destroy');
+    Route::post('/profile/picture', [ProfileController::class, 'updateProfilePicture'])->name('profile.update_picture');
+    Route::put('/profile/personal-info', [ProfileController::class, 'updatePersonalInformation'])->name('profile.update_personal_info');
+    Route::get('/my-orders', [OrderController::class, 'myOrders'])->name('my.orders');
+});
 
 
 Route::middleware(['guest'])->group(function () {
@@ -95,14 +94,3 @@ Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 've
 Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
     ->middleware(['auth', 'throttle:6,1'])
     ->name('verification.send');
-
-Route::middleware('auth')->group(function () {
-    Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-    Route::post('/address', [AddressController::class, 'store'])->name('addresses.store');
-    Route::delete('/addresses/{address}', [AddressController::class, 'destroy'])->name('addresses.destroy');
-    Route::post('/profile/picture', [ProfileController::class, 'updateProfilePicture'])->name('profile.update_picture');
-    Route::put('/profile/personal-info', [ProfileController::class, 'updatePersonalInformation'])->name('profile.update_personal_info');
-});
-});

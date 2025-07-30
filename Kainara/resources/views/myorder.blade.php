@@ -106,11 +106,14 @@
         margin-top: 15px;
         justify-content: flex-end; /* Align buttons to the right */
         width: 100%; /* Take full width */
+        align-items: center; /* Ensures vertical alignment of buttons */
     }
     .order-actions .btn {
-        padding: 8px 15px;
+        padding: 8px 15px; /* Consistent padding for all buttons */
         border-radius: 5px;
         font-size: 0.9rem;
+        flex-shrink: 0; /* Prevents buttons from shrinking if space is tight */
+        flex-grow: 0;  /* Prevents buttons from growing */
     }
     .btn-transaction-detail {
         background-color: #B6B09F;
@@ -143,6 +146,15 @@
     .btn-complete-order:disabled {
         background-color: #a7a7a7; /* Warna abu-abu saat disabled */
         cursor: not-allowed;
+    }
+    .btn-cancel-order {
+        background-color: #dc3545; /* Red color */
+        color: white;
+        border: none; /* Ensure consistency with other custom buttons */
+    }
+    .btn-cancel-order:hover {
+        background-color: #c82333; /* Darker red on hover */
+        color: white;
     }
     .empty-order-card {
         background-color: #fff;
@@ -264,6 +276,12 @@
                     <div class="order-actions">
                         @if ($order->status === 'Awaiting Payment')
                             <a href="{{ route('payment.continue', $order->id) }}" class="btn btn-track">Continue Payment</a>
+                            {{-- "Cancel Order" button within its own form, with inline flex style for alignment --}}
+                            <form action="{{ route('order.cancel', $order->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order? This action cannot be undone and product stock will be returned.');" style="display: flex;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-cancel-order">Cancel Order</button>
+                            </form>
                         @elseif ($order->status === 'Delivered')
                             {{-- Tombol "Complete Order" memicu modal --}}
                             <button type="button" class="btn btn-complete-order" data-bs-toggle="modal" data-bs-target="#reviewModal" data-order-id="{{ $order->id }}">

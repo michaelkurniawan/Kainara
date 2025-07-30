@@ -39,7 +39,7 @@ class OrderController extends Controller
 
         $cartItems = Session::get('cart', []);
         if (empty($cartItems)) {
-            return redirect()->route('checkout.show')->with('error', 'Keranjang Anda kosong. Mohon tambahkan item sebelum checkout.');
+            return redirect()->route('checkout.show')->with('error', 'Your cart is empty. Please add items before checking out.');
         }
 
         DB::beginTransaction();
@@ -51,7 +51,7 @@ class OrderController extends Controller
                 $product = Product::find($item['product_id']);
                 if (!$product) {
                     DB::rollBack();
-                    return redirect()->back()->with('error', 'Satu atau lebih produk di keranjang tidak ditemukan.')->withInput();
+                    return redirect()->back()->with('error', 'One or more products in your cart were not found.')->withInput();
                 }
 
                 $itemPrice = $product->price;
@@ -61,20 +61,20 @@ class OrderController extends Controller
                     $variant = ProductVariant::find($item['product_variant_id']);
                     if (!$variant) {
                         DB::rollBack();
-                        return redirect()->back()->with('error', 'Satu atau lebih varian produk di keranjang tidak ditemukan.')->withInput();
+                        return redirect()->back()->with('error', 'One or more product variants in your cart were not found.')->withInput();
                     }
                     $itemPrice = $variant->price ?: $product->price;
                     $stockAvailable = $variant->stock;
 
                     if ($stockAvailable < $item['quantity']) {
                         DB::rollBack();
-                        return redirect()->back()->with('error', 'Stok tidak cukup untuk ' . $product->name . ' (' . $variant->size . '). Tersedia: ' . $stockAvailable)->withInput();
+                        return redirect()->back()->with('error', 'Insufficient stock for ' . $product->name . ' (' . $variant->size . '). Available: ' . $stockAvailable)->withInput();
                     }
                     $variant->decrement('stock', $item['quantity']);
                 } else {
                     if ($stockAvailable < $item['quantity']) {
                         DB::rollBack();
-                        return redirect()->back()->with('error', 'Stok tidak cukup untuk ' . $product->name . '. Tersedia: ' . $stockAvailable)->withInput();
+                        return redirect()->back()->with('error', 'Insufficient stock for ' . $product->name . '. Available: ' . $stockAvailable)->withInput();
                     }
                     $product->decrement('stock', $item['quantity']);
                 }
@@ -86,12 +86,12 @@ class OrderController extends Controller
 
             if (abs($validatedData['total_amount'] - $grandTotalCalculated) > 0.01) {
                 DB::rollBack();
-                Log::warning('Jumlah total frontend tidak cocok dengan perhitungan backend.', [
+                Log::warning('Frontend total amount does not match backend calculation.', [
                     'frontend_total' => $validatedData['total_amount'],
                     'backend_total' => $grandTotalCalculated,
                     'user_id' => Auth::id(),
                 ]);
-                return redirect()->back()->with('error', 'Terjadi perbedaan harga. Mohon coba lagi atau refresh halaman.')->withInput();
+                return redirect()->back()->with('error', 'There was a price discrepancy. Please try again or refresh the page.')->withInput();
             }
 
             $shippingAddressData = [
@@ -99,7 +99,7 @@ class OrderController extends Controller
                 'name' => $request->input('user_name_input'),
                 'phone' => $request->input('user_phone_input'),
                 'street' => $request->input('street_input'),
-                'sub_district' => $request->input('sub_district_input'), // Ini seharusnya dari input
+                'sub_district' => $request->input('sub_district_input'), // This should be from input
                 'district' => $request->input('district_input'),
                 'city' => $request->input('city_input'),
                 'province' => $request->input('province_input'),
@@ -129,7 +129,7 @@ class OrderController extends Controller
             foreach ($cartItems as $itemData) {
                 $product = Product::find($itemData['product_id']);
                 $productName = $product ? $product->name : 'Unknown Product';
-                $productImage = $product ? $product->image : '[https://placehold.co/80x80/cccccc/333333?text=No+Image](https://placehold.co/80x80/cccccc/333333?text=No+Image)';
+                $productImage = $product ? $product->image : 'https://placehold.co/80x80/cccccc/333333?text=No+Image';
 
                 $actualPrice = $product->price;
                 $variantSize = $itemData['variant_size'] ?? null;
@@ -163,9 +163,9 @@ class OrderController extends Controller
             if ($validatedData['payment_method'] === 'credit_card') {
                 return redirect()->route('stripe.payment.form', $order->id);
             } elseif ($validatedData['payment_method'] === 'transfer_bank') {
-                return redirect()->route('order.awaitingPayment', $order->id)->with('info', 'Mohon selesaikan transfer bank dalam 24 jam.');
+                return redirect()->route('order.awaitingPayment', $order->id)->with('info', 'Please complete the bank transfer within 24 hours.');
             } else {
-                return redirect()->route('order.awaitingPayment', $order->id)->with('info', 'Mohon ikuti instruksi untuk metode pembayaran yang Anda pilih.');
+                return redirect()->route('order.awaitingPayment', $order->id)->with('info', 'Please follow the instructions for your chosen payment method.');
             }
 
         } catch (ValidationException $e) {
@@ -174,14 +174,14 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Order processing failed: ' . $e->getMessage(), ['request' => $request->all()]);
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat memproses pesanan. Mohon coba lagi. ' . $e->getMessage())->withInput();
+            return redirect()->back()->with('error', 'An error occurred while processing your order. Please try again. ' . $e->getMessage())->withInput();
         }
     }
 
     public function showOrderDetails(Order $order)
     {
         if (Auth::id() !== $order->user_id) {
-            abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk melihat pesanan ini.');
+            abort(403, 'Access Denied. You do not have permission to view this order.');
         }
 
         $order->load(['payment', 'orderItems.productVariant']);
@@ -191,7 +191,7 @@ class OrderController extends Controller
     public function showOrderSuccess(Order $order)
     {
         if (Auth::id() !== $order->user_id) {
-            abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk melihat pesanan ini.');
+            abort(403, 'Access Denied. You do not have permission to view this order.');
         }
         return view('order.success', compact('order'));
     }
@@ -199,7 +199,7 @@ class OrderController extends Controller
     public function showOrderFail(Order $order)
     {
         if (Auth::id() !== $order->user_id) {
-            abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk melihat pesanan ini.');
+            abort(403, 'Access Denied. You do not have permission to view this order.');
         }
         return view('order.fail', compact('order'));
     }
@@ -207,7 +207,7 @@ class OrderController extends Controller
     public function showOrderAwaitingPayment(Order $order)
     {
         if (Auth::id() !== $order->user_id) {
-            abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk melihat pesanan ini.');
+            abort(403, 'Access Denied. You do not have permission to view this order.');
         }
         return view('order.awaiting_payment', compact('order'));
     }
@@ -215,7 +215,7 @@ class OrderController extends Controller
     public function myOrders()
     {
         if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Anda harus login untuk melihat pesanan Anda.');
+            return redirect()->route('login')->with('error', 'You must be logged in to view your orders.');
         }
 
         $user = Auth::user();
@@ -231,7 +231,7 @@ class OrderController extends Controller
     public function completeOrder(Order $order)
     {
         if (Auth::id() !== $order->user_id) {
-            abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk mengubah pesanan ini.');
+            abort(403, 'Access Denied. You do not have permission to modify this order.');
         }
 
         if ($order->status === 'Delivered') {
@@ -239,13 +239,57 @@ class OrderController extends Controller
                 $order->status = 'Completed';
                 $order->save();
 
-                return redirect()->back()->with('success', 'Pesanan telah berhasil diselesaikan!');
+                return redirect()->back()->with('success', 'Order has been successfully completed!');
             } catch (\Exception $e) {
-                Log::error('Gagal menyelesaikan pesanan: ' . $e->getMessage(), ['order_id' => $order->id, 'user_id' => Auth::id()]);
-                return redirect()->back()->with('error', 'Terjadi kesalahan saat mencoba menyelesaikan pesanan. Silakan coba lagi.');
+                Log::error('Failed to complete order: ' . $e->getMessage(), ['order_id' => $order->id, 'user_id' => Auth::id()]);
+                return redirect()->back()->with('error', 'An error occurred while trying to complete the order. Please try again.');
             }
         }
 
-        return redirect()->back()->with('error', 'Pesanan tidak dapat diselesaikan dari status saat ini (' . $order->status . ').');
+        return redirect()->back()->with('error', 'Order cannot be completed from its current status (' . $order->status . ').');
+    }
+
+    // New method to cancel an order
+    public function cancelOrder(Order $order)
+    {
+        if (Auth::id() !== $order->user_id) {
+            return back()->with('error', 'Access Denied. You do not have permission to cancel this order.');
+        }
+
+        if ($order->status !== 'Awaiting Payment') {
+            return back()->with('error', 'This order cannot be canceled as its status is not "Awaiting Payment".');
+        }
+
+        DB::beginTransaction();
+        try {
+            foreach ($order->orderItems as $item) {
+                if ($item->product_variant_id) {
+                    $variant = ProductVariant::find($item->product_variant_id);
+                    if ($variant) {
+                        $variant->increment('stock', $item->quantity);
+                    }
+                } else {
+                    $product = Product::find($item->product_id);
+                    if ($product) {
+                        $product->increment('stock', $item->quantity);
+                    }
+                }
+            }
+
+            $order->status = 'Canceled';
+            $order->save();
+            // Or you can completely delete the order if desired: $order->delete();
+            // If deleting, orderItems will be deleted automatically if cascade delete is set up,
+            // otherwise you'd need to delete order items explicitly.
+            // $order->orderItems()->delete();
+            // $order->delete();
+
+            DB::commit();
+            return redirect()->route('order.myOrders')->with('success', 'Order has been successfully canceled and product stock returned.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Order cancellation failed: ' . $e->getMessage(), ['order_id' => $order->id, 'user_id' => Auth::id()]);
+            return back()->with('error', 'An error occurred while canceling the order. Please try again.');
+        }
     }
 }

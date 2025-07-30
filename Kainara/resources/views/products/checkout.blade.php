@@ -223,15 +223,20 @@
                         <div class="address-box">
                             {{-- Kontainer baru untuk address label --}}
                             <div class="address-label-container">
+                                {{-- Check if $address is not null before accessing its properties --}}
                                 <p class="fw-semibold fs-5" id="currentAddressType">{{ $address['label'] ?? '' }}</p>
                             </div>
                             <div class="vr mx-3"></div>
                             {{-- Perhatikan: div ini tidak lagi memiliki d-flex w-100 justify-content-between align-items-start --}}
                             {{-- Karena align-items: center sudah diatur di parent .address-box --}}
                             <div class="text-start flex-grow-1" id="currentAddressDetails">
-                                <p class="text-muted mb-0" data-address-line="address">{{ $address['address'] ?? '' }}{{ $address['sub_district'] ? ', ' . $address['sub_district'] : '' }}</p>
-                                <p class="text-muted mb-0" data-address-line="city-province">{{ $address['city'] ?? '' }}{{ $address['city'] && $address['province'] ? ', ' : '' }}{{ $address['province'] ?? '' }}</p>
-                                <p class="text-muted mb-0" data-address-line="country-postal">{{ $address['country'] ?? '' }} {{ $address['postal_code'] ?? '' }}</p>
+                                @if ($address) {{-- Add this check --}}
+                                    <p class="text-muted mb-0" data-address-line="address">{{ $address['address'] ?? '' }}{{ $address['sub_district'] ? ', ' . $address['sub_district'] : '' }}</p>
+                                    <p class="text-muted mb-0" data-address-line="city-province">{{ $address['city'] ?? '' }}{{ $address['city'] && $address['province'] ? ', ' : '' }}{{ $address['province'] ?? '' }}</p>
+                                    <p class="text-muted mb-0" data-address-line="country-postal">{{ $address['country'] ?? '' }} {{ $address['postal_code'] ?? '' }}</p>
+                                @else
+                                    <p class="text-muted mb-0">No shipping address selected.</p>
+                                @endif {{-- End of check --}}
                             </div>
                             {{-- Kontainer baru untuk tombol Change --}}
                             <div class="btn-ubah-text-only-container">
@@ -269,6 +274,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="phone" class="form-label">Phone</label>
+                                    {{-- Use optional chaining for $address['phone'] to avoid errors if $address is null --}}
                                     <input type="tel" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" placeholder="e.g., 081234567890" value="{{ old('phone', Auth::user()->phone ?? ($address['phone'] ?? '')) }}">
                                     @error('phone')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -276,14 +282,16 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="first_name" class="form-label">First Name</label>
-                                    <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="first_name" name="first_name" placeholder="John" value="{{ old('first_name', Auth::user()->first_name ?? ($address['recipient_name'] ? explode(' ', $address['recipient_name'])[0] : '')) }}">
+                                    {{-- Safely access $address['recipient_name'] --}}
+                                    <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="first_name" name="first_name" placeholder="John" value="{{ old('first_name', Auth::user()->first_name ?? ($address && $address['recipient_name'] ? explode(' ', $address['recipient_name'])[0] : '')) }}">
                                     @error('first_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label for="last_name" class="form-label">Last Name</label>
-                                    <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="last_name" name="last_name" placeholder="Doe" value="{{ old('last_name', Auth::user()->last_name ?? (isset(explode(' ', $address['recipient_name'])[1]) ? explode(' ', $address['recipient_name'])[1] : '')) }}">
+                                    {{-- Safely access $address['recipient_name'] --}}
+                                    <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="last_name" name="last_name" placeholder="Doe" value="{{ old('last_name', Auth::user()->last_name ?? ($address && isset(explode(' ', $address['recipient_name'])[1]) ? explode(' ', $address['recipient_name'])[1] : '')) }}">
                                     @error('last_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -439,7 +447,7 @@
         } else {
             // If no address is set (e.g., brand new user), populate with Auth user's info if available
             document.getElementById('currentAddressType').textContent = ''; // Kosongkan jika tidak ada alamat
-            document.getElementById('email').value = '{{ Auth::user()->email ?? '' }}';
+        document.getElementById('email').value = '{{ Auth::user()->email ?? '' }}';
             document.getElementById('phone').value = '{{ Auth::user()->phone ?? '' }}';
             document.getElementById('first_name').value = '{{ Auth::user()->first_name ?? '' }}';
             document.getElementById('last_name').value = '{{ Auth::user()->last_name ?? '' }}';
