@@ -1,20 +1,21 @@
 <?php
 
-namespace App\Http\Controllers\User; // Keep this namespace if your ReviewController is in User namespace
+namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
-use App\Models\ProductReview; // Make sure this model is correctly named ProductReview
+use App\Models\ProductReview;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException; // Penting: Tambahkan ini
 
 class ReviewController extends Controller
 {
     /**
-     * Store a new product review. The order status update is handled by OrderController@completeOrder.
+     * Store a new product review and complete the order.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
@@ -45,18 +46,12 @@ class ReviewController extends Controller
             }
 
             // 3. Status Pesanan: Pastikan pesanan sudah berstatus 'Delivered'
-            // This check is duplicated with the `completeOrder` method, but it's good to have it here
-            // to prevent creating a review for an invalid order status prematurely.
             if ($order->status !== 'Delivered') {
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => 'Pesanan tidak dapat direview. Hanya pesanan yang sudah Delivered yang bisa direview.'], 400);
             }
 
-            // 4. Periksa apakah sudah ada review untuk **setiap produk** dalam pesanan ini.
-            // Loop melalui setiap item dalam pesanan untuk membuat atau memperbarui review produk.
-            // Asumsi: Setiap item dalam pesanan bisa memiliki review terpisah, atau jika desainnya
-            // 1 review per order, maka hanya ambil produk pertama atau produk utama jika ada.
-            // Disesuaikan dengan asumsi yang Anda miliki di Blade: 1 review per order untuk produk pertama.
+            // 4. Determine which product to review (assuming one review per order for the first product)
             $productToReview = $order->orderItems->first()->product ?? null;
 
             if (is_null($productToReview)) {
@@ -95,18 +90,20 @@ class ReviewController extends Controller
                 ProductReview::create($reviewData);
             }
 
+            // 6. Update Order Status to 'Completed' AFTER review is successfully saved
+            $order->status = 'Completed';
+            $order->save();
+
             // Commit transaksi jika semua operasi berhasil
             DB::commit();
 
-            // **Important:** We are NOT setting order status to 'Completed' here.
-            // The JavaScript on myorder.blade.php will call the 'order.complete' route
-            // *after* receiving a success response from this review.store route.
-            return response()->json(['success' => true, 'message' => 'Review berhasil dikirim!']);
+            return response()->json(['success' => true, 'message' => 'Review berhasil dikirim dan pesanan telah diselesaikan!']);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) { // Tangani ValidationException secara eksplisit
             DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->validator->errors()->first()], 422);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             DB::rollBack();
             Log::error('Review submission failed: ' . $e->getMessage(), [
                 'order_id' => $orderId,

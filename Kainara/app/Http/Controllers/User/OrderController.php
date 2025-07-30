@@ -99,7 +99,7 @@ class OrderController extends Controller
                 'name' => $request->input('user_name_input'),
                 'phone' => $request->input('user_phone_input'),
                 'street' => $request->input('street_input'),
-                'sub_district' => $request->input('sub_district_input'), // This should be from input
+                'sub_district' => $request->input('sub_district_input'),
                 'district' => $request->input('district_input'),
                 'city' => $request->input('city_input'),
                 'province' => $request->input('province_input'),
@@ -118,8 +118,8 @@ class OrderController extends Controller
                 'shipping_recipient_name' => $shippingAddressData['name'],
                 'shipping_phone' => $shippingAddressData['phone'],
                 'shipping_address' => $shippingAddressData['street'] .
-                                             ($shippingAddressData['sub_district'] ? ', ' . $shippingAddressData['sub_district'] : '') .
-                                             ($shippingAddressData['district'] ? ', ' . $shippingAddressData['district'] : ''),
+                                        ($shippingAddressData['sub_district'] ? ', ' . $shippingAddressData['sub_district'] : '') .
+                                        ($shippingAddressData['district'] ? ', ' . $shippingAddressData['district'] : ''),
                 'shipping_country' => $shippingAddressData['country'],
                 'shipping_city' => $shippingAddressData['city'],
                 'shipping_province' => $shippingAddressData['province'],
@@ -293,5 +293,53 @@ class OrderController extends Controller
             Log::error('Order cancellation failed: ' . $e->getMessage(), ['order_id' => $order->id, 'user_id' => Auth::id()]);
             return back()->with('error', 'An error occurred while canceling the order. Please try again.');
         }
+    }
+
+    /**
+     * Fetches order details for the transaction detail modal.
+     *
+     * @param  \App\Models\Order  $order
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function showOrderModalDetails(Order $order)
+    {
+        if (Auth::id() !== $order->user_id) {
+            return response()->json(['message' => 'Access Denied. You do not have permission to view this order.'], 403);
+        }
+
+        // Eager load relationships needed for the modal
+        $order->load(['orderItems.product', 'orderItems.productVariant', 'payment']);
+
+        // Prepare order items data for JSON response
+        $orderItems = $order->orderItems->map(function ($item) {
+            return [
+                'product_name' => $item->product_name,
+                'quantity' => $item->quantity,
+                'price' => $item->price, // Keep as number for JS formatting
+                'variant_size' => $item->variant_size,
+                'variant_color' => $item->variant_color,
+                'product_image' => $item->product ? asset('storage/' . $item->product->image) : 'https://placehold.co/60x60/cccccc/333333?text=No+Image',
+            ];
+        });
+
+        // Return order data as JSON
+        return response()->json([
+            'order_id' => $order->id,
+            'invoice' => 'INV/' . \Carbon\Carbon::parse($order->created_at)->format('Ymd') . '/' . $order->id,
+            'order_date' => \Carbon\Carbon::parse($order->created_at)->format('d F Y'),
+            'status' => $order->status,
+            'payment_method' => ucfirst(str_replace('_', ' ', $order->payment_method)),
+            'total_amount' => $order->grand_total, // Keep as number for JS formatting
+            'subtotal' => $order->subtotal,
+            'shipping_cost' => $order->shipping_cost,
+            'shipping_recipient_name' => $order->shipping_recipient_name,
+            'shipping_phone' => $order->shipping_phone,
+            'shipping_address' => $order->shipping_address, // This field already holds the combined street/sub-district/district
+            'shipping_city' => $order->shipping_city,
+            'shipping_province' => $order->shipping_province,
+            'shipping_postal_code' => $order->shipping_postal_code,
+            'shipping_country' => $order->shipping_country,
+            'order_items' => $orderItems,
+        ]);
     }
 }

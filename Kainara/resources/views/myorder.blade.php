@@ -4,9 +4,13 @@
 
 @push('styles')
 <style>
+    :root {
+        --font-primary: 'Ancizar Serif', serif;
+        --font-secondary: 'Ancizar Serif', serif;
+    }
     body {
         font-family: 'AncizarSerif', serif;
-        background-color: #ffffff; /* Light background for the page */
+        background-color: #ffffff;
     }
     h1.display-5 {
         font-size: 4.5rem;
@@ -21,8 +25,13 @@
         margin-bottom: 20px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         display: flex;
-        flex-direction: column; /* Allow content to stack on small screens */
+        flex-direction: column;
     }
+
+    .card-order .order-card:last-child {
+        margin-bottom: 0;
+    }
+
     .order-header {
         display: flex;
         align-items: center;
@@ -44,23 +53,21 @@
         color: #888;
     }
     .order-status {
-        background-color: #e0ffe0; /* Light green for "In Delivery" */
-        color: #28a745; /* Darker green text */
+        background-color: #e0ffe0;
+        color: #28a745;
         padding: 5px 10px;
         border-radius: 5px;
         font-weight: bold;
         font-size: 0.85rem;
-        margin-left: auto; /* Push to the right */
-        text-transform: capitalize; /* Ensure status text is capitalized */
+        margin-left: auto;
+        text-transform: capitalize;
     }
 
-    /* Status-specific colors for My Order page */
-    .status-awaiting-payment { background-color: #fff3cd; color: #856404; } /* yellow */
-    .status-order-confirmed { background-color: #d1ecf1; color: #0c5460; } /* light blue */
-    .status-awaiting-shipment { background-color: #cce5ff; color: #004085; } /* blue */
-    .status-shipped { background-color: #d4edda; color: #155724; } /* green */
-    .status-delivered { background-color: #d4edda; color: #155724; } /* green */
-    /* Note: "completed", "canceled", "returned", "refunded" will not appear here based on controller logic */
+    .status-awaiting-payment { background-color: #fff3cd; color: #856404; }
+    .status-order-confirmed { background-color: #d1ecf1; color: #0c5460; }
+    .status-awaiting-shipment { background-color: #cce5ff; color: #004085; }
+    .status-shipped { background-color: #d4edda; color: #155724; }
+    .status-delivered { background-color: #d4edda; color: #155724; }
 
 
     .order-details-summary {
@@ -91,10 +98,10 @@
         margin-bottom: 3px;
     }
     .order-total {
-        margin-left: auto; /* Push to the right */
+        margin-left: auto;
         text-align: right;
         flex-shrink: 0;
-        min-width: 120px; /* Ensure space for total */
+        min-width: 120px;
     }
     .order-total strong {
         font-size: 1.3rem;
@@ -104,16 +111,23 @@
         display: flex;
         gap: 10px;
         margin-top: 15px;
-        justify-content: flex-end; /* Align buttons to the right */
-        width: 100%; /* Take full width */
-        align-items: center; /* Ensures vertical alignment of buttons */
+        justify-content: flex-end;
+        width: 100%;
+        align-items: center;
     }
+
+    .order-actions form {
+        display: inline-flex;
+        margin: 0;
+        padding: 0;
+    }
+
     .order-actions .btn {
-        padding: 8px 15px; /* Consistent padding for all buttons */
+        padding: 8px 15px;
         border-radius: 5px;
         font-size: 0.9rem;
-        flex-shrink: 0; /* Prevents buttons from shrinking if space is tight */
-        flex-grow: 0;  /* Prevents buttons from growing */
+        flex-shrink: 0;
+        flex-grow: 0;
     }
     .btn-transaction-detail {
         background-color: #B6B09F;
@@ -132,28 +146,26 @@
         background-color: rgb(117, 27, 27);
         color: white;
     }
-    /* Gaya baru untuk tombol 'Complete Order' */
     .btn-complete-order {
-        background-color: #28a745; /* Warna hijau */
+        background-color: #28a745;
         color: white;
         border: none;
     }
     .btn-complete-order:hover {
-        background-color: #218838; /* Hijau lebih gelap saat hover */
+        background-color: #218838;
         color: white;
     }
-    /* Gaya untuk tombol saat disabled */
     .btn-complete-order:disabled {
-        background-color: #a7a7a7; /* Warna abu-abu saat disabled */
+        background-color: #a7a7a7;
         cursor: not-allowed;
     }
     .btn-cancel-order {
-        background-color: #dc3545; /* Red color */
+        background-color: #dc3545;
         color: white;
-        border: none; /* Ensure consistency with other custom buttons */
+        border: none;
     }
     .btn-cancel-order:hover {
-        background-color: #c82333; /* Darker red on hover */
+        background-color: #c82333;
         color: white;
     }
     .empty-order-card {
@@ -178,30 +190,18 @@
         padding: 10px 25px;
     }
 
-    /* Gaya untuk bintang di modal review */
-    #stars .fa-star {
-        cursor: pointer;
-        transition: color 0.2s ease;
-        color: #ccc; /* Default empty star color */
-    }
-    #stars .fa-star.fas {
-        color: #ffc107; /* Filled star color */
-    }
-
-
-    /* Responsive adjustments */
     @media (max-width: 768px) {
         .order-card {
             flex-direction: column;
             align-items: flex-start;
         }
         .order-header {
-            flex-wrap: wrap; /* Allow header items to wrap */
+            flex-wrap: wrap;
         }
         .order-status {
-            margin-left: 0; /* Remove auto-margin on small screens */
-            margin-top: 10px; /* Add some space */
-            width: fit-content; /* Adjust width */
+            margin-left: 0;
+            margin-top: 10px;
+            width: fit-content;
         }
         .order-details-summary {
             flex-direction: column;
@@ -211,18 +211,17 @@
             margin-bottom: 10px;
             margin-right: 0;
         }
-        /* Perbaikan: Atur text-align dan padding-top hanya jika perlu pada breakpoint ini */
         .order-total {
             margin-left: 0;
             width: 100%;
-            text-align: left; /* Align total left on small screens */
+            text-align: left;
             margin-top: 10px;
             border-top: 1px dashed #eee;
             padding-top: 10px;
         }
         .order-actions {
             flex-direction: column;
-            align-items: stretch; /* Stretch buttons to full width */
+            align-items: stretch;
         }
     }
 </style>
@@ -240,9 +239,8 @@
                         <div class="order-info">
                             <strong>Order</strong> | {{ \Carbon\Carbon::parse($order->created_at)->format('d F Y') }}
                             <br>
-                            <span>INV/{{ \Carbon\Carbon::parse($order->created_at)->format('Ymd') }}/M/{{ $order->id }}</span>
+                            <span>INV/{{ \Carbon\Carbon::parse($order->created_at)->format('Ymd') }}/{{ $order->id }}</span>
                         </div>
-                        {{-- Make sure status is slugged for CSS class, e.g., "In Delivery" becomes "in-delivery" --}}
                         <span class="order-status status-{{ Str::slug($order->status) }}">{{ $order->status }}</span>
                     </div>
 
@@ -252,8 +250,7 @@
                             $remainingItemsCount = $order->orderItems->count() - 1;
                         @endphp
 
-                        @if ($firstItem && $firstItem->product) {{-- Ensure product relationship exists --}}
-                            {{-- Check if product image is available, otherwise use a placeholder --}}
+                        @if ($firstItem && $firstItem->product)
                             <img src="{{ asset('storage/' . $firstItem->product->image) }}" alt="{{ $firstItem->product->name }}">
                             <div class="order-item-info">
                                 <h4>{{ $firstItem->product->name }}</h4>
@@ -278,24 +275,22 @@
                     <div class="order-actions">
                         @if ($order->status === 'Awaiting Payment')
                             <a href="{{ route('payment.continue', $order->id) }}" class="btn btn-track">Continue Payment</a>
-                            {{-- "Cancel Order" button within its own form, with inline flex style for alignment --}}
-                            <form action="{{ route('order.cancel', $order->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order? This action cannot be undone and product stock will be returned.');" style="display: flex;">
+                            <form action="{{ route('order.cancel', $order->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order? This action cannot be undone and product stock will be returned.');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-cancel-order">Cancel Order</button>
                             </form>
                         @elseif ($order->status === 'Delivered')
-                            {{-- Tombol "Complete Order" memicu modal --}}
                             <button type="button" class="btn btn-complete-order" data-bs-toggle="modal" data-bs-target="#reviewModal" data-order-id="{{ $order->id }}">
                                 Complete Order
                             </button>
-                            {{-- Opsi: tetap tampilkan Transaction Detail meskipun status Delivered --}}
-                            <a href="{{ route('order.details', $order->id) }}" class="btn btn-transaction-detail">Transaction Detail</a>
+                            {{-- Change from <a> to <button> for consistent modal triggering --}}
+                            <button type="button" class="btn btn-transaction-detail" data-bs-toggle="modal" data-bs-target="#transactionDetailModal" data-order-id="{{ $order->id }}">Transaction Detail</button>
                         @else
-                            <a href="{{ route('order.details', $order->id) }}" class="btn btn-transaction-detail">Transaction Detail</a>
+                            {{-- Change from <a> to <button> for consistent modal triggering --}}
+                            <button type="button" class="btn btn-transaction-detail" data-bs-toggle="modal" data-bs-target="#transactionDetailModal" data-order-id="{{ $order->id }}">Transaction Detail</button>
                         @endif
 
-                        {{-- Tombol "Track" ditampilkan secara terpisah untuk status yang relevan --}}
                         @if (in_array($order->status, ['Awaiting Shipment', 'Shipped', 'In Delivery']))
                             <button class="btn btn-track">Track</button>
                         @endif
@@ -311,49 +306,16 @@
         </div>
     </div>
 
-    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="reviewModalLabel">Submit Review & Complete Order</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="reviewForm">
-                    @csrf
-                    <input type="hidden" name="order_id" id="review_order_id">
-                    <div class="modal-body">
-                        <div class="mb-3 text-center">
-                            <label for="rating" class="form-label fs-5">Your Rating</label>
-                            <div id="stars" class="text-warning fs-3">
-                                <i class="far fa-star" data-rating="1"></i>
-                                <i class="far fa-star" data-rating="2"></i>
-                                <i class="far fa-star" data-rating="3"></i>
-                                <i class="far fa-star" data-rating="4"></i>
-                                <i class="far fa-star" data-rating="5"></i>
-                            </div>
-                            <input type="hidden" name="rating" id="review_rating_input" value="0">
-                            <small class="form-text text-muted" id="rating-text">Click on stars to rate</small>
-                        </div>
-                        <div class="mb-3">
-                            <label for="comment" class="form-label">Your Comment (Optional)</label>
-                            <textarea class="form-control" id="comment" name="comment" rows="3" placeholder="Share your experience..."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary btn-submit-review" style="background-color: #B6B09F; border-color: #B6B09F;">Submit Review</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <x-review-modal/>
+    {{-- Assuming components.transaction-detail-modal exists and is correctly defined --}}
+    @include('components.transaction-detail-modal')
+
 @endsection
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const reviewModalElement = document.getElementById('reviewModal');
-        // Pastikan Anda menginisialisasi modal Bootstrap dengan benar
         const reviewModal = new bootstrap.Modal(reviewModalElement);
         const reviewForm = document.getElementById('reviewForm');
         const reviewOrderIdInput = document.getElementById('review_order_id');
@@ -361,7 +323,7 @@
         const starIcons = reviewModalElement.querySelectorAll('#stars i.fa-star');
         const ratingText = document.getElementById('rating-text');
         const commentInput = document.getElementById('comment');
-        const submitReviewButton = reviewForm.querySelector('.btn-submit-review'); // Ambil tombol submit
+        const submitReviewButton = reviewForm.querySelector('.btn-submit-review');
 
         let currentRating = 0;
 
@@ -370,14 +332,13 @@
             const orderId = button.dataset.orderId;
             reviewOrderIdInput.value = orderId;
 
-            // Reset modal fields for a fresh entry
             currentRating = 0;
             reviewRatingInput.value = 0;
             updateStarsDisplay(0);
             commentInput.value = '';
             ratingText.textContent = 'Click on stars to rate';
-            submitReviewButton.disabled = false; // Pastikan tombol aktif saat modal dibuka
-            submitReviewButton.textContent = 'Submit Review'; // Reset teks tombol
+            submitReviewButton.disabled = false;
+            submitReviewButton.textContent = 'Submit Review';
         });
 
         function updateStarsDisplay(rating) {
@@ -418,12 +379,10 @@
                 return;
             }
 
-            submitReviewButton.disabled = true; // Nonaktifkan tombol
-            submitReviewButton.textContent = 'Submitting...'; // Ubah teks tombol
+            submitReviewButton.disabled = true;
+            submitReviewButton.textContent = 'Submitting...';
 
             const formData = new FormData(this);
-            // We'll submit the review first, and then complete the order if the review is successful.
-            // This assumes your reviews.store route handles the review submission and returns success.
             fetch('{{ route('reviews.store') }}', {
                 method: 'POST',
                 body: formData,
@@ -441,34 +400,9 @@
             })
             .then(data => {
                 if (data.success) {
-                    // Review submitted successfully, now complete the order
-                    const orderIdToComplete = reviewOrderIdInput.value;
-                    return fetch(`/orders/${orderIdToComplete}/complete`, { // Assuming this is your route for completing an order
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json' // Important for non-FormData POST
-                        },
-                        body: JSON.stringify({ _method: 'PUT' }) // Laravel expects _method for PUT/PATCH
-                    });
-                } else {
-                    throw new Error(data.message || 'Review submission failed.');
-                }
-            })
-            .then(response => {
-                return response.json().then(data => {
-                    if (!response.ok) {
-                        throw new Error(data.message || 'Server error occurred during order completion.');
-                    }
-                    return data;
-                });
-            })
-            .then(data => {
-                if (data.success) {
                     alert(data.message);
                     reviewModal.hide();
-                    window.location.reload(); // Reload the page to update order status
+                    window.location.reload();
                 } else {
                     alert('Error: ' + data.message);
                 }
@@ -482,6 +416,99 @@
                 submitReviewButton.textContent = 'Submit Review';
             });
         });
+
+        const transactionDetailModalElement = document.getElementById('transactionDetailModal');
+
+        if (transactionDetailModalElement) {
+            transactionDetailModalElement.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const orderId = button.dataset.orderId;
+
+                document.getElementById('modalOrderId').textContent = 'Loading...';
+                document.getElementById('modalInvoice').textContent = 'Loading...';
+                document.getElementById('modalOrderDate').textContent = 'Loading...';
+                document.getElementById('modalOrderStatus').textContent = 'Loading...';
+                document.getElementById('modalOrderStatus').className = 'badge';
+                document.getElementById('modalShippingNamePhone').textContent = 'Loading...';
+                document.getElementById('modalShippingAddress').textContent = 'Loading...';
+                document.getElementById('modalShippingCityProvince').textContent = 'Loading...';
+                document.getElementById('modalShippingCountryPostal').textContent = 'Loading...';
+                document.getElementById('modalOrderItems').innerHTML = '<div class="text-center py-4 text-muted">Loading items...</div>';
+                document.getElementById('modalTotalAmount').textContent = 'Loading...';
+
+
+                fetch(`/orders/${orderId}/modal-details`)
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().catch(() => {
+                                throw new Error(`HTTP error! Status: ${response.status} - Could not parse error message.`);
+                            }).then(errorData => {
+                                throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        document.getElementById('modalOrderId').textContent = data.order_id;
+                        document.getElementById('modalInvoice').textContent = data.invoice;
+                        document.getElementById('modalOrderDate').textContent = data.order_date;
+
+                        const statusBadge = document.getElementById('modalOrderStatus');
+                        statusBadge.textContent = data.status;
+                        statusBadge.className = 'badge';
+                        statusBadge.classList.add(`status-${data.status.toLowerCase().replace(/\s/g, '-')}`);
+
+
+                        document.getElementById('modalShippingNamePhone').textContent = `${data.shipping_recipient_name} (${data.shipping_phone})`;
+                        document.getElementById('modalShippingAddress').textContent = data.shipping_address;
+                        document.getElementById('modalShippingCityProvince').textContent = `${data.shipping_city}, ${data.shipping_province}`;
+                        document.getElementById('modalShippingCountryPostal').textContent = `${data.shipping_country} ${data.shipping_postal_code}`;
+
+                        const orderItemsContainer = document.getElementById('modalOrderItems');
+                        orderItemsContainer.innerHTML = '';
+                        if (data.order_items && data.order_items.length > 0) {
+                            data.order_items.forEach(item => {
+                                const formattedPrice = new Intl.NumberFormat('id-ID').format(item.price);
+                                const formattedSubtotal = new Intl.NumberFormat('id-ID').format(item.quantity * item.price);
+
+                                const itemHtml = `
+                                    <div class="list-group-item d-flex align-items-center">
+                                        <img src="${item.product_image}" alt="${item.product_name}" class="me-3" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
+                                        <div class="flex-grow-1">
+                                            <h5 class="mb-1">${item.product_name}</h5>
+                                            ${item.variant_size || item.variant_color ? `<small class="text-muted">Variant: ${item.variant_size ? item.variant_size : ''}${item.variant_size && item.variant_color ? ' / ' : ''}${item.variant_color ? item.variant_color : ''}</small><br>` : ''}
+                                            <small class="text-muted">${item.quantity} x IDR ${formattedPrice}</small>
+                                        </div>
+                                        <div>
+                                            <strong>IDR ${formattedSubtotal}</strong>
+                                        </div>
+                                    </div>
+                                `;
+                                orderItemsContainer.insertAdjacentHTML('beforeend', itemHtml);
+                            });
+                        } else {
+                            orderItemsContainer.innerHTML = '<div class="text-center py-4 text-muted">No items found for this order.</div>';
+                        }
+
+                        document.getElementById('modalTotalAmount').textContent = `IDR ${new Intl.NumberFormat('id-ID').format(data.total_amount)}`;
+
+                    })
+                    .catch(error => {
+                        console.error('Error fetching transaction details:', error);
+                        document.getElementById('modalOrderId').textContent = 'Error loading data.';
+                        document.getElementById('modalInvoice').textContent = '';
+                        document.getElementById('modalOrderDate').textContent = '';
+                        document.getElementById('modalOrderStatus').textContent = 'Error';
+                        document.getElementById('modalOrderStatus').className = 'badge badge-danger';
+                        document.getElementById('modalShippingNamePhone').textContent = 'Error loading data.';
+                        document.getElementById('modalShippingAddress').textContent = '';
+                        document.getElementById('modalShippingCityProvince').textContent = '';
+                        document.getElementById('modalShippingCountryPostal').textContent = '';
+                        document.getElementById('modalOrderItems').innerHTML = `<div class="alert alert-danger text-center">Failed to load transaction details: ${error.message}. Please try again.</div>`;
+                        document.getElementById('modalTotalAmount').textContent = 'Error';
+                    });
+            });
+        }
     });
 </script>
 @endpush

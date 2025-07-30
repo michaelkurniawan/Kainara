@@ -123,6 +123,7 @@
 
     {{-- Container for all order cards, adjusted margin top --}}
     <div class="card-order-container mt-2">
+        {{-- Loop through $userOrders as passed from profile.blade.php --}}
         @forelse ($userOrders as $order)
             @php
                 $firstItem = $order->orderItems->first();
@@ -154,12 +155,15 @@
                 data-bs-toggle="modal"
                 data-bs-target="#transactionDetailModal"
                 style="cursor: pointer;" {{-- Add cursor pointer to indicate clickability --}}
+                {{-- Data-order attribute for the modal. It will be parsed by JS in profile.blade.php --}}
                 data-order="{{ json_encode([
                     'id' => $order->id,
                     'invoice' => 'INV/' . \Carbon\Carbon::parse($order->created_at)->format('Ymd') . '/' . $order->id,
                     'order_date' => \Carbon\Carbon::parse($order->created_at)->format('d F Y'),
                     'status' => $order->status,
-                    'total_amount' => 'IDR ' . number_format($order->grand_total, 0, ',', '.'),
+                    'total_amount' => 'IDR ' . number_format($order->grand_total, 0, ',', '.'), // Format for display
+                    'subtotal' => 'IDR ' . number_format($order->subtotal, 0, ',', '.'),
+                    'shipping_cost' => 'IDR ' . number_format($order->shipping_cost, 0, ',', '.'),
                     'shipping_address' => [
                         'recipient_name' => $order->shipping_recipient_name ?? 'N/A',
                         'phone' => $order->shipping_phone ?? 'N/A',
@@ -173,8 +177,10 @@
                         return [
                             'product_name' => $item->product->name ?? 'Unknown Product',
                             'quantity' => $item->quantity,
-                            'price' => 'IDR ' . number_format($item->price, 0, ',', '.'),
+                            'price' => 'IDR ' . number_format($item->price, 0, ',', '.'), // Format for display
                             'image' => asset('storage/' . ($item->product->image ?? 'images/default-product.png')),
+                            'variant_size' => $item->variant_size, // Include variants if available
+                            'variant_color' => $item->variant_color, // Include variants if available
                         ];
                     })->toArray(),
                 ]) }}">

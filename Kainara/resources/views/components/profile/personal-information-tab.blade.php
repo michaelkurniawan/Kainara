@@ -1,3 +1,52 @@
+<div class="tab-pane fade show active" id="personal-info" role="tabpanel" aria-labelledby="personal-info-tab">
+    <div class="addresses-header d-flex justify-content-between align-items-center mb-4">
+        <h3 class="personal-info-title mb-0 font-serif-medium">My Account</h3>
+    </div>
+    <hr class="mb-4"> {{-- Garis pemisah --}}
+
+    <div class="personal-info-section">
+        {{-- Kolom Kiri: Private Info --}}
+        <div class="personal-info-column">
+            <h4 class="personal-info-subtitle">
+                Private Info
+                {{-- Pencil icon now triggers the modal --}}
+                <button type="button" class="btn btn-sm btn-address-action" data-bs-toggle="modal" data-bs-target="#editPersonalInfoModal">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+            </h4>
+            <div class="personal-info-item">
+                <span class="personal-info-label font-serif-medium">First Name</span>
+                <p class="personal-info-value font-serif-medium">{{ $user->first_name }}</p>
+            </div>
+            <div class="personal-info-item">
+                <span class="personal-info-label font-serif-medium">Last Name</span>
+                <p class="personal-info-value font-serif-medium">{{ $user->last_name }}</p>
+            </div>
+            <div class="personal-info-item">
+                <span class="personal-info-label font-serif-medium">Date of Birth</span>
+                <p class="personal-info-value font-serif-medium">{{ $user->dob ? $user->dob->format('d F Y') : 'N/A' }}</p>
+            </div>
+        </div>
+
+        <div class="separator"></div>
+
+        {{-- Kolom Kanan: Profile Info --}}
+        <div class="personal-info-column">
+            <h4 class="personal-info-subtitle font-serif-medium">Profile Info</h4>
+            <div class="personal-info-item">
+                <span class="personal-info-label font-serif-medium">Email</span>
+                <p class="personal-info-value font-serif-medium">{{ $user->email }}</p>
+            </div>
+            <div class="personal-info-item mt-4">
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-logout font-serif-medium">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('styles')
 <style>
     /* New styles for Personal Information tab */
@@ -68,54 +117,10 @@
         border-left: 0.1px #000000 solid;
         opacity: 30%;
     }
+
+    /* NEW: Cursor style for DOB input */
+    #edit_personal_dob {
+        cursor: text; /* Ensures an i-beam cursor */
+    }
 </style>
 @endpush
-
-<div class="tab-pane fade show active" id="personal-info" role="tabpanel" aria-labelledby="personal-info-tab">
-    <div class="addresses-header d-flex justify-content-between align-items-center mb-4">
-        <h3 class="personal-info-title mb-0 font-serif-medium">My Account</h3>
-    </div>
-    <hr class="mb-4"> {{-- Garis pemisah --}}
-
-    <div class="personal-info-section">
-        {{-- Kolom Kiri: Private Info --}}
-        <div class="personal-info-column">
-            <h4 class="personal-info-subtitle">
-                Private Info
-                {{-- Pencil icon now triggers the modal --}}
-                <button type="button" class="btn btn-sm btn-address-action" data-bs-toggle="modal" data-bs-target="#editPersonalInfoModal">
-                    <i class="fas fa-pencil-alt"></i>
-                </button>
-            </h4>
-            <div class="personal-info-item">
-                <span class="personal-info-label font-serif-medium">First Name</span>
-                <p class="personal-info-value font-serif-medium">{{ $user->first_name }}</p>
-            </div>
-            <div class="personal-info-item">
-                <span class="personal-info-label font-serif-medium">Last Name</span>
-                <p class="personal-info-value font-serif-medium">{{ $user->last_name }}</p>
-            </div>
-            <div class="personal-info-item">
-                <span class="personal-info-label font-serif-medium">Date of Birth</span>
-                <p class="personal-info-value font-serif-medium">{{ $user->dob ? $user->dob->format('d F Y') : 'N/A' }}</p>
-            </div>
-        </div>
-
-        <div class="separator"></div>
-
-        {{-- Kolom Kanan: Profile Info --}}
-        <div class="personal-info-column">
-            <h4 class="personal-info-subtitle font-serif-medium">Profile Info</h4>
-            <div class="personal-info-item">
-                <span class="personal-info-label font-serif-medium">Email</span>
-                <p class="personal-info-value font-serif-medium">{{ $user->email }}</p>
-            </div>
-            <div class="personal-info-item mt-4">
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn btn-logout font-serif-medium">Logout</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>

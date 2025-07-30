@@ -12,6 +12,7 @@ use App\Http\Controllers\User\OrderController;
 use App\Http\Controllers\User\StripePaymentController;
 use App\Http\Controllers\User\ProfileController;
 use App\Http\Controllers\User\AddressController;
+use App\Http\Controllers\User\ReviewController;
 use App\Http\Controllers\User\Auth\LoginController;
 use App\Http\Controllers\User\Auth\RegisterController;
 use App\Http\Controllers\User\Auth\EmailVerificationController;
@@ -55,7 +56,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/my-orders/{order}/cancel', [OrderController::class, 'cancelOrder'])->name('order.cancel');
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::get('/my-orders', [OrderController::class, 'myOrders'])->name('my.orders');
-
+    Route::get('/orders/{order}/modal-details', [OrderController::class, 'showOrderModalDetails'])->name('order.modal.details');
 
     Route::get('/payment/stripe/{order}', [StripePaymentController::class, 'showPaymentForm'])->name('stripe.payment.form');
     Route::post('/payment/stripe/{order}/confirm', [StripePaymentController::class, 'confirmPayment'])->name('stripe.payment.confirm');

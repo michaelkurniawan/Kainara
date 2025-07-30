@@ -167,7 +167,6 @@
         border-color: #AD9D6D;
         box-shadow: 0 0 0 0.25rem rgba(173, 157, 109, 0.25);
     }
-
 </style>
 @endpush
 
@@ -216,17 +215,10 @@
     </ul>
 
     <div class="tab-content" id="profileTabContent">
-        {{-- Tab Pane: Personal Information (Component) --}}
         @include('components.profile.personal-information-tab', ['user' => $user])
-
-        {{-- Tab Pane: Order History (Component) --}}
-        {{-- FIX: Changed $userOrders to $userOrdersHistory --}}
+        {{-- IMPORTANT: Pass the correct variable name to the partial --}}
         @include('components.profile.order-history-tab', ['userOrders' => $userOrdersHistory])
-
-        {{-- Tab Pane: Addresses (Component) --}}
         @include('components.profile.addresses-tab', ['userAddresses' => $userAddresses])
-
-        {{-- Tab Pane: Help & Support (Component) --}}
         @include('components.profile.help-support-tab')
     </div>
 </div>
@@ -235,6 +227,7 @@
 @include('components.add-address-modal', ['user' => $user])
 @include('components.edit-address-modal')
 @include('components.edit-personal-info-modal', ['user' => $user])
+{{-- The transaction detail modal is now included here directly for consistency --}}
 @include('components.transaction-detail-modal')
 @endsection
 
@@ -309,7 +302,6 @@
 
                 document.getElementById('edit_personal_first_name').value = user.first_name || '';
                 document.getElementById('edit_personal_last_name').value = user.last_name || '';
-                document.getElementById('edit_personal_email').value = user.email || '';
                 // Format DOB for input type="date"
                 if (user.dob) {
                     const dobDate = new Date(user.dob);
@@ -439,52 +431,65 @@
         });
     });
 
+    // --- Transaction Detail Modal Logic for PROFILE page ---
+    // This logic runs on profile.blade.php
     document.addEventListener('DOMContentLoaded', function () {
-    const transactionDetailModal = document.getElementById('transactionDetailModal');
-    if (transactionDetailModal) {
-        transactionDetailModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget; // Button that triggered the modal
-            const orderData = JSON.parse(button.getAttribute('data-order'));
+        const transactionDetailModal = document.getElementById('transactionDetailModal');
+        if (transactionDetailModal) {
+            transactionDetailModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget; // Button that triggered the modal
+                // Get the order data directly from the data-order attribute of the button
+                // Make sure the data-order attribute is present and correctly JSON encoded on the button
+                const orderData = JSON.parse(button.getAttribute('data-order'));
 
-            // Populate Order Information
-            document.getElementById('modalOrderId').textContent = orderData.id;
-            document.getElementById('modalInvoice').textContent = orderData.invoice;
-            document.getElementById('modalOrderDate').textContent = orderData.order_date;
+                // Populate Order Information
+                document.getElementById('modalOrderId').textContent = orderData.id;
+                document.getElementById('modalInvoice').textContent = orderData.invoice;
+                document.getElementById('modalOrderDate').textContent = orderData.order_date;
 
-            const modalOrderStatus = document.getElementById('modalOrderStatus');
-            modalOrderStatus.textContent = orderData.status;
-            // Remove previous status classes and add the new one
-            modalOrderStatus.className = 'badge order-status'; // Reset classes
-            modalOrderStatus.classList.add(`status-${orderData.status.toLowerCase().replace(/\s/g, '-')}`);
+                const modalOrderStatus = document.getElementById('modalOrderStatus');
+                modalOrderStatus.textContent = orderData.status;
+                // Remove previous status classes and add the new one
+                modalOrderStatus.className = 'badge order-status'; // Reset classes
+                // Use slugged status for CSS class, ensure it matches your CSS
+                modalOrderStatus.classList.add(`status-${orderData.status.toLowerCase().replace(/\s/g, '-')}`);
 
 
-            // Populate Shipping Address
-            const shippingAddress = orderData.shipping_address;
-            document.getElementById('modalShippingNamePhone').innerHTML = `<strong>${shippingAddress.recipient_name}</strong> | ${shippingAddress.phone}`;
-            document.getElementById('modalShippingAddress').textContent = shippingAddress.address;
-            document.getElementById('modalShippingCityProvince').textContent = `${shippingAddress.city}, ${shippingAddress.province}`;
-            document.getElementById('modalShippingCountryPostal').textContent = `${shippingAddress.country} ${shippingAddress.postal_code}`;
+                // Populate Shipping Address
+                const shippingAddress = orderData.shipping_address;
+                document.getElementById('modalShippingNamePhone').innerHTML = `<strong>${shippingAddress.recipient_name}</strong> | ${shippingAddress.phone}`;
+                document.getElementById('modalShippingAddress').textContent = shippingAddress.address;
+                document.getElementById('modalShippingCityProvince').textContent = `${shippingAddress.city}, ${shippingAddress.province}`;
+                document.getElementById('modalShippingCountryPostal').textContent = `${shippingAddress.country} ${shippingAddress.postal_code}`;
 
-            // Populate Order Items
-            const modalOrderItems = document.getElementById('modalOrderItems');
-            modalOrderItems.innerHTML = ''; // Clear previous items
-            orderData.items.forEach(item => {
-                const itemHtml = `
-                    <div class="list-group-item d-flex align-items-center py-2">
-                        <img src="${item.image}" alt="${item.product_name}" class="me-3" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0">${item.product_name}</h6>
-                            <small class="text-muted">${item.quantity} x ${item.price}</small>
-                        </div>
-                    </div>
-                `;
-                modalOrderItems.insertAdjacentHTML('beforeend', itemHtml);
+                // Populate Order Items
+                const modalOrderItems = document.getElementById('modalOrderItems');
+                modalOrderItems.innerHTML = ''; // Clear previous items
+                if (orderData.items && orderData.items.length > 0) {
+                    orderData.items.forEach(item => {
+                        const itemHtml = `
+                            <div class="list-group-item d-flex align-items-center py-2">
+                                <img src="${item.image}" alt="${item.product_name}" class="me-3" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">${item.product_name}</h6>
+                                    ${item.variant_size || item.variant_color ? `<small class="text-muted">Variant: ${item.variant_size ? item.variant_size : ''}${item.variant_size && item.variant_color ? ' / ' : ''}${item.variant_color ? item.variant_color : ''}</small><br>` : ''}
+                                    <small class="text-muted">${item.quantity} x ${item.price}</small>
+                                </div>
+                                <div>
+                                    <strong>${item.price.replace('IDR ', '')}</strong>
+                                </div>
+                            </div>
+                        `;
+                        modalOrderItems.insertAdjacentHTML('beforeend', itemHtml);
+                    });
+                } else {
+                    modalOrderItems.innerHTML = '<div class="text-center py-4 text-muted">No items found for this order.</div>';
+                }
+
+                // Populate Total Amount
+                document.getElementById('modalTotalAmount').textContent = orderData.total_amount;
             });
-
-            // Populate Total Amount
-            document.getElementById('modalTotalAmount').textContent = orderData.total_amount;
-        });
-    }
+        }
     });
 </script>
 @endpush
