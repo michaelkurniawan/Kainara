@@ -64,7 +64,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-    Route::post('/address', [AddressController::class, 'store'])->name('addresses.store');
+    Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');
+    Route::get('/addresses/{address}/edit', [AddressController::class, 'edit'])->name('addresses.edit'); // For fetching data for edit modal via AJAX
+    Route::put('/addresses/{address}', [AddressController::class, 'update'])->name('addresses.update');
     Route::delete('/addresses/{address}', [AddressController::class, 'destroy'])->name('addresses.destroy');
     Route::post('/profile/picture', [ProfileController::class, 'updateProfilePicture'])->name('profile.update_picture');
     Route::put('/profile/personal-info', [ProfileController::class, 'updatePersonalInformation'])->name('profile.update_personal_info');

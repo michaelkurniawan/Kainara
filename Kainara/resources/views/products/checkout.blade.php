@@ -358,10 +358,13 @@
         </div>
     </div>
 
+    {{-- Include the modals needed for address management from checkout --}}
     @include('components.popupalamat', [
         'userAddresses' => $userAddresses,
         'selectedAddressId' => $selectedAddressId,
     ])
+    @include('components.add-address-modal', ['user' => Auth::user()])
+    @include('components.edit-address-modal')
 @endsection
 
 @push('scripts')
@@ -380,7 +383,8 @@
         const formCountry = document.getElementById('country_input');
         const formPostalCode = document.getElementById('postal_code_input');
 
-        const userAddressesData = {{ Js::from($userAddresses) }}; // Tetap dibutuhkan untuk logika di `addressSelected`
+        // userAddressesData is already available from the prop passed to popupalamat
+        // and its script is included *after* this one, so we need to rely on the event.
 
         window.addEventListener('addressSelected', function(event) {
             const selectedAddressData = event.detail.addressData;
@@ -443,7 +447,7 @@
         } else {
             // If no address is set (e.g., brand new user), populate with Auth user's info if available
             document.getElementById('currentAddressType').textContent = ''; // Kosongkan jika tidak ada alamat
-        document.getElementById('email').value = '{{ Auth::user()->email ?? '' }}';
+            document.getElementById('email').value = '{{ Auth::user()->email ?? '' }}';
             document.getElementById('phone').value = '{{ Auth::user()->phone ?? '' }}';
             document.getElementById('first_name').value = '{{ Auth::user()->first_name ?? '' }}';
             document.getElementById('last_name').value = '{{ Auth::user()->last_name ?? '' }}';

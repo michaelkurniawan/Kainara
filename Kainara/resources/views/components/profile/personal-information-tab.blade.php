@@ -2,14 +2,12 @@
     <div class="addresses-header d-flex justify-content-between align-items-center mb-4">
         <h3 class="personal-info-title mb-0 font-serif-medium">My Account</h3>
     </div>
-    <hr class="mb-4"> {{-- Garis pemisah --}}
+    <hr class="mb-4"> 
 
     <div class="personal-info-section">
-        {{-- Kolom Kiri: Private Info --}}
         <div class="personal-info-column">
             <h4 class="personal-info-subtitle">
                 Private Info
-                {{-- Pencil icon now triggers the modal --}}
                 <button type="button" class="btn btn-sm btn-address-action" data-bs-toggle="modal" data-bs-target="#editPersonalInfoModal">
                     <i class="fas fa-pencil-alt"></i>
                 </button>
@@ -118,9 +116,8 @@
         opacity: 30%;
     }
 
-    /* NEW: Cursor style for DOB input */
     #edit_personal_dob {
-        cursor: text; /* Ensures an i-beam cursor */
+        cursor: text; 
     }
 </style>
 @endpush

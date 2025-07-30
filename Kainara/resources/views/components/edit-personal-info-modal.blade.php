@@ -1,14 +1,14 @@
 <div class="modal fade" id="editPersonalInfoModal" tabindex="-1" aria-labelledby="editPersonalInfoModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content shadow-lg">
-            <div class="modal-header border-bottom-0 p-4">
-                <h3 class="modal-title font-serif-bold fs-4 text-dark" id="editPersonalInfoModalLabel">Edit Personal Information</h3>
+            <div class="modal-header-epi border-bottom-0 p-4">
+                <h3 class="modal-title-epi font-serif-bold fs-4 text-dark" id="editPersonalInfoModalLabel">Edit Personal Information</h3>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="editPersonalInfoForm" method="POST" action="{{ route('profile.update_personal_info') }}">
                 @csrf
                 @method('PUT')
-                <div class="modal-body py-3 px-4 bg-white">
+                <div class="modal-body-epi py-3 px-4 bg-white">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -30,9 +30,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer d-flex justify-content-end align-items-center border-top-0 py-2 px-3 bg-white">
-                    <button type="button" class="btn btn-outline-secondary font-serif-regular px-4 py-2 me-2" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary font-serif-medium px-4 py-2 btn-custom-gold">Save Changes</button>
+                <div class="modal-footer-epi d-flex justify-content-end align-items-center border-top-0 py-3 px-3 bg-white">
+                    <button type="button" class="btn btn-outline-secondary font-serif-regular px-4 py-2 me-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary font-serif-medium px-4 py-2 btn-custom-gold me-2">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -40,14 +40,14 @@
 </div>
 
 <style>
-    .modal-content {
+    .modal-content-epi {
         border: none;
         border-radius: 0 !important;
     }
 
-    .modal-header,
-    .modal-body,
-    .modal-footer {
+    .modal-header-epi,
+    .modal-body-epi,
+    .modal-footer-epi {
         background-color: #fff !important;
         border-radius: 0 !important;
     }
@@ -96,9 +96,11 @@
         color: #495057;
     }
 
-    .modal-header {
+    .modal-header-epi {
         border-bottom: 1px solid #dee2e6 !important;
         padding-bottom: 1rem !important;
-        
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 </style>

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use App\Models\Order; // Make sure to import the Order model
-use App\Models\Address; // Make sure to import the Address model
+use App\Models\UserAddress; // Make sure to import the Address model (assuming this is your UserAddress model, renamed for clarity)
 
 class ProfileController extends Controller
 {
@@ -23,10 +23,10 @@ class ProfileController extends Controller
         // Fetch orders for the profile's Order History tab
         // These are orders that are considered "finished" or "archived"
         $userOrdersHistory = $user->orders()
-                                  ->whereIn('status', ['Completed', 'Canceled', 'Returned', 'Refunded'])
-                                  ->with('orderItems.product') // Eager load relationships needed for display
-                                  ->orderByDesc('created_at')
-                                  ->get();
+                                    ->whereIn('status', ['Completed', 'Canceled', 'Returned', 'Refunded'])
+                                    ->with('orderItems.product') // Eager load relationships needed for display
+                                    ->orderByDesc('created_at')
+                                    ->get();
 
         return view('profile', compact(['user', 'userAddresses', 'userOrdersHistory']));
     }

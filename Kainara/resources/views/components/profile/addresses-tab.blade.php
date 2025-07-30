@@ -109,7 +109,7 @@
                         Edit
                     </button>
                     |
-                    {{-- Changed to button with new class --}}
+                    {{-- Changed to button with new class and added data attributes for JS confirmation --}}
                     <form action="{{ route('addresses.destroy', $userAddress->id) }}" method="POST" class="d-inline" id="delete-address-form-{{ $userAddress->id }}">
                         @csrf
                         @method('DELETE')
@@ -130,3 +130,31 @@
         <p class="text-center text-muted font-serif-light-italic">No addresses found. Please add a new address.</p>
     @endforelse
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.trigger-delete-address-notification').forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent the default form submission
+
+                const addressId = this.dataset.addressId;
+                const addressLabel = this.dataset.addressLabel;
+                const form = document.getElementById(`delete-address-form-${addressId}`);
+
+                if (form) {
+                    showConfirmation(
+                        'Confirm Deletion',
+                        `Are you sure you want to delete "${addressLabel}"? This action cannot be undone.`,
+                        function (confirmed) {
+                            if (confirmed) {
+                                form.submit(); // Submit the form if confirmed
+                            }
+                        }
+                    );
+                }
+            });
+        });
+    });
+</script>
+@endpush
