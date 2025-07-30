@@ -51,9 +51,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/order/{order}/success', [OrderController::class, 'showOrderSuccess'])->name('order.success');
     Route::get('/order/{order}/fail', [OrderController::class, 'showOrderFail'])->name('order.fail');
     Route::get('/order/{order}/awaiting-payment', [OrderController::class, 'showOrderAwaitingPayment'])->name('order.awaitingPayment');
+    Route::post('/order/{order}/complete', [OrderController::class, 'completeOrder'])->name('order.complete');
+    Route::delete('/my-orders/{order}/cancel', [OrderController::class, 'cancelOrder'])->name('order.cancel');
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::get('/my-orders', [OrderController::class, 'myOrders'])->name('my.orders');
+
 
     Route::get('/payment/stripe/{order}', [StripePaymentController::class, 'showPaymentForm'])->name('stripe.payment.form');
     Route::post('/payment/stripe/{order}/confirm', [StripePaymentController::class, 'confirmPayment'])->name('stripe.payment.confirm');
+    Route::get('/order/{order}/continue-payment', [StripePaymentController::class, 'showPaymentForm'])->name('payment.continue');
 
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');

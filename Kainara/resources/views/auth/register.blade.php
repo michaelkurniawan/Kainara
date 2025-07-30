@@ -158,7 +158,7 @@
 </div>
 
 <div class="container-fluid login-container flex-grow-1">
-    <div class="login-card mt-4">
+    <div class="login-card">
         <span class="font-serif-italic header m-0">Register</span>
         <p class="text-muted font-sans-thin-italic mb-4">Create new account, it's free</p>
         <form action="{{ route('register') }}" method="POST">
@@ -227,7 +227,7 @@
             </div>
 
             @if (Route::has('register'))
-                <p class="register-link text-muted text-start font-sans-light-italic">Already have an account? <a href="{{ route('register') }}" class="text-link font-sans-italic">Login</a></p>
+                <p class="register-link text-muted text-start font-sans-light-italic">Already have an account? <a href="{{ route('login') }}" class="text-link font-sans-italic">Login</a></p>
             @endif
 
         </form>

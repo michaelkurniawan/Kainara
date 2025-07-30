@@ -51,17 +51,17 @@
         font-weight: bold;
         font-size: 0.85rem;
         margin-left: auto; /* Push to the right */
+        text-transform: capitalize; /* Ensure status text is capitalized */
     }
 
+    /* Status-specific colors for My Order page */
     .status-awaiting-payment { background-color: #fff3cd; color: #856404; } /* yellow */
     .status-order-confirmed { background-color: #d1ecf1; color: #0c5460; } /* light blue */
     .status-awaiting-shipment { background-color: #cce5ff; color: #004085; } /* blue */
     .status-shipped { background-color: #d4edda; color: #155724; } /* green */
     .status-delivered { background-color: #d4edda; color: #155724; } /* green */
-    .status-completed { background-color: #d4edda; color: #155724; } /* green */
-    .status-canceled { background-color: #f8d7da; color: #721c24; } /* red */
-    .status-returned { background-color: #f8d7da; color: #721c24; } /* red */
-    .status-refunded { background-color: #f8d7da; color: #721c24; } /* red */
+    /* Note: "completed", "canceled", "returned", "refunded" will not appear here based on controller logic */
+
 
     .order-details-summary {
         display: flex;
@@ -242,6 +242,7 @@
                             <br>
                             <span>INV/{{ \Carbon\Carbon::parse($order->created_at)->format('Ymd') }}/M/{{ $order->id }}</span>
                         </div>
+                        {{-- Make sure status is slugged for CSS class, e.g., "In Delivery" becomes "in-delivery" --}}
                         <span class="order-status status-{{ Str::slug($order->status) }}">{{ $order->status }}</span>
                     </div>
 
@@ -251,10 +252,11 @@
                             $remainingItemsCount = $order->orderItems->count() - 1;
                         @endphp
 
-                        @if ($firstItem)
-                            <img src="{{ asset('storage/' . $firstItem->product_image) }}" alt="{{ $firstItem->product_name }}">
+                        @if ($firstItem && $firstItem->product) {{-- Ensure product relationship exists --}}
+                            {{-- Check if product image is available, otherwise use a placeholder --}}
+                            <img src="{{ asset('storage/' . $firstItem->product->image) }}" alt="{{ $firstItem->product->name }}">
                             <div class="order-item-info">
-                                <h4>{{ $firstItem->product_name }}</h4>
+                                <h4>{{ $firstItem->product->name }}</h4>
                                 <p>{{ $firstItem->quantity }} item x IDR {{ number_format($firstItem->price, 0, ',', '.') }}</p>
                                 @if ($remainingItemsCount > 0)
                                     <p>+ {{ $remainingItemsCount }} other items</p>
@@ -262,7 +264,7 @@
                             </div>
                         @else
                             <div class="order-item-info">
-                                <h4>No items in this order.</h4>
+                                <h4>No product details available.</h4>
                             </div>
                         @endif
 
@@ -420,9 +422,8 @@
             submitReviewButton.textContent = 'Submitting...'; // Ubah teks tombol
 
             const formData = new FormData(this);
-            // Tidak perlu menambahkan _token lagi karena sudah ada di FormData dari @csrf
-            // formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-
+            // We'll submit the review first, and then complete the order if the review is successful.
+            // This assumes your reviews.store route handles the review submission and returns success.
             fetch('{{ route('reviews.store') }}', {
                 method: 'POST',
                 body: formData,
@@ -431,33 +432,52 @@
                 }
             })
             .then(response => {
-                // Selalu coba parse sebagai JSON, karena server akan mengirim JSON untuk error juga
                 return response.json().then(data => {
                     if (!response.ok) {
-                        // Jika respons bukan 2xx (misal 400, 403, 500)
-                        throw new Error(data.message || 'Server error occurred.');
+                        throw new Error(data.message || 'Server error occurred during review submission.');
                     }
-                    return data; // Ini adalah data sukses
+                    return data;
                 });
             })
             .then(data => {
-                // Ini akan dipanggil jika response.ok adalah true
+                if (data.success) {
+                    // Review submitted successfully, now complete the order
+                    const orderIdToComplete = reviewOrderIdInput.value;
+                    return fetch(`/orders/${orderIdToComplete}/complete`, { // Assuming this is your route for completing an order
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json' // Important for non-FormData POST
+                        },
+                        body: JSON.stringify({ _method: 'PUT' }) // Laravel expects _method for PUT/PATCH
+                    });
+                } else {
+                    throw new Error(data.message || 'Review submission failed.');
+                }
+            })
+            .then(response => {
+                return response.json().then(data => {
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Server error occurred during order completion.');
+                    }
+                    return data;
+                });
+            })
+            .then(data => {
                 if (data.success) {
                     alert(data.message);
                     reviewModal.hide();
-                    window.location.reload();
+                    window.location.reload(); // Reload the page to update order status
                 } else {
-                    // Ini seharusnya tidak terpanggil jika response.ok, tapi untuk jaga-jaga
                     alert('Error: ' + data.message);
                 }
             })
             .catch(error => {
-                // Ini akan menangani error dari network atau error yang dilempar dari .then pertama
-                console.error('Fetch error:', error);
+                console.error('Operation failed:', error);
                 alert('An error occurred: ' + error.message);
             })
             .finally(() => {
-                // Pastikan tombol diaktifkan kembali setelah selesai (baik sukses atau gagal)
                 submitReviewButton.disabled = false;
                 submitReviewButton.textContent = 'Submit Review';
             });

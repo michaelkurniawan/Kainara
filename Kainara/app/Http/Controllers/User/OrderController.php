@@ -118,8 +118,8 @@ class OrderController extends Controller
                 'shipping_recipient_name' => $shippingAddressData['name'],
                 'shipping_phone' => $shippingAddressData['phone'],
                 'shipping_address' => $shippingAddressData['street'] .
-                                        ($shippingAddressData['sub_district'] ? ', ' . $shippingAddressData['sub_district'] : '') .
-                                        ($shippingAddressData['district'] ? ', ' . $shippingAddressData['district'] : ''),
+                                             ($shippingAddressData['sub_district'] ? ', ' . $shippingAddressData['sub_district'] : '') .
+                                             ($shippingAddressData['district'] ? ', ' . $shippingAddressData['district'] : ''),
                 'shipping_country' => $shippingAddressData['country'],
                 'shipping_city' => $shippingAddressData['city'],
                 'shipping_province' => $shippingAddressData['province'],
@@ -220,10 +220,12 @@ class OrderController extends Controller
 
         $user = Auth::user();
 
+        // Fetch orders that are *NOT* in the "completed", "canceled", "returned", or "refunded" statuses
         $orders = Order::where('user_id', $user->id)
-                       ->with(['orderItems.productVariant'])
-                       ->orderByDesc('created_at')
-                       ->get();
+                        ->whereNotIn('status', ['Completed', 'Canceled', 'Returned', 'Refunded'])
+                        ->with(['orderItems.product', 'orderItems.productVariant']) // Eager load product for image and name
+                        ->orderByDesc('created_at')
+                        ->get();
 
         return view('myorder', compact('orders'));
     }
@@ -231,7 +233,8 @@ class OrderController extends Controller
     public function completeOrder(Order $order)
     {
         if (Auth::id() !== $order->user_id) {
-            abort(403, 'Access Denied. You do not have permission to modify this order.');
+            // Changed from abort(403) to JSON response to match the JS expectation
+            return response()->json(['success' => false, 'message' => 'Access Denied. You do not have permission to modify this order.'], 403);
         }
 
         if ($order->status === 'Delivered') {
@@ -239,14 +242,17 @@ class OrderController extends Controller
                 $order->status = 'Completed';
                 $order->save();
 
-                return redirect()->back()->with('success', 'Order has been successfully completed!');
+                // Return JSON response for success
+                return response()->json(['success' => true, 'message' => 'Order has been successfully completed!']);
             } catch (\Exception $e) {
-                Log::error('Failed to complete order: ' . $e->getMessage(), ['order_id' => $order->id, 'user_id' => Auth::id()]);
-                return redirect()->back()->with('error', 'An error occurred while trying to complete the order. Please try again.');
+                Log::error('Failed to complete order (backend): ' . $e->getMessage(), ['order_id' => $order->id, 'user_id' => Auth::id()]);
+                // Return JSON response for error
+                return response()->json(['success' => false, 'message' => 'An error occurred while trying to complete the order. Please try again.'], 500);
             }
         }
 
-        return redirect()->back()->with('error', 'Order cannot be completed from its current status (' . $order->status . ').');
+        // Return JSON response for invalid status
+        return response()->json(['success' => false, 'message' => 'Order cannot be completed from its current status (' . $order->status . ').'], 400);
     }
 
     // New method to cancel an order
@@ -256,8 +262,9 @@ class OrderController extends Controller
             return back()->with('error', 'Access Denied. You do not have permission to cancel this order.');
         }
 
-        if ($order->status !== 'Awaiting Payment') {
-            return back()->with('error', 'This order cannot be canceled as its status is not "Awaiting Payment".');
+        // Only allow cancellation if the order is awaiting payment or confirmed (before shipping)
+        if (!in_array($order->status, ['Awaiting Payment', 'Order Confirmed'])) {
+            return back()->with('error', 'This order cannot be canceled as its status is ' . $order->status . '. Please contact support for further assistance.');
         }
 
         DB::beginTransaction();
@@ -278,14 +285,9 @@ class OrderController extends Controller
 
             $order->status = 'Canceled';
             $order->save();
-            // Or you can completely delete the order if desired: $order->delete();
-            // If deleting, orderItems will be deleted automatically if cascade delete is set up,
-            // otherwise you'd need to delete order items explicitly.
-            // $order->orderItems()->delete();
-            // $order->delete();
 
             DB::commit();
-            return redirect()->route('order.myOrders')->with('success', 'Order has been successfully canceled and product stock returned.');
+            return redirect()->route('my.orders')->with('success', 'Order has been successfully canceled and product stock returned.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Order cancellation failed: ' . $e->getMessage(), ['order_id' => $order->id, 'user_id' => Auth::id()]);

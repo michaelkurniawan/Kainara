@@ -221,14 +221,10 @@
                             <i class="bi bi-geo-alt-fill text-danger me-2"></i> Shipping Address
                         </h2>
                         <div class="address-box">
-                            {{-- Kontainer baru untuk address label --}}
                             <div class="address-label-container">
-                                {{-- Check if $address is not null before accessing its properties --}}
                                 <p class="fw-semibold fs-5" id="currentAddressType">{{ $address['label'] ?? '' }}</p>
                             </div>
                             <div class="vr mx-3"></div>
-                            {{-- Perhatikan: div ini tidak lagi memiliki d-flex w-100 justify-content-between align-items-start --}}
-                            {{-- Karena align-items: center sudah diatur di parent .address-box --}}
                             <div class="text-start flex-grow-1" id="currentAddressDetails">
                                 @if ($address) {{-- Add this check --}}
                                     <p class="text-muted mb-0" data-address-line="address">{{ $address['address'] ?? '' }}{{ $address['sub_district'] ? ', ' . $address['sub_district'] : '' }}</p>

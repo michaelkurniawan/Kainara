@@ -1,20 +1,20 @@
 <?php
 
-namespace App\Http\Controllers\User;
+namespace App\Http\Controllers\User; // Keep this namespace if your ReviewController is in User namespace
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
-use App\Models\ProductReview;
+use App\Models\ProductReview; // Make sure this model is correctly named ProductReview
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema; // Pastikan ini diimpor
+use Illuminate\Support\Facades\Schema;
 
 class ReviewController extends Controller
 {
     /**
-     * Store a new product review and complete the associated order.
+     * Store a new product review. The order status update is handled by OrderController@completeOrder.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
@@ -33,10 +33,9 @@ class ReviewController extends Controller
         $comment = $request->input('comment');
         $userId = Auth::id();
 
-        // Menggunakan transaksi database untuk memastikan atomicity
         DB::beginTransaction();
         try {
-            $order = Order::with('orderItems')->find($orderId); // Eager load orderItems
+            $order = Order::with('orderItems.product')->find($orderId); // Eager load orderItems and their products
 
             // 2. Otorisasi: Pastikan pengguna adalah pemilik pesanan
             if (!$order || $order->user_id !== $userId) {
@@ -46,30 +45,34 @@ class ReviewController extends Controller
             }
 
             // 3. Status Pesanan: Pastikan pesanan sudah berstatus 'Delivered'
+            // This check is duplicated with the `completeOrder` method, but it's good to have it here
+            // to prevent creating a review for an invalid order status prematurely.
             if ($order->status !== 'Delivered') {
                 DB::rollBack();
-                return response()->json(['success' => false, 'message' => 'Pesanan tidak dapat direview atau diselesaikan dari status saat ini (' . $order->status . '). Hanya pesanan yang sudah Delivered yang bisa diselesaikan.'], 400);
+                return response()->json(['success' => false, 'message' => 'Pesanan tidak dapat direview. Hanya pesanan yang sudah Delivered yang bisa direview.'], 400);
             }
 
-            // 4. Periksa apakah sudah ada review untuk produk ini dalam pesanan ini
-            // Ambil product_id dari item pertama di pesanan. Asumsi satu review per pesanan.
-            $productIdToReview = $order->orderItems->first()->product_id ?? null;
+            // 4. Periksa apakah sudah ada review untuk **setiap produk** dalam pesanan ini.
+            // Loop melalui setiap item dalam pesanan untuk membuat atau memperbarui review produk.
+            // Asumsi: Setiap item dalam pesanan bisa memiliki review terpisah, atau jika desainnya
+            // 1 review per order, maka hanya ambil produk pertama atau produk utama jika ada.
+            // Disesuaikan dengan asumsi yang Anda miliki di Blade: 1 review per order untuk produk pertama.
+            $productToReview = $order->orderItems->first()->product ?? null;
 
-            if (is_null($productIdToReview)) {
+            if (is_null($productToReview)) {
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => 'Tidak ada produk yang ditemukan dalam pesanan ini untuk direview.'], 400);
             }
 
-            // Membangun query untuk mencari review yang sudah ada
-            $query = ProductReview::where('user_id', $userId)
-                                  ->where('product_id', $productIdToReview);
+            // Check if a review already exists for this user and product (and potentially order)
+            $existingReviewQuery = ProductReview::where('user_id', $userId)
+                                                 ->where('product_id', $productToReview->id);
 
-            // Jika kolom 'order_id' ada di tabel product_reviews, tambahkan ke kondisi query
+            // If product_reviews table has 'order_id' column, use it for stricter check
             if (Schema::hasColumn('product_reviews', 'order_id')) {
-                $query->where('order_id', $orderId);
+                $existingReviewQuery->where('order_id', $orderId);
             }
-
-            $existingReview = $query->first();
+            $existingReview = $existingReviewQuery->first();
 
             // 5. Simpan atau Perbarui Review
             if ($existingReview) {
@@ -81,7 +84,7 @@ class ReviewController extends Controller
                 // Buat review baru
                 $reviewData = [
                     'user_id' => $userId,
-                    'product_id' => $productIdToReview,
+                    'product_id' => $productToReview->id, // Associate review with the product
                     'rating' => $rating,
                     'comment' => $comment,
                 ];
@@ -92,26 +95,24 @@ class ReviewController extends Controller
                 ProductReview::create($reviewData);
             }
 
-            // 6. Update Status Order menjadi 'Completed'
-            $order->status = 'Completed';
-            $order->save();
-
             // Commit transaksi jika semua operasi berhasil
             DB::commit();
-            return response()->json(['success' => true, 'message' => 'Review berhasil dikirim dan pesanan diselesaikan!']);
+
+            // **Important:** We are NOT setting order status to 'Completed' here.
+            // The JavaScript on myorder.blade.php will call the 'order.complete' route
+            // *after* receiving a success response from this review.store route.
+            return response()->json(['success' => true, 'message' => 'Review berhasil dikirim!']);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // Handle validasi error dari $request->validate()
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => $e->validator->errors()->first()], 422); // Unprocessable Entity
+            return response()->json(['success' => false, 'message' => $e->validator->errors()->first()], 422);
         } catch (\Exception $e) {
-            // Tangani error umum lainnya
             DB::rollBack();
-            Log::error('Review submission and order completion failed: ' . $e->getMessage(), [
+            Log::error('Review submission failed: ' . $e->getMessage(), [
                 'order_id' => $orderId,
                 'user_id' => $userId,
                 'error_message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(), // Tambahkan trace untuk debugging lebih lanjut
+                'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all()
             ]);
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan internal. Silakan coba lagi. Mohon hubungi administrator jika masalah berlanjut.'], 500);
