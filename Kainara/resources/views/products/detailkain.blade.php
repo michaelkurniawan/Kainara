@@ -302,6 +302,7 @@
 
         const addToCartButton = document.querySelector('.btn-add-to-cart');
         const buyNowButton = document.querySelector('.btn-buy-it-now');
+        const addToCheckoutForm = document.getElementById('addToCheckoutForm'); // Get the form
 
         const reviewsContainer = document.getElementById('reviews-container');
         const prevBtn = document.getElementById('prev-review-btn');
@@ -312,16 +313,18 @@
         const averageRatingStarsContainer = document.getElementById('average-rating-stars');
         const averageRatingTextContainer = document.getElementById('average-rating-text');
 
+        const isAuthenticated = {{ Auth::check() ? 'true' : 'false' }};
+
         if (product.variants && product.variants.length > 0) {
             maxQuantity = product.variants.reduce((sum, variant) => {
                 return variant.size === 'One Size' ? sum + variant.stock : sum;
             }, 0);
         } else {
-            maxQuantity = product.stock || 100;
+            maxQuantity = product.stock || 100; // Fallback to a default if product.stock is not defined
         }
         
         if (maxQuantity === 0 && product.id) {
-            maxQuantity = 1;
+            maxQuantity = 1; 
         }
 
         function updateQuantityControls() {
@@ -340,7 +343,7 @@
             buyNowButton.disabled = !isAvailable;
         }
 
-        updateQuantityControls();
+        updateQuantityControls(); // Initial call to set button states
 
         minusBtn.addEventListener('click', function () {
             if (quantity > 1) {
@@ -355,6 +358,47 @@
                 updateQuantityControls();
             }
         });
+
+        // --- Logic to handle form submission and login check ---
+        if (addToCheckoutForm) {
+            addToCheckoutForm.addEventListener('submit', function(event) {
+                if (!isAuthenticated) {
+                    event.preventDefault(); // Stop the form from submitting
+
+                    window.showNotificationCard({
+                        type: 'info', // Or 'error'
+                        title: 'Login Required',
+                        message: 'You must log in to add products to your cart or proceed with the purchase.',
+                        hasActions: false, // No YES/NO buttons
+                        onConfirm: () => {
+                            window.location.href = '{{ route('login') }}';
+                        }
+                    });
+
+                    // Set the OK button to redirect to login
+                    const confirmBtn = document.getElementById('globalNotificationConfirmBtn');
+                    if (confirmBtn) {
+                        confirmBtn.textContent = 'Login Now';
+                        confirmBtn.style.display = 'inline-block';
+                        confirmBtn.removeEventListener('click', window.hideNotificationCard); // Remove default hide
+                        confirmBtn.addEventListener('click', () => {
+                            window.hideNotificationCard();
+                            window.location.href = '{{ route('login') }}';
+                        });
+                    }
+                    const cancelBtn = document.getElementById('globalNotificationCancelBtn');
+                    if (cancelBtn) {
+                        cancelBtn.style.display = 'none'; // Hide NO button
+                    }
+                    const actionsDiv = document.getElementById('globalNotificationActions');
+                    if (actionsDiv) {
+                        actionsDiv.style.display = 'flex'; // Ensure actions div is visible for the single button
+                    }
+                }
+                // If authenticated, the form will submit normally
+            });
+        }
+        // --- End of Login Check Logic ---
 
         function generateStarsHtml(rating) {
             let starsHtml = '';

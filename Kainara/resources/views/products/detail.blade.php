@@ -257,7 +257,7 @@
                     <span class="text-decoration-underline fs-4 ms-2">Size Chart</span>
                 </p>
 
-                {{-- Form untuk Add to Cart / Buy Now (tidak lagi di dalam @guest/@else) --}}
+                {{-- Form for Add to Cart / Buy Now (no longer inside @guest/@else) --}}
                 <form action="{{ route('checkout.add') }}" method="POST" id="addToCheckoutForm">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
@@ -454,11 +454,11 @@
                     // Show the custom notification card
                     window.showNotificationCard({
                         type: 'info', // Or 'error'
-                        title: 'Login Diperlukan',
-                        message: 'Anda harus login untuk menambahkan produk ke keranjang atau melanjutkan pembelian.',
-                        hasActions: false, // Tidak ada tombol YES/NO
+                        title: 'Login Required',
+                        message: 'You must log in to add products to your cart or proceed with the purchase.',
+                        hasActions: false, // No YES/NO buttons
                         onConfirm: () => {
-                            // Opsional: Redirect ke halaman login setelah user menekan OK
+                            // Optional: Redirect to login page after user clicks OK
                             window.location.href = '{{ route('login') }}';
                         }
                     });
@@ -466,7 +466,7 @@
                     // Set the OK button to redirect to login
                     const confirmBtn = document.getElementById('globalNotificationConfirmBtn');
                     if (confirmBtn) {
-                        confirmBtn.textContent = 'Login Sekarang';
+                        confirmBtn.textContent = 'Login Now';
                         confirmBtn.style.display = 'inline-block';
                         confirmBtn.removeEventListener('click', window.hideNotificationCard); // Remove default hide
                         confirmBtn.addEventListener('click', () => {
