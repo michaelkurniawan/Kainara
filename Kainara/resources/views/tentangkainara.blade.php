@@ -72,7 +72,7 @@
       top: -8vw;
     }
 
-  </style>
+  </style>  
 </head>
 <body>
 
