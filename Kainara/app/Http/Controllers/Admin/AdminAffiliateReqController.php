@@ -17,7 +17,7 @@ class AdminAffiliateReqController extends Controller
     }
 
     public function show(ArtisanProfile $profile){
-        $profile->load('portfolios');
+        $profile->load('portfolio');
         return view('admin.affiliations.show', ['profile' => $profile]);
     }
 

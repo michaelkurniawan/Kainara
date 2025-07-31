@@ -77,28 +77,41 @@
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ __('Portfolio') }}</h3>
                     </div>
                     <div class="p-6">
-                        @if($profile->portfolios->isNotEmpty())
-                            @foreach($profile->portfolios as $portfolio)
-                                <div class="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0 last:pb-0">
-                                    <h5 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-1">{{ $portfolio->project_title }} ({{ $portfolio->year_created }})</h5>
-                                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-1"><strong>Fabric Type:</strong> {{ $portfolio->fabric_type === 'others' ? $portfolio->other_fabric_type : $portfolio->fabric_type }}</p>
-                                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">{{ $portfolio->project_description }}</p>
+                        @if($profile->portfolio)
+                            @php $portfolio = $profile->portfolio; @endphp
 
-                                    @if($portfolio->video_link)
-                                        <p class="text-sm mb-2"><a href="{{ $portfolio->video_link }}" target="_blank" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200">{{ __('View Video') }}</a></p>
-                                    @endif
+                            <div class="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0 last:pb-0">
+                                <h5 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                    {{ $portfolio->project_title }} ({{ $portfolio->year_created }})
+                                </h5>
+                                <p class="text-sm text-gray-700 dark:text-gray-300 mb-1">
+                                    <strong>Fabric Type:</strong>
+                                    {{ $portfolio->fabric_type === 'others' ? $portfolio->other_fabric_type : $portfolio->fabric_type }}
+                                </p>
+                                <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                                    {{ $portfolio->project_description }}
+                                </p>
 
-                                    <div class="flex flex-wrap gap-3 mt-3">
-                                        @foreach((array) $portfolio->photo_paths as $photo)
-                                            <div>
-                                                <a href="{{ asset('storage/' . $photo) }}" target="_blank">
-                                                    <img src="{{ asset('storage/' . $photo) }}" alt="Portfolio Image" class="h-36 w-36 object-cover rounded-md shadow-sm">
-                                                </a>
-                                            </div>
-                                        @endforeach
-                                    </div>
+                                @if($portfolio->video_link)
+                                    <p class="text-sm mb-2">
+                                        <a href="{{ $portfolio->video_link }}" target="_blank"
+                                        class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200">
+                                            {{ __('View Video') }}
+                                        </a>
+                                    </p>
+                                @endif
+
+                                <div class="flex flex-wrap gap-3 mt-3">
+                                    @foreach((array) $portfolio->photo_paths as $photo)
+                                        <div>
+                                            <a href="{{ asset('storage/' . $photo) }}" target="_blank">
+                                                <img src="{{ asset('storage/' . $photo) }}" alt="Portfolio Image"
+                                                    class="h-36 w-36 object-cover rounded-md shadow-sm">
+                                            </a>
+                                        </div>
+                                    @endforeach
                                 </div>
-                            @endforeach
+                            </div>
                         @else
                             <p class="text-gray-500 dark:text-gray-300">{{ __('No portfolio submitted.') }}</p>
                         @endif

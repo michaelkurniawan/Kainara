@@ -3,7 +3,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
 
 class ArtisanProfile extends Model
 {
@@ -13,8 +14,8 @@ class ArtisanProfile extends Model
     // HAPUS relasi ke User
     // public function user(): BelongsTo { ... } // <-- HAPUS METHOD INI
 
-    public function portfolios(): HasMany
+    public function portfolio(): HasOne
     {
-        return $this->hasMany(Portfolio::class);
+        return $this->hasOne(Portfolio::class);
     }
 }

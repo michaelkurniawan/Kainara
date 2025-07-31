@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('portfolios', function (Blueprint $table) {
             $table->id();
             // Portfolio berelasi dengan pendaftaran artisan, bukan user langsung
-            $table->foreignId('artisan_profile_id')->constrained()->onDelete('cascade');
+            $table->foreignId('artisan_profile_id')->constrained()->unique()->onDelete('cascade');
 
             // --- Data dari Step 3: Portfolio ---
             $table->string('project_title');
