@@ -4,7 +4,7 @@
             <div class="modal-header mt-3">
                 <h4 class="modal-title fs-4" id="sizeChartModalLabel">
                     @if(isset($product) && isset($product->gender))
-                        {{ $product->gender->name ?? '' }}'s {{ Str::title(Str::after(Str::lower($product->name), Str::lower($product->gender->name ?? '') . "'s ")) }} Size Chart
+                        Men's Outerwear Size Chart
                     @else
                         Men's Outerwear Size Chart
                     @endif
@@ -13,8 +13,8 @@
             </div>
             <div class="modal-body">
                 <div class="d-flex justify-content-center align-items-center py-4 gap-5 flex-wrap text-center">
-                    <img src="{{ asset('images/MenOuterwear.png') }}" alt="Gambar Pakaian Luar Pria" class="img-fluid me-3" style="max-width: 45%;">
-                    <img src="{{ asset('images/SizeMenOuterwear.png') }}" alt="Tabel Ukuran Pakaian Luar Pria" class="img-fluid" style="max-width: 45%;">
+                    <img src="{{ asset('images/sizechart/Outer.png') }}" alt="Gambar Pakaian Luar Pria" class="img-fluid me-3" style="max-width: 45%;">
+                    <img src="{{ asset('images/sizechart/SizeOuter.png') }}" alt="Tabel Ukuran Pakaian Luar Pria" class="img-fluid" style="max-width: 45%;">
                 </div>
             </div>
         </div>

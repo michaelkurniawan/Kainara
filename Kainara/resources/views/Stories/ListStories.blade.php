@@ -110,7 +110,7 @@
 @section('content')
     <div class="container-fluid py-5 px-5">
         <x-bangga title="Kainara's Stories" subtitle="Bangga Pakai Karya UMKM" />
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mt-4">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mt-4 mb-5">
             @forelse ($articles as $story)
                 <div class="col d-flex"> {{-- Add d-flex here to make columns equal height --}}
                     <a href="{{ route('Stories.DetailStories', $story->slug) }}" class="text-decoration-none text-dark d-flex flex-grow-1"> {{-- Ensure the link also takes full height --}}
