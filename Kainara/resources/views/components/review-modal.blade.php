@@ -148,6 +148,7 @@
         const ratingInput = document.getElementById('review_rating_input');
         const ratingText = document.getElementById('rating-text');
         const skipReviewButton = document.getElementById('skipReviewButton');
+        const submitReviewButton = reviewForm.querySelector('button[type="submit"]'); // Get the submit button
         let selectedRating = 0;
 
         // --- Star Rating Functionality ---
@@ -207,31 +208,32 @@
             updateStars(0);
         });
 
-        // --- Form Submission Functionality ---
-        reviewForm.addEventListener('submit', async function(e) {
-            e.preventDefault(); // Prevent default form submission
-
-            const submitButton = reviewForm.querySelector('button[type="submit"]');
-            const skipButton = document.getElementById('skipReviewButton');
-
-            // Disable buttons and show loading state
-            submitButton.disabled = true;
-            skipButton.disabled = true;
-            submitButton.textContent = 'Submitting...';
-            skipButton.textContent = 'Processing...';
-
+        // --- Function to handle form submission (for both review and skip) ---
+        const handleFormSubmission = async (isSkipAction) => {
             const formData = new FormData(reviewForm);
             const data = Object.fromEntries(formData.entries());
 
-            // Ensure rating is at least 1 if submitting a review
-            if (selectedRating === 0 && e.submitter !== skipReviewButton) {
+            // Add the skip_review flag to the data
+            data.skip_review = isSkipAction;
+
+            // If skipping, rating and comment can be null/empty,
+            // otherwise, ensure rating is provided for review submission.
+            if (!isSkipAction && selectedRating === 0) {
                 alert('Please provide a rating (1-5 stars) or click "Skip".');
-                submitButton.disabled = false;
-                skipButton.disabled = false;
-                submitButton.textContent = 'Submit Review';
-                skipButton.textContent = 'Skip';
-                return;
+                return; // Stop the submission
             }
+            // If skipping, clear rating and comment from data to avoid sending unnecessary values
+            if (isSkipAction) {
+                data.rating = null; // Send null or remove if backend allows
+                data.comment = null; // Send null or remove if backend allows
+            }
+
+
+            // Disable buttons and show loading state
+            submitReviewButton.disabled = true;
+            skipReviewButton.disabled = true;
+            submitReviewButton.textContent = 'Submitting...';
+            skipReviewButton.textContent = 'Processing...';
 
             try {
                 const response = await fetch('/reviews', { // Laravel route for reviews.store
@@ -262,72 +264,23 @@
                 alert('An unexpected error occurred. Please try again.');
             } finally {
                 // Re-enable buttons and reset text
-                submitButton.disabled = false;
-                skipButton.disabled = false;
-                submitButton.textContent = 'Submit Review';
-                skipButton.textContent = 'Skip';
+                submitReviewButton.disabled = false;
+                skipReviewButton.disabled = false;
+                submitReviewButton.textContent = 'Submit Review';
+                skipReviewButton.textContent = 'Skip';
             }
+        };
+
+        // --- Form Submission Event Listener ---
+        reviewForm.addEventListener('submit', async function(e) {
+            e.preventDefault(); // Prevent default form submission
+            handleFormSubmission(false); // Call with isSkipAction = false for review submission
         });
 
         // --- Skip Button Functionality ---
-        // The "Skip" button will also trigger the form submission.
-        // The backend validation requires a rating, so if 'Skip' is clicked
-        // without a rating, the backend will return a validation error.
-        // If you want 'Skip' to truly bypass review and just complete order,
-        // you'd need a separate backend endpoint or logic.
         skipReviewButton.addEventListener('click', async function(e) {
-            e.preventDefault(); // Prevent default form submission
-
-            const submitButton = reviewForm.querySelector('button[type="submit"]');
-            const skipButton = document.getElementById('skipReviewButton');
-
-            // Disable buttons and show loading state
-            submitButton.disabled = true;
-            skipButton.disabled = true;
-            submitButton.textContent = 'Submitting...';
-            skipButton.textContent = 'Processing...';
-
-            const formData = new FormData(reviewForm);
-            const data = Object.fromEntries(formData.entries());
-
-            // If skip, set rating to 1 (minimum required by backend) if no rating is selected
-            // This is a workaround to satisfy backend validation for 'Skip'
-            if (selectedRating === 0) {
-                data.rating = 1; // Default to 1 star if skipping without selection
-                ratingInput.value = 1; // Update hidden input
-            }
-
-            try {
-                const response = await fetch('/reviews', { // Laravel route for reviews.store
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    alert(result.message);
-                    const bsModal = bootstrap.Modal.getInstance(reviewModal);
-                    if (bsModal) {
-                        bsModal.hide();
-                    }
-                    location.reload();
-                } else {
-                    alert('Error: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Fetch error:', error);
-                alert('An unexpected error occurred. Please try again.');
-            } finally {
-                submitButton.disabled = false;
-                skipButton.disabled = false;
-                submitButton.textContent = 'Submit Review';
-                skipButton.textContent = 'Skip';
-            }
+            e.preventDefault(); // Prevent default button action
+            handleFormSubmission(true); // Call with isSkipAction = true for skipping
         });
     });
 </script>

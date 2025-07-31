@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\User\ProductController;
 use App\Http\Controllers\User\StoriesController;
@@ -19,12 +20,14 @@ use App\Http\Controllers\User\Auth\EmailVerificationController;
 use App\Http\Controllers\User\Auth\ForgotPasswordController;
 use App\Http\Controllers\User\Auth\ResetPasswordController;
 
-// Admin Routes
 require __DIR__.'/admin.php';
 
-
-// User Routes
-Route::get('/', [LatestStoriesController::class, 'index'])->name('welcome');
+Route::get('/', function () {
+    if (Auth::check() && Auth::user()->isAdmin()) {
+        return redirect()->route('admin.dashboard');
+    }
+    return (new LatestStoriesController())->index();
+})->name('welcome');
 
 Route::get('/join-as-artisan', [ArtisanRegistrationController::class, 'showForm'])->name('artisan.register');
 Route::post('/join-as-artisan', [ArtisanRegistrationController::class, 'store'])->name('artisan.register.store');
@@ -39,13 +42,12 @@ Route::get('/products/category/{category_name}', [ProductController::class, 'ind
 Route::get('/products/fabric/{slug}', [ProductController::class, 'showFabricProduct'])->name('products.detailkain');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
-
 Route::get('/stories', [StoriesController::class, 'index'])->name('Stories.ListStories');
 Route::get('/stories/{slug}', [StoriesController::class, 'show'])->name('Stories.DetailStories');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'showCheckoutPage'])->name('checkout.show');
-    Route::post('/checkout/add', [CheckoutController::class, 'addToCheckout'])->name('checkout.add'); // This is the route to protect
+    Route::post('/checkout/add', [CheckoutController::class, 'addToCheckout'])->name('checkout.add');
 
     Route::post('/order/process', [OrderController::class, 'processCheckout'])->name('order.process');
     Route::get('/order/{order}/details', [OrderController::class, 'showOrderDetails'])->name('order.details');
@@ -65,7 +67,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');
-    Route::get('/addresses/{address}/edit', [AddressController::class, 'edit'])->name('addresses.edit'); // For fetching data for edit modal via AJAX
+    Route::get('/addresses/{address}/edit', [AddressController::class, 'edit'])->name('addresses.edit');
     Route::put('/addresses/{address}', [AddressController::class, 'update'])->name('addresses.update');
     Route::delete('/addresses/{address}', [AddressController::class, 'destroy'])->name('addresses.destroy');
     Route::post('/profile/picture', [ProfileController::class, 'updateProfilePicture'])->name('profile.update_picture');
@@ -76,7 +78,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
     Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
 });
-
 
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
