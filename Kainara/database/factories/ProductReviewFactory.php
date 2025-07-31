@@ -5,6 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\User;
 use App\Models\Product;
+use App\Models\Order;
 use App\Models\ProductReview;
 
 /**
@@ -25,6 +26,8 @@ class ProductReviewFactory extends Factory
         return [
             'user_id' => User::factory(),
             'product_id' => Product::factory(),
+            'order_id' => Order::factory(),
+
             'rating' => fake()->numberBetween(1, 5),
             'comment' => fake()->boolean(70) ? fake()->sentence(rand(7, 15)) : null,
         ];

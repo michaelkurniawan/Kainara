@@ -13,23 +13,37 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id');
-            $table->foreignId('address_id');
-            $table->enum('status', ['Awaiting Payment', 'Order Confirmed', 'Awaiting Shipment', 'Shipped', 'Delivered', 'Canceled', 'Returned', 'Refunded']);
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('address_id')->nullable()->constrained('user_addresses')->onDelete('set null');
+            $table->enum('status', ['Awaiting Payment', 'Order Confirmed', 'Awaiting Shipment', 'Shipped', 'Delivered', 'Canceled', 'Returned', 'Refunded', 'Completed']);
             $table->decimal('shipping_cost', 10, 2);
             $table->decimal('subtotal', 12, 2);
             $table->boolean('is_completed')->default(false);
             $table->timestamp('completed_at')->nullable();
             $table->timestamp('auto_complete_at')->nullable();
             $table->timestamps();
+            $table->string('original_user_name')->nullable();
+            $table->string('original_user_email')->nullable();
+            $table->string('shipping_label')->nullable(); 
+            $table->string('shipping_recipient_name')->nullable();
+            $table->string('shipping_phone')->nullable(); 
+            $table->text('shipping_address')->nullable(); 
+            $table->string('shipping_country')->nullable(); 
+            $table->string('shipping_city')->nullable(); 
+            $table->string('shipping_province')->nullable(); 
+            $table->string('shipping_postal_code')->nullable();
+            $table->string('payment_method')->nullable(); 
         });
 
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id');
-            $table->foreignId('product_id');
-            $table->foreignId('product_variant_id')->nullable();
+            $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
+            $table->foreignId('product_id')->nullable()->constrained('products')->onDelete('set null');
+            $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->onDelete('set null');
             $table->string('product_name');
+            $table->string('product_image')->nullable();
+            $table->string('variant_size')->nullable();
+            $table->string('variant_color')->nullable();
             $table->decimal('price', 12, 2);
             $table->integer('quantity');
             $table->timestamps();

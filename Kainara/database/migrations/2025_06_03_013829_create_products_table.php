@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('category_id');
+            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
+            $table->foreignId('gender_id')->nullable()->constrained('genders')->onDelete('set null');
+            $table->foreignId('vendor_id')->constrained('vendors')->onDelete('cascade');
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('origin');
@@ -26,22 +28,16 @@ return new class extends Migration
 
         Schema::create('product_variants', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id');
+            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             $table->string('size');
             $table->string('color');
             $table->integer('stock');
+            $table->string('sleeve')->nullable();
             $table->decimal('price', 12, 2)->nullable();
             $table->timestamps();
         });
 
-        Schema::create('product_reviews', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id');
-            $table->foreignId('product_id');
-            $table->tinyInteger('rating');
-            $table->text('comment')->nullable();
-            $table->timestamps();
-        });
+        
     }
 
     /**

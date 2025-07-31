@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
@@ -16,36 +18,50 @@ class Product extends Model
      */
     protected $fillable = [
         'category_id',
+        'vendor_id',
+        'gender_id',
         'name',
         'slug',
+        'origin', 
         'description',
-        'sku',
         'price',
-        'stock_quantity',
-        'is_active',
+        'image', 
+        'material', 
     ];
 
     /**
      * Get the category that owns the product.
      */
-    public function category()
+    public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
     /**
      * Get the product variants for the product.
      */
-    public function variants()
+    public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
     }
 
-    /**
-     * Get the product reviews for the product.
-     */
-    public function reviews()
+    public function vendor(): BelongsTo // Add this relationship
+    {
+        return $this->belongsTo(Vendor::class);
+    }
+
+    public function gender(): BelongsTo // New relationship for Gender
+    {
+        return $this->belongsTo(Gender::class);
+    }
+
+    public function reviews(): HasMany
     {
         return $this->hasMany(ProductReview::class);
+    }
+
+    public function getTotalStockAttribute(): int
+    {
+        return $this->variants->sum('stock');
     }
 }

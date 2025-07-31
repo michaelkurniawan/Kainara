@@ -4,37 +4,32 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductReview extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'product_id',
-        'user_id', // Pastikan Anda juga punya model User
+        'user_id',
+        'order_id',
         'rating',
         'comment',
     ];
 
-    /**
-     * Get the product that the review belongs to.
-     */
-    public function product()
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
-    /**
-     * Get the user that wrote the review.
-     */
-    public function user()
+    public function user(): BelongsTo
     {
-        // Asumsi Anda memiliki model User di App\Models\User
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class, 'order_id');
     }
 }

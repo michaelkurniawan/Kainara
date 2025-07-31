@@ -1,0 +1,257 @@
+@font-face {
+    font-family: 'Ancizar Serif';
+    src: url('/fonts/AncizarSerif-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900; /* Ini menunjukkan rentang bobot font variabel */
+    font-style: normal;
+    font-display: swap; /* Disarankan untuk kinerja pemuatan font */
+}
+
+@font-face {
+    font-family: 'Ancizar Serif';
+    src: url('/fonts/AncizarSerif-Italic-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900; /* Ini menunjukkan rentang bobot font variabel */
+    font-style: italic; /* Penting: Atur sebagai italic */
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ancizar Sans'; /* Nama yang akan digunakan di CSS dan Tailwind */
+    src: url('/fonts/AncizarSans-VariableFont_wght_0.ttf') format('truetype'); /* Perhatikan perubahan nama file jika ada */
+    font-weight: 100 900; /* Menunjukkan rentang bobot font variabel */
+    font-style: normal;
+    font-display: swap; /* Disarankan untuk kinerja pemuatan font */
+}
+
+@font-face {
+    font-family: 'Ancizar Sans'; /* Nama yang sama dengan versi normal */
+    src: url('/fonts/AncizarSans-Italic-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic; /* Penting: Atur sebagai italic agar browser menggunakannya untuk gaya italic */
+    font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --logo-height-medium: 50px;  /* Example: Set to fit within 90px header */
+    --logo-height-large: 80px;   /* Example: Set to fit within 90px header */
+
+    --target-icon-size: 24px;
+    --header-actual-height: 90px; /* TARGET TINGGI BAR HEADER (tanpa memperhitungkan logo yang meluber) */
+
+    --font-primary: 'Ancizar Serif', serif;
+    --font-secondary: 'Ancizar Sans', sans-serif;
+    --color-brand: #AD9D6C;
+    --color-text-dark: #000000;
+    --color-text-nav: #000000;
+    --color-text-light: #f8f9fa;
+    --color-bg-header: #ffffff;
+    --color-bg-footer: #000000;
+    --header-shadow: 0 .125rem .25rem rgba(0,0,0,.075); /* Shadow dari Bootstrap .shadow-sm */
+    --footer-logo-height: 250px;
+    --footer-padding-y: 1rem;
+    
+    /* --color-brand: #AD9D6C; Warna emas/coklat untuk dropdown */
+    --color-dropdown-text: #FFFFFF; /* Warna teks di dropdown */
+    --color-dropdown-hover-bg: #9a8a5e; /* Warna background hover item dropdown (lebih gelap dari brand) */
+    --header-dropdown-border-radius: 15px; /* Sesuai desain */
+}
+
+body {
+    font-family: var(--font-secondary);
+    color: var(--color-text-dark);
+    /* padding-top: calc(var(--header-actual-height) + 2px); PENTING: Sesuaikan berdasarkan --header-actual-height */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex-grow: 1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-primary);
+}
+
+/* Font Weight Normal (non-italic) */
+.font-serif-light {
+    font-family: var(--font-primary);
+    font-weight: 300;
+}
+
+.font-serif-regular {
+    font-family: var(--font-primary);
+    font-weight: 400;
+}
+
+.font-serif-medium {
+    font-family: var(--font-primary);
+    font-weight: 500;
+}
+
+.font-serif-semibold {
+    font-family: var(--font-primary);
+    font-weight: 600;
+}
+
+.font-serif-bold {
+    font-family: var(--font-primary);
+    font-weight: 700;
+}
+
+.font-serif-extrabold {
+    font-family: var(--font-primary);
+    font-weight: 800;
+}
+
+.font-serif-black {
+    font-family: var(--font-primary);
+    font-weight: 900;
+}
+
+/* Font Weight Italic */
+.font-serif-light-italic {
+    font-family: var(--font-primary);
+    font-weight: 300;
+    font-style: italic;
+}
+
+.font-serif-italic { /* Untuk Regular Italic */
+    font-family: var(--font-primary);
+    font-weight: 400;
+    font-style: italic;
+}
+
+.font-serif-medium-italic {
+    font-family: var(--font-primary);
+    font-weight: 500;
+    font-style: italic;
+}
+
+.font-serif-semibold-italic {
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-style: italic;
+}
+
+.font-serif-bold-italic {
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-style: italic;
+}
+
+.font-serif-extrabold-italic {
+    font-family: var(--font-primary);
+    font-weight: 800;
+    font-style: italic;
+}
+
+.font-serif-black-italic {
+    font-family: var(--font-primary);
+    font-weight: 900;
+    font-style: italic;
+}
+
+/* Font Weight Normal (non-italic) */
+.font-sans-thin {
+    font-family: var(--font-secondary); /* Menggunakan variabel font sans-serif */
+    font-weight: 100;
+}
+
+.font-sans-extralight {
+    font-family: var(--font-secondary);
+    font-weight: 200;
+}
+
+.font-sans-light {
+    font-family: var(--font-secondary);
+    font-weight: 300;
+}
+
+.font-sans-regular {
+    font-family: var(--font-secondary);
+    font-weight: 400;
+}
+
+.font-sans-medium {
+    font-family: var(--font-secondary);
+    font-weight: 500;
+}
+
+.font-sans-semibold {
+    font-family: var(--font-secondary);
+    font-weight: 600;
+}
+
+.font-sans-bold {
+    font-family: var(--font-secondary);
+    font-weight: 700;
+}
+
+.font-sans-extrabold {
+    font-family: var(--font-secondary);
+    font-weight: 800;
+}
+
+.font-sans-black {
+    font-family: var(--font-secondary);
+    font-weight: 900;
+}
+
+/* Font Weight Italic */
+.font-sans-thin-italic {
+    font-family: var(--font-secondary);
+    font-weight: 100;
+    font-style: italic;
+}
+
+.font-sans-extralight-italic {
+    font-family: var(--font-secondary);
+    font-weight: 200;
+    font-style: italic;
+}
+
+.font-sans-light-italic {
+    font-family: var(--font-secondary);
+    font-weight: 300;
+    font-style: italic;
+}
+
+.font-sans-italic { /* Untuk Regular Italic */
+    font-family: var(--font-secondary);
+    font-weight: 400;
+    font-style: italic;
+}
+
+.font-sans-medium-italic {
+    font-family: var(--font-secondary);
+    font-weight: 500;
+    font-style: italic;
+}
+
+.font-sans-semibold-italic {
+    font-family: var(--font-secondary);
+    font-weight: 600;
+    font-style: italic;
+}
+
+.font-sans-bold-italic {
+    font-family: var(--font-secondary);
+    font-weight: 700;
+    font-style: italic;
+}
+
+.font-sans-extrabold-italic {
+    font-family: var(--font-secondary);
+    font-weight: 800;
+    font-style: italic;
+}
+
+.font-sans-black-italic {
+    font-family: var(--font-secondary);
+    font-weight: 900;
+    font-style: italic;
+}
