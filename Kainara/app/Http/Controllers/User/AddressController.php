@@ -263,8 +263,6 @@ class AddressController extends Controller
                 'hasActions' => false
             ]);
         } catch (\Exception $e) {
-            // For delete errors, always redirect to the main page (checkout or profile addresses tab)
-            // as redirect()->back() might lead to confusion if the address visually disappeared but an error occurred.
             $redirectTarget = $fromCheckout ?
                                 route('checkout.show') :
                                 route('profile.index', ['#addresses']);

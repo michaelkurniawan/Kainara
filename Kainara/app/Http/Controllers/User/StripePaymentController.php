@@ -78,7 +78,7 @@ class StripePaymentController extends Controller
 
                 // Jika PaymentIntent yang ada sudah sukses atau sedang diproses, arahkan ke halaman sukses
                 if (in_array($paymentIntent->status, ['succeeded', 'processing'])) {
-                    return redirect()->route('order.success', $order->id)->with('success', 'Pembayaran untuk pesanan ini sudah diproses.');
+                    return redirect()->route('my.orders')->with('success', 'Pembayaran untuk pesanan ini sudah diproses.');
                 }
 
                 // Jika jumlah PaymentIntent tidak cocok dengan grand_total order saat ini (misalnya, perubahan harga), perbarui
@@ -175,7 +175,7 @@ class StripePaymentController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Pembayaran berhasil!',
-                    'redirect_url' => route('order.success', $order->id) // Arahkan ke halaman sukses
+                    'redirect_url' => route('my.orders') // Redirect to 'my.orders' route
                 ]);
             } elseif ($stripePaymentIntent->status === 'requires_action' || $stripePaymentIntent->status === 'requires_source_action') {
                 $payment->save();
@@ -185,7 +185,7 @@ class StripePaymentController extends Controller
                     'success' => false,
                     'message' => 'Pembayaran memerlukan tindakan tambahan. Harap selesaikan di Stripe.',
                     // Fallback redirect jika tidak ada URL tindakan spesifik
-                    'redirect_url' => $stripePaymentIntent->next_action->redirect_to_url->url ?? route('checkout.show')
+                    'redirect_url' => $stripePaymentIntent->next_action->redirect_to_url->url ?? route('my.orders')
                 ]);
             } else {
                 // Tangani semua status tidak sukses lainnya (misalnya, 'failed', 'canceled', 'requires_payment_method' jika tidak ditangani sebelumnya)

@@ -155,7 +155,6 @@
                 data-bs-toggle="modal"
                 data-bs-target="#transactionDetailModal"
                 style="cursor: pointer;" {{-- Add cursor pointer to indicate clickability --}}
-                {{-- Data-order attribute for the modal. It will be parsed by JS in profile.blade.php --}}
                 data-order="{{ json_encode([
                     'id' => $order->id,
                     'invoice' => 'INV/' . \Carbon\Carbon::parse($order->created_at)->format('Ymd') . '/' . $order->id,

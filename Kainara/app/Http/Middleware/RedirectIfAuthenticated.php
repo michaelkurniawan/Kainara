@@ -13,17 +13,19 @@ class RedirectIfAuthenticated
      * Handle an incoming request.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  string|null  ...$guards
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, ...$guards): Response
     {
         $guards = empty($guards) ? [null] : $guards;
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                if (Auth::user()->role === 'admin') {
-                    return redirect(route('admin.dashboard'));
-                } else if (Auth::user()->role === 'user') {
-                    return redirect(route('welcome'));
+                if (Auth::user()->isAdmin()) {
+                    return redirect()->route('admin.dashboard');
+                } 
+                else {
+                    return redirect()->route('welcome');
                 }
             }
         }

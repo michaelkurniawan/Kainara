@@ -10,8 +10,7 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-lg font-semibold">{{ __('Uncompleted Orders') }}</h3>
-                        {{-- Tombol "Add New Order" biasanya tidak ada untuk admin, karena order dibuat oleh user --}}
+                        <h3 class="text-lg font-semibold">{{ __('Order List') }}</h3>
                     </div>
 
                     @if (session('success'))
@@ -25,16 +24,20 @@
                         </div>
                     @endif
 
-                    {{-- Status Filter --}}
                     <div class="mb-4">
                         <form action="{{ route('admin.orders.index') }}" method="GET" class="flex items-center space-x-2">
                             <x-input-label for="status_filter" :value="__('Filter by Status')" class="sr-only" />
                             <select id="status_filter" name="status" onchange="this.form.submit()" class="block w-full md:w-auto border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
-                                <option value="">{{ __('All Uncompleted Statuses') }}</option>
+                                <option value="">{{ __('All Orders') }}</option>
+                                <option value="Uncompleted" {{ $filterStatus == 'Uncompleted' ? 'selected' : '' }}>
+                                    {{ __('Uncompleted Orders') }}
+                                </option>
                                 @foreach($allStatuses as $statusOption)
-                                    <option value="{{ $statusOption }}" {{ $filterStatus == $statusOption ? 'selected' : '' }}>
-                                        {{ $statusOption }}
-                                    </option>
+                                    @if($statusOption !== 'Uncompleted')
+                                        <option value="{{ $statusOption }}" {{ $filterStatus == $statusOption ? 'selected' : '' }}>
+                                            {{ __($statusOption) }}
+                                        </option>
+                                    @endif
                                 @endforeach
                             </select>
                             @if($filterStatus)
@@ -44,7 +47,6 @@
                             @endif
                         </form>
                     </div>
-                    {{-- End Status Filter --}}
 
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -89,8 +91,11 @@
                                                 @elseif($order->status == 'Shipped') bg-purple-100 text-purple-800
                                                 @elseif($order->status == 'Delivered') bg-green-100 text-green-800
                                                 @elseif($order->status == 'Returned') bg-red-100 text-red-800
+                                                @elseif($order->status == 'Completed') bg-teal-100 text-teal-800
+                                                @elseif($order->status == 'Canceled') bg-gray-400 text-gray-800
+                                                @elseif($order->status == 'Refunded') bg-pink-100 text-pink-800
                                                 @else bg-gray-100 text-gray-800 @endif">
-                                                {{ $order->status }} {{-- Hapus .value di sini juga --}}
+                                                {{ $order->status }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
@@ -100,13 +105,12 @@
                                             <a href="{{ route('admin.orders.show', $order) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200 mr-2">
                                                 {{ __('View Details') }}
                                             </a>
-                                            {{-- Tambahkan tombol atau dropdown untuk update status di sini jika ingin dilakukan langsung dari index --}}
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
                                         <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-300">
-                                            {{ __('Tidak ada pesanan yang belum terselesaikan.') }}
+                                            {{ __('Tidak ada pesanan yang ditemukan.') }}
                                         </td>
                                     </tr>
                                 @endforelse

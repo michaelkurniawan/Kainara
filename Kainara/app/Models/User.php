@@ -14,7 +14,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory, Notifiable;
 
     /**
-     * Atribut yang dapat diisi secara massal.
+     * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
@@ -25,11 +25,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'profile_picture',
         'dob',
+        'role', // Ensure 'role' is here
     ];
 
-
     /**
-     * Atribut yang harus disembunyikan untuk serialisasi.
+     * The attributes that should be hidden for serialization.
      *
      * @var array<int, string>
      */
@@ -39,7 +39,7 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
-     * Mendapatkan atribut yang harus dicasting.
+     * Get the attributes that should be cast.
      *
      * @return array<string, string>
      */
@@ -48,13 +48,13 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'last_login' => 'datetime', // Casting last_login sebagai datetime
-            'dob' => 'date', // Casting dob sebagai date
+            'last_login' => 'datetime',
+            'dob' => 'date',
         ];
     }
 
     /**
-     * Mendapatkan keranjang belanja yang terkait dengan pengguna.
+     * Get the cart associated with the user.
      */
     public function cart(): HasOne
     {
@@ -71,15 +71,25 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Order::class, 'user_id');
     }
 
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(UserAddress::class, 'user_id');
+    }
 
+    /**
+     * Check if the user has an admin role.
+     */
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
     }
 
-    public function addresses(): HasMany
+    /**
+     * Check if the user has a regular user role.
+     */
+    public function isUser(): bool
     {
-        return $this->hasMany(UserAddress::class, 'user_id');
+        return $this->role === 'user';
     }
 
     public function hasVerifiedEmail()

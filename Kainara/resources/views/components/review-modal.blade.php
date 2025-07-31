@@ -70,43 +70,35 @@
         box-shadow: 0 0 0 0.25rem rgba(182, 176, 159, 0.25);
     }
 
-    #reviewModal .btn {
-        border-radius: 0px;
-        font-weight: 600;
-        transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    .btn-custom-gold {
+        background-color: #B39C59;
+        border-color: #AD9D6D;
+        transition: all 0.2s ease-in-out;
+        border-radius: 0 !important; /* Make Save Changes button square */
     }
 
-    #reviewModal .btn-secondary {
-        background-color: #6c757d;
-        border-color: #6c757d;
-        color: #fff;
+    .btn-custom-gold:hover {
+        background-color: #c9b071;
+        border-color: #B39C59;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
-    #reviewModal .btn-secondary:hover {
-        background-color: #5a6268;
-        border-color: #545b62;
+    .btn-outline-secondary {
+        border-color: #ced4da;
+        color: #6c757d;
+        transition: all 0.2s ease-in-out;
+        border-radius: 0 !important; /* Make Cancel button square */
     }
 
-    #reviewModal .btn-submit-review {
-        background-color: #B6B09F; /* Custom primary color */
-        border-color: #B6B09F;
-        color: #fff;
-    }
-
-    #reviewModal .btn-submit-review:hover {
-        background-color: #9c9685; /* Darker shade on hover */
-        border-color: #9c9685;
-    }
-
-    #reviewModal .btn-submit-review:disabled {
-        background-color: #a7a7a7; /* Gray when disabled */
-        border-color: #a7a7a7;
-        cursor: not-allowed;
-        opacity: 0.7;
+    .btn-outline-secondary:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+        color: #495057;
     }
 
     /* Adjusted modal-footer padding */
-    #reviewModal .modal-footer {
+    #reviewModal .modal-footer-epi {
         padding: 15px 25px; /* Reduced padding */
     }
 </style>
@@ -139,11 +131,156 @@
                         <textarea class="form-control" id="comment" name="comment" rows="4" placeholder="Share your experience and thoughts about the product and service..."></textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-submit-review">Submit Review</button>
+                <div class="modal-footer-epi d-flex justify-content-end align-items-center border-top-0 py-3 px-3 bg-white">
+                    <button type="button" class="btn btn-outline-secondary font-serif-regular px-4 py-2 me-3" id="skipReviewButton">Skip</button>
+                    <button type="submit" class="btn btn-primary font-serif-medium px-4 py-2 btn-custom-gold me-2">Submit Review</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const reviewModal = document.getElementById('reviewModal');
+        const reviewForm = document.getElementById('reviewForm');
+        const starsContainer = document.getElementById('stars');
+        const ratingInput = document.getElementById('review_rating_input');
+        const ratingText = document.getElementById('rating-text');
+        const skipReviewButton = document.getElementById('skipReviewButton');
+        const submitReviewButton = reviewForm.querySelector('button[type="submit"]'); // Get the submit button
+        let selectedRating = 0;
+
+        // --- Star Rating Functionality ---
+        const updateStars = (rating) => {
+            const stars = starsContainer.querySelectorAll('.fa-star');
+            stars.forEach(star => {
+                const starRating = parseInt(star.dataset.rating);
+                if (starRating <= rating) {
+                    star.classList.remove('far');
+                    star.classList.add('fas');
+                } else {
+                    star.classList.remove('fas');
+                    star.classList.add('far');
+                }
+            });
+            ratingInput.value = rating;
+            if (rating > 0) {
+                ratingText.textContent = `You rated ${rating} out of 5 stars.`;
+            } else {
+                ratingText.textContent = 'Click on stars to rate';
+            }
+        };
+
+        starsContainer.addEventListener('mouseover', function(e) {
+            if (e.target.classList.contains('fa-star')) {
+                const hoveredRating = parseInt(e.target.dataset.rating);
+                updateStars(hoveredRating);
+            }
+        });
+
+        starsContainer.addEventListener('mouseout', function() {
+            updateStars(selectedRating); // Revert to selected rating on mouse out
+        });
+
+        starsContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('fa-star')) {
+                selectedRating = parseInt(e.target.dataset.rating);
+                updateStars(selectedRating);
+            }
+        });
+
+        // --- Modal Initialization and Reset ---
+        reviewModal.addEventListener('show.bs.modal', function(event) {
+            // Button that triggered the modal
+            const button = event.relatedTarget;
+            // Extract info from data-bs-* attributes
+            const orderId = button ? button.getAttribute('data-bs-order-id') : null;
+
+            const reviewOrderIdInput = document.getElementById('review_order_id');
+            if (reviewOrderIdInput) {
+                reviewOrderIdInput.value = orderId;
+            }
+
+            // Reset form fields and star rating
+            reviewForm.reset();
+            selectedRating = 0;
+            updateStars(0);
+        });
+
+        // --- Function to handle form submission (for both review and skip) ---
+        const handleFormSubmission = async (isSkipAction) => {
+            const formData = new FormData(reviewForm);
+            const data = Object.fromEntries(formData.entries());
+
+            // Add the skip_review flag to the data
+            data.skip_review = isSkipAction;
+
+            // If skipping, rating and comment can be null/empty,
+            // otherwise, ensure rating is provided for review submission.
+            if (!isSkipAction && selectedRating === 0) {
+                alert('Please provide a rating (1-5 stars) or click "Skip".');
+                return; // Stop the submission
+            }
+            // If skipping, clear rating and comment from data to avoid sending unnecessary values
+            if (isSkipAction) {
+                data.rating = null; // Send null or remove if backend allows
+                data.comment = null; // Send null or remove if backend allows
+            }
+
+
+            // Disable buttons and show loading state
+            submitReviewButton.disabled = true;
+            skipReviewButton.disabled = true;
+            submitReviewButton.textContent = 'Submitting...';
+            skipReviewButton.textContent = 'Processing...';
+
+            try {
+                const response = await fetch('/reviews', { // Laravel route for reviews.store
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') // Ensure CSRF token is sent
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) { // HTTP status 200-299
+                    alert(result.message); // Use a better UI for messages in a real app
+                    const bsModal = bootstrap.Modal.getInstance(reviewModal);
+                    if (bsModal) {
+                        bsModal.hide();
+                    }
+                    // Optionally, refresh the page or update UI to reflect completed order
+                    location.reload();
+                } else {
+                    // Handle server-side validation errors or other errors
+                    alert('Error: ' + result.message); // Display error message
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                alert('An unexpected error occurred. Please try again.');
+            } finally {
+                // Re-enable buttons and reset text
+                submitReviewButton.disabled = false;
+                skipReviewButton.disabled = false;
+                submitReviewButton.textContent = 'Submit Review';
+                skipReviewButton.textContent = 'Skip';
+            }
+        };
+
+        // --- Form Submission Event Listener ---
+        reviewForm.addEventListener('submit', async function(e) {
+            e.preventDefault(); // Prevent default form submission
+            handleFormSubmission(false); // Call with isSkipAction = false for review submission
+        });
+
+        // --- Skip Button Functionality ---
+        skipReviewButton.addEventListener('click', async function(e) {
+            e.preventDefault(); // Prevent default button action
+            handleFormSubmission(true); // Call with isSkipAction = true for skipping
+        });
+    });
+</script>
