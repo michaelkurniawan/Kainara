@@ -67,8 +67,8 @@ class StripePaymentController extends Controller
                     'amount_paid' => $order->grand_total, // Simpan jumlah, akan dikonfirmasi setelah berhasil
                     'currency' => strtoupper($paymentIntent->currency),
                     'payment_method_type' => 'card', // Diasumsikan rute ini untuk pembayaran kartu
-                    'card_details' => null,             // Ini akan diisi setelah pembayaran berhasil
-                    'payment_method_details' => null,   // Ini akan diisi setelah pembayaran berhasil
+                    'card_details' => null,              // Ini akan diisi setelah pembayaran berhasil
+                    'payment_method_details' => null,    // Ini akan diisi setelah pembayaran berhasil
                 ]);
                 $clientSecret = $paymentIntent->client_secret;
 
@@ -129,12 +129,13 @@ class StripePaymentController extends Controller
             $reportedPaymentIntentStatus = $request->input('payment_intent_status');
 
             // Ambil PaymentIntent dari API Stripe untuk mendapatkan status dan detail otentik
-            $stripePaymentIntent = $this->stripe->paymentIntents->retrieve($paymentIntentId);
+            // Penting: Perluas 'latest_charge' untuk mendapatkan ID Charge yang terkait
+            $stripePaymentIntent = $this->stripe->paymentIntents->retrieve($paymentIntentId, ['expand' => ['latest_charge']]);
 
             // Temukan record Payment lokal yang sesuai di database Anda
             $payment = Payment::where('order_id', $order->id)
-                              ->where('stripe_payment_intent_id', $paymentIntentId)
-                              ->first();
+                               ->where('stripe_payment_intent_id', $paymentIntentId)
+                               ->first();
 
             if (!$payment) {
                 return response()->json([
@@ -164,6 +165,13 @@ class StripePaymentController extends Controller
                     ];
                 }
             }
+
+            // --- PENAMBAHAN PENTING: Simpan stripe_charge_id ---
+            // Charge ID diperlukan untuk memproses refund di Stripe
+            if ($stripePaymentIntent->latest_charge && $stripePaymentIntent->latest_charge->id) {
+                $payment->stripe_charge_id = $stripePaymentIntent->latest_charge->id;
+            }
+            // --- AKHIR PENAMBAHAN PENTING ---
 
             // Tangani berbagai status PaymentIntent yang dilaporkan oleh Stripe
             if ($stripePaymentIntent->status === 'succeeded') {

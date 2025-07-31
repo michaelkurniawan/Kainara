@@ -123,8 +123,8 @@
 
     {{-- Container for all order cards, adjusted margin top --}}
     <div class="card-order-container mt-2">
-        {{-- Loop through $userOrders as passed from profile.blade.php --}}
-        @forelse ($userOrders as $order)
+        {{-- Loop through $userOrdersHistory --}}
+        @forelse ($userOrdersHistory as $order)
             @php
                 $firstItem = $order->orderItems->first();
                 $productImage = $firstItem ? asset('storage/' . ($firstItem->product->image ?? 'images/default-product.png')) : 'https://placehold.co/80x80/cccccc/333333?text=No+Image';

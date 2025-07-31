@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->unique()->constrained('orders')->onDelete('cascade');
             $table->string('stripe_payment_intent_id')->unique(); 
+            $table->string('stripe_charge_id')->nullable(); 
             $table->string('status')->default('pending'); 
             $table->decimal('amount_paid', 12, 2); 
             $table->timestamp('paid_at')->nullable(); 

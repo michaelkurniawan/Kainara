@@ -23,10 +23,10 @@ class ProfileController extends Controller
         // Fetch orders for the profile's Order History tab
         // These are orders that are considered "finished" or "archived"
         $userOrdersHistory = $user->orders()
-                                    ->whereIn('status', ['Completed', 'Canceled', 'Returned', 'Refunded'])
-                                    ->with('orderItems.product') // Eager load relationships needed for display
-                                    ->orderByDesc('created_at')
-                                    ->get();
+                                        ->whereIn('status', ['Completed', 'Canceled', 'Returned', 'Refunded'])
+                                        ->with('orderItems.product') // Eager load relationships needed for display
+                                        ->orderByDesc('created_at')
+                                        ->get();
 
         return view('profile', compact(['user', 'userAddresses', 'userOrdersHistory']));
     }

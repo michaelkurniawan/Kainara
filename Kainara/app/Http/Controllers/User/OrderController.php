@@ -26,16 +26,15 @@ class OrderController extends Controller
             'payment_method' => 'required|in:transfer_bank,credit_card,e_wallet',
             'total_amount' => 'required|numeric|min:0',
 
-            // UBAH NAMA VALIDASI INI AGAR SESUAI DENGAN INPUT HIDDEN
-            'shipping_recipient_name' => 'required|string|max:255', // Make required
-            'shipping_phone' => 'required|string|max:255',       // Make required
-            'shipping_address_line' => 'required|string|max:255', // This is for street/main address line
+            'shipping_recipient_name' => 'required|string|max:255',
+            'shipping_phone' => 'required|string|max:255',
+            'shipping_address_line' => 'required|string|max:255',
             'shipping_sub_district' => 'nullable|string',
             'shipping_district' => 'nullable|string',
-            'shipping_city' => 'required|string',                // Make required
-            'shipping_province' => 'required|string',             // Make required
-            'shipping_country' => 'required|string',              // Make required
-            'shipping_postal_code' => 'required|string|max:10', // Make required
+            'shipping_city' => 'required|string',
+            'shipping_province' => 'required|string',
+            'shipping_country' => 'required|string',
+            'shipping_postal_code' => 'required|string|max:10',
         ]);
 
         $cartItems = Session::get('cart', []);
@@ -46,12 +45,10 @@ class OrderController extends Controller
         DB::beginTransaction();
         try {
             $shippingCost = 0; // Assuming this is calculated elsewhere or fixed
-            // ... (stock decrement logic remains the same)
 
             $calculatedSubtotal = 0;
             foreach ($cartItems as $item) {
-                // ... (your existing product/variant logic and stock checks)
-                 $product = Product::find($item['product_id']);
+                $product = Product::find($item['product_id']);
                 if (!$product) {
                     DB::rollBack();
                     return redirect()->back()->with('error', 'One or more products in your cart were not found.')->withInput();
@@ -97,21 +94,19 @@ class OrderController extends Controller
                 return redirect()->back()->with('error', 'There was a price discrepancy. Please try again or refresh the page.')->withInput();
             }
 
-            // AMBIL DATA DARI VALIDATED DATA SESUAI NAMA INPUT BARU
             $shippingAddressData = [
-                'type' => $validatedData['address_type_input'] ?? null, // Use validated data
+                'type' => $validatedData['address_type_input'] ?? null,
                 'recipient_name' => $validatedData['shipping_recipient_name'],
                 'phone' => $validatedData['shipping_phone'],
-                'address' => $validatedData['shipping_address_line'], // This is the main street address
+                'address' => $validatedData['shipping_address_line'],
                 'sub_district' => $validatedData['shipping_sub_district'] ?? null,
                 'district' => $validatedData['shipping_district'] ?? null,
                 'city' => $validatedData['shipping_city'],
                 'province' => $validatedData['shipping_province'],
                 'postal_code' => $validatedData['shipping_postal_code'],
-                'country' => $validatedData['shipping_country'], // Should be 'Indonesia' from validation
+                'country' => $validatedData['shipping_country'],
             ];
 
-            // Construct full shipping address for the 'shipping_address' column
             $fullShippingAddress = $shippingAddressData['address'];
             if ($shippingAddressData['sub_district']) {
                 $fullShippingAddress .= ', ' . $shippingAddressData['sub_district'];
@@ -119,38 +114,26 @@ class OrderController extends Controller
             if ($shippingAddressData['district']) {
                 $fullShippingAddress .= ', ' . $shippingAddressData['district'];
             }
-            // You might want to add city and province here too, depending on how detailed you want 'shipping_address' to be.
-            // For example:
-            // if ($shippingAddressData['city']) {
-            //     $fullShippingAddress .= ', ' . $shippingAddressData['city'];
-            // }
-            // if ($shippingAddressData['province']) {
-            //     $fullShippingAddress .= ', ' . $shippingAddressData['province'];
-            // }
-
 
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'subtotal' => $calculatedSubtotal,
                 'shipping_cost' => $shippingCost,
-                'grand_total' => $grandTotalCalculated, // Pastikan grand_total disimpan
+                'grand_total' => $grandTotalCalculated,
                 'status' => 'Awaiting Payment',
                 'payment_method' => $validatedData['payment_method'],
                 'original_user_name' => Auth::check() ? Auth::user()->first_name . ' ' . Auth::user()->last_name : ($validatedData['first_name'] . ' ' . $validatedData['last_name']),
                 'original_user_email' => Auth::check() ? Auth::user()->email : $validatedData['email'],
                 'shipping_recipient_name' => $shippingAddressData['recipient_name'],
                 'shipping_phone' => $shippingAddressData['phone'],
-                'shipping_address' => $fullShippingAddress, // GUNAKAN INI
+                'shipping_address' => $fullShippingAddress,
                 'shipping_country' => $shippingAddressData['country'],
                 'shipping_city' => $shippingAddressData['city'],
                 'shipping_province' => $shippingAddressData['province'],
                 'shipping_postal_code' => $shippingAddressData['postal_code'],
             ]);
 
-            // ... (rest of the order item creation and session clearing)
-
             foreach ($cartItems as $itemData) {
-                // ... (item creation logic)
                 $product = Product::find($itemData['product_id']);
                 $productName = $product ? $product->name : 'Unknown Product';
                 $productImage = $product ? $product->image : 'https://placehold.co/80x80/cccccc/333333?text=No+Image';
@@ -244,10 +227,22 @@ class OrderController extends Controller
 
         $user = Auth::user();
 
-        // Fetch orders that are *NOT* in the "completed", "canceled", "returned", or "refunded" statuses
+        // Fetch orders that are NOT in the "finished" or "archived" statuses
         $orders = Order::where('user_id', $user->id)
-                        ->whereNotIn('status', ['Completed', 'Canceled', 'Returned', 'Refunded'])
-                        ->with(['orderItems.product', 'orderItems.productVariant']) // Eager load product for image and name
+                        ->whereNotIn('status', [
+                            'Completed',
+                            'Canceled',
+                            'Returned',
+                            'Refunded',
+                            'Partially Refunded',
+                            'Refund Pending',
+                            'Refund Failed',
+                        ])
+                        ->with([
+                            'payment.refunds', // Load payment and refunds to determine full refund status
+                            'orderItems.product', // For display
+                            'orderItems.productVariant', // For display
+                        ])
                         ->orderByDesc('created_at')
                         ->get();
 
@@ -257,7 +252,6 @@ class OrderController extends Controller
     public function completeOrder(Order $order)
     {
         if (Auth::id() !== $order->user_id) {
-            // Changed from abort(403) to JSON response to match the JS expectation
             return response()->json(['success' => false, 'message' => 'Access Denied. You do not have permission to modify this order.'], 403);
         }
 
@@ -266,27 +260,27 @@ class OrderController extends Controller
                 $order->status = 'Completed';
                 $order->save();
 
-                // Return JSON response for success
-                return response()->json(['success' => true, 'message' => 'Order has been successfully completed!']);
+                // Redirect to profile.index#order-history after successful completion
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order has been successfully completed!',
+                    'redirect_url' => route('profile.index', ['#order-history']) // Updated redirect URL
+                ]);
             } catch (\Exception $e) {
                 Log::error('Failed to complete order (backend): ' . $e->getMessage(), ['order_id' => $order->id, 'user_id' => Auth::id()]);
-                // Return JSON response for error
                 return response()->json(['success' => false, 'message' => 'An error occurred while trying to complete the order. Please try again.'], 500);
             }
         }
 
-        // Return JSON response for invalid status
         return response()->json(['success' => false, 'message' => 'Order cannot be completed from its current status (' . $order->status . ').'], 400);
     }
 
-    // New method to cancel an order
     public function cancelOrder(Order $order)
     {
         if (Auth::id() !== $order->user_id) {
             return back()->with('error', 'Access Denied. You do not have permission to cancel this order.');
         }
 
-        // Only allow cancellation if the order is awaiting payment or confirmed (before shipping)
         if (!in_array($order->status, ['Awaiting Payment', 'Order Confirmed'])) {
             return back()->with('error', 'This order cannot be canceled as its status is ' . $order->status . '. Please contact support for further assistance.');
         }
@@ -311,7 +305,8 @@ class OrderController extends Controller
             $order->save();
 
             DB::commit();
-            return redirect()->route('my.orders')->with('success', 'Order has been successfully canceled and product stock returned.');
+            // Redirect to profile.index#order-history after successful cancellation
+            return redirect()->route('profile.index', ['#order-history'])->with('success', 'Order has been successfully canceled and product stock returned.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Order cancellation failed: ' . $e->getMessage(), ['order_id' => $order->id, 'user_id' => Auth::id()]);

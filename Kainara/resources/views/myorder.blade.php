@@ -68,6 +68,13 @@
     .status-awaiting-shipment { background-color: #cce5ff; color: #004085; }
     .status-shipped { background-color: #d4edda; color: #155724; }
     .status-delivered { background-color: #d4edda; color: #155724; }
+    .status-completed { background-color: #e2f0d9; color: #4CAF50; }
+    .status-canceled { background-color: #f8d7da; color: #721c24; }
+    .status-returned { background-color: #fff3cd; color: #856404; }
+    .status-refunded { background-color: #d1ecf1; color: #0c5460; }
+    .status-partially-refunded { background-color: #e1f5fe; color: #03a9f4; }
+    .status-refund-pending { background-color: #fffde7; color: #ffc107; }
+    .status-refund-failed { background-color: #fce4ec; color: #e91e63; }
 
 
     .order-details-summary {
@@ -167,6 +174,19 @@
     .btn-cancel-order:hover {
         background-color: #c82333;
         color: white;
+    }
+    .btn-request-refund {
+        background-color: #007bff;
+        color: white;
+        border: none;
+    }
+    .btn-request-refund:hover {
+        background-color: #0056b3;
+        color: white;
+    }
+    .btn-request-refund:disabled {
+        background-color: #a7a7a7;
+        cursor: not-allowed;
     }
     .empty-order-card {
         background-color: #fff;
@@ -281,13 +301,30 @@
                                 <button type="submit" class="btn btn-cancel-order">Cancel Order</button>
                             </form>
                         @elseif ($order->status === 'Delivered')
-                            <button type="button" class="btn btn-complete-order" data-bs-toggle="modal" data-bs-target="#reviewModal" data-order-id="{{ $order->id }}">
-                                Complete Order
+                            {{-- "Complete Order" button --}}
+                            <button type="button" class="btn btn-complete-order" data-bs-toggle="modal" data-bs-target="#reviewModal" data-order-id="{{ $order->id }}" {{ $order->hasReview() ? 'disabled' : '' }}>
+                                {{ $order->hasReview() ? 'Reviewed' : 'Complete Order' }}
                             </button>
-                            {{-- Change from <a> to <button> for consistent modal triggering --}}
+
+                            {{-- Refund Request Button for FULL Refund only --}}
+                            @php
+                                $canInitiateFullRefund = false;
+                                if ($order->payment && $order->payment->status === 'succeeded') {
+                                    // Check if no part of the payment has been successfully refunded yet
+                                    $totalRefundedAmountForPayment = $order->payment->refunds->where('status', 'succeeded')->sum('refunded_amount');
+                                    if (abs($order->payment->amount_paid - $totalRefundedAmountForPayment) > 0.01) {
+                                        $canInitiateFullRefund = true;
+                                    }
+                                }
+                            @endphp
+
+                            <a href="{{ route('refund.request', $order->id) }}" class="btn btn-request-refund {{ !$canInitiateFullRefund ? 'disabled' : '' }}" {{ !$canInitiateFullRefund ? 'aria-disabled="true"' : '' }}>
+                                Request Full Refund
+                            </a>
+
                             <button type="button" class="btn btn-transaction-detail" data-bs-toggle="modal" data-bs-target="#transactionDetailModal" data-order-id="{{ $order->id }}">Transaction Detail</button>
                         @else
-                            {{-- Change from <a> to <button> for consistent modal triggering --}}
+                            {{-- For other statuses (e.g., Partially Refunded, Refund Pending, Refund Failed, Completed) --}}
                             <button type="button" class="btn btn-transaction-detail" data-bs-toggle="modal" data-bs-target="#transactionDetailModal" data-order-id="{{ $order->id }}">Transaction Detail</button>
                         @endif
 
@@ -315,6 +352,7 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Review Modal Logic
         const reviewModalElement = document.getElementById('reviewModal');
         const reviewModal = new bootstrap.Modal(reviewModalElement);
         const reviewForm = document.getElementById('reviewForm');
@@ -402,7 +440,12 @@
                 if (data.success) {
                     alert(data.message);
                     reviewModal.hide();
-                    window.location.reload();
+                    // Use the redirect_url from the response if available
+                    if (data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        window.location.reload(); // Fallback
+                    }
                 } else {
                     alert('Error: ' + data.message);
                 }
@@ -417,6 +460,7 @@
             });
         });
 
+        // Transaction Detail Modal Logic
         const transactionDetailModalElement = document.getElementById('transactionDetailModal');
 
         if (transactionDetailModalElement) {
@@ -455,7 +499,7 @@
 
                         const statusBadge = document.getElementById('modalOrderStatus');
                         statusBadge.textContent = data.status;
-                        statusBadge.className = 'badge';
+                        statusBadge.className = 'order-status';
                         statusBadge.classList.add(`status-${data.status.toLowerCase().replace(/\s/g, '-')}`);
 
 
