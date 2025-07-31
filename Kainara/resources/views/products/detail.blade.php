@@ -19,6 +19,8 @@
         justify-content: center;
         align-items: center;
         padding: 0;
+        border: 1px solid #6c757d;
+        color: #6c757d;
     }
     .card .text-muted {
         font-size: 0.9rem !important;
@@ -35,6 +37,7 @@
     .review-date {
         text-align: center;
         margin-bottom: 0.5rem;
+        font-size: 0.85rem;
     }
     .review-rating {
         text-align: center;
@@ -51,16 +54,16 @@
     }
     #prev-review-btn:hover:not(:disabled) {
         background-color: #B6B09F;
-        border-color: #343a40;
-        color: black;
+        border-color: #B6B09F;
+        color: white;
     }
     #next-review-btn:hover:not(:disabled) {
         background-color: #B6B09F;
-        border-color: #343a40;
-        color: black;
+        border-color: #B6B09F;
+        color: white;
     }
     .review-nav-btn:disabled {
-        opacity: 0.6;
+        opacity: 0.5;
         cursor: not-allowed;
     }
 
@@ -139,96 +142,52 @@
         transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
     }
 
+    .btn-size:disabled {
+        background-color: #e9ecef;
+        color: #6c757d;
+        border-color: #e9ecef;
+        cursor: not-allowed;
+        opacity: 0.65;
+    }
+
     .product-image-container {
-        width: '100%';
+        width: 100%;
+        max-width: 736px;
         display: flex;
         justify-content: flex-start;
-        align-items: flex-start;
         overflow: hidden;
-        margin: 0 auto;
+        margin: 0;
     }
 
     .product-image-container img {
-        width: 736px;
-        height: 736px;
+        width: 100%;
+        height: auto;
         object-fit: contain;
+        max-height: 736px;
+    }
+
+    @media (max-width: 768px) {
+        .product-image-container {
+            max-width: 100%;
+        }
+        .product-image-container img {
+            max-height: 500px;
+        }
+    }
+
+    .btn-add-to-cart, .btn-buy-it-now {
+        font-size: 1.25rem;
+        padding: 0.75rem 1.5rem;
+    }
+
+    .btn-add-to-cart:disabled, .btn-buy-it-now:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
     }
 </style>
 @endpush
 
 @section('content')
-    @php
-        $hardcodedReviews = [
-            [
-                'user_name' => 'Budi Santoso',
-                'rating' => 4.0,
-                'comment' => 'Batiknya sangat bagus, kualitas kainnya premium dan warnanya cerah. Sangat direkomendasikan!',
-                'created_at' => '2025-06-28 10:30:00',
-            ],
-            [
-                'user_name' => 'Siti Aminah',
-                'rating' => 4.5,
-                'comment' => 'Desainnya unik dan modern. Agak tipis sedikit tapi masih nyaman dipakai.',
-                'created_at' => '2025-06-25 14:15:00',
-            ],
-            [
-                'user_name' => 'Joko Permana',
-                'rating' => 5.0,
-                'comment' => 'Pengiriman cepat, produk sesuai deskripsi. Istri saya sangat suka!',
-                'created_at' => '2025-06-20 09:00:00',
-            ],
-            [
-                'user_name' => 'Ayu Lestari',
-                'rating' => 3.2,
-                'comment' => 'Warnanya agak berbeda dari gambar, tapi masih oke. Cukup nyaman dipakai.',
-                'created_at' => '2025-06-18 11:45:00',
-            ],
-            [
-                'user_name' => 'Dewi Chandra',
-                'rating' => 5.0,
-                'comment' => 'Kainnya adem dan motifnya elegan. Akan beli lagi di lain waktu.',
-                'created_at' => '2025-06-15 16:20:00',
-            ],
-            [
-                'user_name' => 'Tomi Wijaya',
-                'rating' => 4.8,
-                'comment' => 'Ukuran pas, sesuai harapan. Warnanya juga tidak luntur setelah dicuci.',
-                'created_at' => '2025-06-10 18:00:00',
-            ],
-            [
-                'user_name' => 'Faisal Rahman',
-                'rating' => 5.0,
-                'comment' => 'Pelayanan memuaskan, admin responsif. Produk tiba dengan aman.',
-                'created_at' => '2025-06-05 09:30:00',
-            ],
-            [
-                'user_name' => 'Linda Susanti',
-                'rating' => 2.5,
-                'comment' => 'Sayang sekali, bahan kurang sesuai ekspektasi. Agak kasar.',
-                'created_at' => '2025-06-01 13:00:00',
-            ],
-            [
-                'user_name' => 'Rizky Pratama',
-                'rating' => 5.0,
-                'comment' => 'Produk istimewa! Sangat puas dengan pembelian ini.',
-                'created_at' => '2025-05-28 17:00:00',
-            ],
-            [
-                'user_name' => 'Sarah Wijaya',
-                'rating' => 4.0,
-                'comment' => 'Lumayan bagus, semoga awet.',
-                'created_at' => '2025-05-25 10:00:00',
-            ],
-        ];
-
-        $totalRating = 0;
-        foreach ($hardcodedReviews as $review) {
-            $totalRating += $review['rating'];
-        }
-        $averageRating = count($hardcodedReviews) > 0 ? $totalRating / count($hardcodedReviews) : 0;
-        $reviewCount = count($hardcodedReviews);
-    @endphp
-
     <div class="container-fluid px-5 py-5">
 
         @if (session('success'))
@@ -287,35 +246,9 @@
                 <p class="fs-3 fw-bold mb-2">IDR {{ number_format($product->price, 0, ',', '.') }}</p>
 
                 <div class="d-flex align-items-center mb-4">
-                    <div class="text-warning me-2 fs-4">
-                        @php
-                            $ratingHtmlSummary = '';
-                            $fullStarsSummary = floor($averageRating);
-                            $decimalPartSummary = $averageRating - $fullStarsSummary;
-
-                            for ($i = 0; $i < $fullStarsSummary; $i++) {
-                                $ratingHtmlSummary .= '<i class="fas fa-star"></i>';
-                            }
-
-                            if ($decimalPartSummary >= 0.75) {
-                                $ratingHtmlSummary .= '<i class="fas fa-star"></i>';
-                            } elseif ($decimalPartSummary >= 0.25) {
-                                $ratingHtmlSummary .= '<i class="fas fa-star-half-alt"></i>';
-                            }
-
-                            $starsRenderedSummary = floor($averageRating);
-                            if ($decimalPartSummary >= 0.25) {
-                                $starsRenderedSummary++;
-                            }
-                            $emptyStarsSummary = 5 - $starsRenderedSummary;
-                            for ($i = 0; $i < $emptyStarsSummary; $i++) {
-                                $ratingHtmlSummary .= '<i class="far fa-star"></i>';
-                            }
-                        @endphp
-                        {!! $ratingHtmlSummary !!}
+                    <div class="text-warning me-2 fs-4" id="average-rating-stars">
                     </div>
-                    <span class="text-muted fs-5 ms-2">
-                        {{ number_format($averageRating, 1) }} Stars | {{ $reviewCount }} Reviews
+                    <span class="text-muted fs-5 ms-2" id="average-rating-text">
                     </span>
                 </div>
 
@@ -324,6 +257,7 @@
                     <span class="text-decoration-underline fs-4 ms-2">Size Chart</span>
                 </p>
 
+                {{-- Form for Add to Cart / Buy Now (no longer inside @guest/@else) --}}
                 <form action="{{ route('checkout.add') }}" method="POST" id="addToCheckoutForm">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
@@ -334,7 +268,7 @@
                         $displayableSizes = $availableSizesRaw->filter(function ($size) {
                             return $size !== 'One Size';
                         })->sort()->toArray();
-                        $hasOnlyOneSizeVariant = $availableSizesRaw->count() > 0 && count($displayableSizes) === 0;
+                        // hasOnlyOneSizeVariant is now passed from the controller, no need to recalculate here
                     @endphp
 
                     @if (!$hasOnlyOneSizeVariant)
@@ -352,9 +286,8 @@
                         </div>
                     @else
                         <p class="mb-4 fs-4 fw-semibold">Size: One Size Only</p>
-                        <input type="hidden" name="selected_size_one_size_hidden" id="selected_size_input_one_size" value="One Size">
+                        <input type="hidden" name="selected_size" id="selected_size_input_one_size" value="One Size">
                     @endif
-
 
                     <div class="mb-4" style="max-width: 57%;">
                         <div class="d-flex gap-2 mb-4">
@@ -375,13 +308,12 @@
         <hr>
 
         <div class="product-reviews-section mt-4">
-            <h2 class="fw-bold mb-4 d-flex align-items-center justify-content-center fs-2">Customer Reviews ({{ $reviewCount }})</h2>
+            <h2 class="fw-bold mb-4 d-flex align-items-center justify-content-center fs-2">Customer Reviews (<span id="review-count-display">0</span>)</h2>
 
             <div id="reviews-container" class="row g-4 justify-content-center">
             </div>
 
-            @if ($reviewCount > 3)
-            <div class="d-flex justify-content-center align-items-center mt-5 gap-3">
+            <div class="d-flex justify-content-center align-items-center mt-5 gap-3" id="pagination-controls" style="display: none;">
                 <button id="prev-review-btn" class="btn btn-outline-secondary rounded-3 px-4 py-2 review-nav-btn" disabled>
                     <i class="fas fa-chevron-left me-2"></i>Previous
                 </button>
@@ -390,12 +322,10 @@
                     Next <i class="fas fa-chevron-right ms-2"></i>
                 </button>
             </div>
-            @endif
         </div>
 
     </div>
 
-    {{-- Include the dynamically determined size chart modal --}}
     @include($sizeChartComponent)
 @endsection
 
@@ -407,6 +337,9 @@
         let maxQuantity = 0;
 
         const productVariants = @json($product->variants);
+        const productReviews = @json($productReviews);
+        const reviewsPerPage = 3;
+        let currentPage = 0;
 
         const sizeStockMap = {};
         productVariants.forEach(variant => {
@@ -426,8 +359,20 @@
 
         const addToCartButton = document.querySelector('.btn-add-to-cart');
         const buyNowButton = document.querySelector('.btn-buy-it-now');
+        const addToCheckoutForm = document.getElementById('addToCheckoutForm'); // Get the form
 
         const hasOnlyOneSizeVariant = {{ json_encode($hasOnlyOneSizeVariant) }};
+
+        const reviewsContainer = document.getElementById('reviews-container');
+        const prevBtn = document.getElementById('prev-review-btn');
+        const nextBtn = document.getElementById('next-review-btn');
+        const pageIndicator = document.getElementById('page-indicator');
+        const reviewCountDisplay = document.getElementById('review-count-display');
+        const paginationControls = document.getElementById('pagination-controls');
+        const averageRatingStarsContainer = document.getElementById('average-rating-stars');
+        const averageRatingTextContainer = document.getElementById('average-rating-text');
+
+        const isAuthenticated = {{ Auth::check() ? 'true' : 'false' }};
 
         function updateQuantityControls() {
             quantity = Math.min(quantity, maxQuantity);
@@ -440,19 +385,20 @@
             minusBtn.disabled = quantity <= 1;
             plusBtn.disabled = quantity >= maxQuantity;
 
-            if (maxQuantity === 0 || (!selectedSize && !hasOnlyOneSizeVariant)) {
-                addToCartButton?.setAttribute('disabled', 'disabled');
-                buyNowButton?.setAttribute('disabled', 'disabled');
+            // Enable/disable Add to Cart and Buy Now buttons based on size selection and stock
+            if ((selectedSize || hasOnlyOneSizeVariant) && maxQuantity > 0) {
+                if (addToCartButton) addToCartButton.disabled = false;
+                if (buyNowButton) buyNowButton.disabled = false;
             } else {
-                addToCartButton?.removeAttribute('disabled');
-                buyNowButton?.removeAttribute('disabled');
+                if (addToCartButton) addToCartButton.disabled = true;
+                if (buyNowButton) buyNowButton.disabled = true;
             }
         }
 
         sizeButtons.forEach(button => {
             button.addEventListener('click', function () {
-                sizeButtons.forEach(btn => btn.classList.remove('selected', 'bg-secondary', 'text-white'));
-                this.classList.add('selected', 'bg-secondary', 'text-white');
+                sizeButtons.forEach(btn => btn.classList.remove('selected'));
+                this.classList.add('selected');
 
                 selectedSize = this.dataset.size;
                 if (selectedSizeInput) {
@@ -491,43 +437,81 @@
                 return variant.size === 'One Size' ? sum + variant.stock : sum;
             }, 0);
             maxQuantity = oneSizeTotalStock;
-            updateQuantityControls();
-        } else if (sizeButtons.length > 0) {
-            maxQuantity = 0;
-            selectedSize = null;
-            updateQuantityControls();
         } else {
             maxQuantity = 0;
             selectedSize = null;
-            updateQuantityControls();
         }
 
-        const hardcodedReviews = @json($hardcodedReviews);
-        const reviewsPerPage = 3;
-        let currentPage = 0;
+        // Initial call to set button states correctly on page load
+        updateQuantityControls();
 
-        const reviewsContainer = document.getElementById('reviews-container');
-        const prevBtn = document.getElementById('prev-review-btn');
-        const nextBtn = document.getElementById('next-review-btn');
-        const pageIndicator = document.getElementById('page-indicator');
+        // --- New Logic: Handle form submission for login check ---
+        if (addToCheckoutForm) {
+            addToCheckoutForm.addEventListener('submit', function(event) {
+                if (!isAuthenticated) {
+                    event.preventDefault(); // Stop the form from submitting
+
+                    // Show the custom notification card
+                    window.showNotificationCard({
+                        type: 'info', // Or 'error'
+                        title: 'Login Required',
+                        message: 'You must log in to add products to your cart or proceed with the purchase.',
+                        hasActions: false, // No YES/NO buttons
+                        onConfirm: () => {
+                            // Optional: Redirect to login page after user clicks OK
+                            window.location.href = '{{ route('login') }}';
+                        }
+                    });
+
+                    // Set the OK button to redirect to login
+                    const confirmBtn = document.getElementById('globalNotificationConfirmBtn');
+                    if (confirmBtn) {
+                        confirmBtn.textContent = 'Login Now';
+                        confirmBtn.style.display = 'inline-block';
+                        confirmBtn.removeEventListener('click', window.hideNotificationCard); // Remove default hide
+                        confirmBtn.addEventListener('click', () => {
+                            window.hideNotificationCard();
+                            window.location.href = '{{ route('login') }}';
+                        });
+                    }
+                    const cancelBtn = document.getElementById('globalNotificationCancelBtn');
+                    if (cancelBtn) {
+                        cancelBtn.style.display = 'none'; // Hide NO button
+                    }
+                    const actionsDiv = document.getElementById('globalNotificationActions');
+                    if (actionsDiv) {
+                        actionsDiv.style.display = 'flex'; // Ensure actions div is visible for the single button
+                    }
+
+                }
+                // If authenticated, the form will submit normally
+            });
+        }
+        // --- End of New Logic ---
+
 
         function generateStarsHtml(rating) {
             let starsHtml = '';
-            let remainingRating = rating;
+            let fullStars = Math.floor(rating);
+            let halfStar = (rating - fullStars) >= 0.25 && (rating - fullStars) < 0.75;
+            let quarterRoundUp = (rating - fullStars) >= 0.75;
+            let emptyStars = 5;
 
-            for (let i = 0; i < 5; i++) {
-                if (remainingRating >= 1) {
-                    starsHtml += '<i class="fas fa-star"></i>';
-                    remainingRating--;
-                } else if (remainingRating >= 0.75) {
-                    starsHtml += '<i class="fas fa-star"></i>';
-                    remainingRating = 0;
-                } else if (remainingRating >= 0.25) {
-                    starsHtml += '<i class="fas fa-star-half-alt"></i>';
-                    remainingRating = 0;
-                } else {
-                    starsHtml += '<i class="far fa-star"></i>';
-                }
+            for (let i = 0; i < fullStars; i++) {
+                starsHtml += '<i class="fas fa-star"></i>';
+                emptyStars--;
+            }
+
+            if (quarterRoundUp) {
+                starsHtml += '<i class="fas fa-star"></i>';
+                emptyStars--;
+            } else if (halfStar) {
+                starsHtml += '<i class="fas fa-star-half-alt"></i>';
+                emptyStars--;
+            }
+
+            for (let i = 0; i < emptyStars; i++) {
+                starsHtml += '<i class="far fa-star"></i>';
             }
             return starsHtml;
         }
@@ -535,35 +519,44 @@
         function renderReviews() {
             reviewsContainer.innerHTML = '';
 
+            reviewCountDisplay.textContent = productReviews.length;
+
+            if (productReviews.length === 0) {
+                reviewsContainer.innerHTML = '<div class="col-12 text-center"><p class="text-muted fs-5">No reviews for this product yet. Be the first to review!</p></div>';
+                paginationControls.style.display = 'none';
+                updateAverageRatingDisplay(0, 0);
+                return;
+            }
+
+            paginationControls.style.display = 'flex';
+
             const startIndex = currentPage * reviewsPerPage;
             const endIndex = startIndex + reviewsPerPage;
-            const reviewsToDisplay = hardcodedReviews.slice(startIndex, endIndex);
+            const reviewsToDisplay = productReviews.slice(startIndex, endIndex);
 
-            if (reviewsToDisplay.length === 0 && hardcodedReviews.length > 0 && currentPage > 0) {
+            if (reviewsToDisplay.length === 0 && productReviews.length > 0 && currentPage > 0) {
                 currentPage--;
                 renderReviews();
-                return;
-            } else if (hardcodedReviews.length === 0) {
-                reviewsContainer.innerHTML = '<div class="col-12"><p class="text-muted fs-5">No reviews yet for this product. Be the first to review!</p></div>';
-                updatePaginationButtons();
                 return;
             }
 
             reviewsToDisplay.forEach(review => {
                 const colDiv = document.createElement('div');
-                colDiv.className = 'col-lg-4 col-md-6 col-12';
+                colDiv.className = 'col-lg-4 col-md-6 col-12 d-flex';
 
                 const cardHtml = `
-                    <div class="card h-100 rounded-3 shadow-sm review-card-bg">
+                    <div class="card w-100 rounded-3 shadow-sm review-card-bg">
                         <div class="review-name-header-wrapper">
                             <h5 class="review-user-name fs-4">${review.user_name}</h5>
                         </div>
-                        <div class="card-body-content">
-                            <p class="card-text text-muted mb-2 review-date">
-                                ${new Date(review.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                            <div class="text-warning fs-5 review-rating">
-                                ${generateStarsHtml(review.rating)}
+                        <div class="card-body-content d-flex flex-column justify-content-between">
+                            <div>
+                                <p class="card-text text-muted mb-2 review-date">
+                                    ${new Date(review.created_at).toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                                <div class="text-warning fs-5 review-rating">
+                                    ${generateStarsHtml(review.rating)}
+                                </div>
                             </div>
                             <p class="card-text fs-6 review-comment">${review.comment || '<span class="text-muted fst-italic">No comment provided.</span>'}</p>
                         </div>
@@ -574,24 +567,44 @@
             });
 
             updatePaginationButtons();
+            calculateAndDisplayAverageRating();
         }
 
         function updatePaginationButtons() {
-            const totalPages = Math.ceil(hardcodedReviews.length / reviewsPerPage);
-            if (pageIndicator) {
-                if (hardcodedReviews.length > 0) {
-                    pageIndicator.textContent = `Page ${currentPage + 1} of ${totalPages}`;
-                } else {
-                    pageIndicator.textContent = '';
-                }
+            const totalPages = Math.ceil(productReviews.length / reviewsPerPage);
+            if (productReviews.length > 0) {
+                pageIndicator.textContent = `Page ${currentPage + 1} of ${totalPages}`;
+            } else {
+                pageIndicator.textContent = '';
             }
 
-            if (prevBtn) {
-                prevBtn.disabled = currentPage === 0;
+            prevBtn.disabled = currentPage === 0;
+            nextBtn.disabled = (currentPage + 1) * reviewsPerPage >= productReviews.length;
+
+            if (totalPages <= 1) {
+                paginationControls.style.display = 'none';
+            } else {
+                paginationControls.style.display = 'flex';
             }
-            if (nextBtn) {
-                nextBtn.disabled = (currentPage + 1) * reviewsPerPage >= hardcodedReviews.length;
+        }
+
+        function calculateAndDisplayAverageRating() {
+            if (productReviews.length === 0) {
+                updateAverageRatingDisplay(0, 0);
+                return;
             }
+
+            let totalRatingSum = 0;
+            productReviews.forEach(review => {
+                totalRatingSum += review.rating;
+            });
+            const averageRating = totalRatingSum / productReviews.length;
+            updateAverageRatingDisplay(averageRating, productReviews.length);
+        }
+
+        function updateAverageRatingDisplay(avgRating, reviewCount) {
+            averageRatingStarsContainer.innerHTML = generateStarsHtml(avgRating);
+            averageRatingTextContainer.textContent = `${avgRating.toFixed(1)} Stars | ${reviewCount} Reviews`;
         }
 
         if (nextBtn) {

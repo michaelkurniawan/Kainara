@@ -400,14 +400,11 @@
                 @endif
 
                 <div class="ms-auto">
-                    {{-- Updated Clear All button: Resets all query filters, but retains gender/category if they are in the route. --}}
                     @php
                         $clearAllParams = [];
-                        // If gender is set via route, keep it in the URL when clearing all.
                         if (request()->route('gender')) {
                             $clearAllParams['gender'] = request()->route('gender');
                         }
-                        // If category_name is set via route, keep it in the URL when clearing all.
                         if (request()->route('category_name')) {
                             $clearAllParams['category_name'] = request()->route('category_name');
                         }
@@ -417,11 +414,12 @@
                 </div>
             </div>
         @endif
-        {{-- End of Filtered By Section --}}
 
         <div class="row g-4 py-4 mb-4">
             @forelse ($products as $product)
                 <div class="col-12 col-sm-6 col-md-4">
+                    {{-- THIS IS THE CORRECTED LINK --}}
+                    {{-- All product clicks go to products.show, which then redirects if it's a 'Fabric' product. --}}
                     <a href="{{ route('products.show', $product->slug) }}" class="text-decoration-none text-dark">
                         <div class="product-container card h-100">
                             <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="img-fluid" />

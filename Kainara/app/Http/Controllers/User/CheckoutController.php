@@ -6,47 +6,21 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\UserAddress; // Import the UserAddress model
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth; // Import Auth facade
 
 class CheckoutController extends Controller
 {
     public function showCheckoutPage()
     {
-        // Initialize dummy addresses in session if not already present
-        // In a real application, this data would typically come from a database,
-        // associated with the authenticated user.
-        if (!Session::has('user_addresses')) {
-            Session::put('user_addresses', [
-                [
-                    'id' => 1,
-                    'type' => 'Home',
-                    'name' => 'Michael Kurniawan',
-                    'phone' => '085175059853',
-                    'street' => 'Jl. Pakuan No.3, Sumur Batu',
-                    'sub_district' => 'Babakan Madang',
-                    'district' => 'Kabupaten Bogor',
-                    'city' => '', // City might be empty if sub_district/district is sufficient for the region
-                    'province' => 'Jawa Barat',
-                    'postal_code' => '16810',
-                    'is_primary' => true,
-                ],
-                [
-                    'id' => 2,
-                    'type' => 'Work',
-                    'name' => 'Michael Kurniawan',
-                    'phone' => '085175059853',
-                    'street' => 'Sentul City, Jl. Pakuan No.3, Sumur Batu',
-                    'sub_district' => 'Babakan Madang',
-                    'district' => 'Bogor Regency',
-                    'city' => '',
-                    'province' => 'West Java',
-                    'postal_code' => '16810',
-                    'is_primary' => false,
-                ],
-            ]);
-        }
+        // Get the authenticated user
+        $user = Auth::user();
 
-        $userAddresses = Session::get('user_addresses', []);
+        // Fetch user addresses from the database
+        // If the user is not logged in, userAddresses will be empty.
+        $userAddresses = $user ? $user->addresses()->get() : collect();
+
         $cartItems = Session::get('cart', []);
         $subtotal = 0;
 
@@ -89,28 +63,43 @@ class CheckoutController extends Controller
 
         // Determine the address to display on the checkout page
         $selectedAddressId = null;
-        if (Session::has('selected_address_id')) {
-            // Priority 1: Use address ID from flash session (e.g., after user selects/adds an address in a modal)
-            $selectedAddressId = Session::get('selected_address_id');
-        } else {
-            // Priority 2: Find if a primary address is set
-            $defaultAddress = collect($userAddresses)->firstWhere('is_primary');
-            if ($defaultAddress) {
-                $selectedAddressId = $defaultAddress['id'];
-            } elseif (!empty($userAddresses)) {
-                // Priority 3: If no primary, use the first available address
-                $selectedAddressId = $userAddresses[0]['id'];
+        $address = null; // Initialize address to null
+
+        // If a user is logged in and has addresses
+        if ($user && $userAddresses->isNotEmpty()) {
+            if (Session::has('selected_address_id')) {
+                // Priority 1: Use address ID from session (e.g., after user selects/adds an address in a modal)
+                $selectedAddressId = Session::get('selected_address_id');
+                $address = $userAddresses->firstWhere('id', $selectedAddressId);
+
+                // If the selected ID from session is not found in current user's addresses, fallback
+                if (!$address) {
+                    $selectedAddressId = null;
+                }
+            }
+
+            if (!$selectedAddressId) {
+                // Priority 2: Find if a primary/default address is set in the database
+                $defaultAddress = $userAddresses->firstWhere('is_default', true);
+                if ($defaultAddress) {
+                    $selectedAddressId = $defaultAddress->id;
+                    $address = $defaultAddress;
+                } elseif ($userAddresses->isNotEmpty()) {
+                    // Priority 3: If no default, use the first available address
+                    $selectedAddressId = $userAddresses->first()->id;
+                    $address = $userAddresses->first();
+                }
             }
         }
 
-        // Get the full address data for the selected address ID to pass to the view
-        $address = collect($userAddresses)->firstWhere('id', $selectedAddressId);
 
+        // The $address variable now holds the full address object (or null)
         return view('products.checkout', compact('cartItems', 'subtotal', 'userAddresses', 'selectedAddressId', 'address'));
     }
 
     public function addToCheckout(Request $request)
     {
+        // ... (your existing addToCheckout method remains the same)
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
@@ -147,17 +136,24 @@ class CheckoutController extends Controller
             $variantColor = $productVariant->color;
             // Check stock before adding to cart/checkout
             if ($productVariant->stock < $quantity) {
-                return back()->with('error', 'Not enough stock for the selected variant.');
+                return back()->with('notification', [
+                    'type' => 'error',
+                    'title' => 'Limited Stock!',
+                    'message' => 'Not enough stock for the selected variant. Available: ' . $productVariant->stock,
+                    'hasActions' => false
+                ]);
             }
         } else {
             // If a specific size was requested but not found, or no 'One Size' variant exists for a product needing one
             if ($selectedSize && $selectedSize !== 'One Size') {
-                return back()->with('error', 'Selected size is not available for this product.');
+                return back()->with('notification', [
+                    'type' => 'error',
+                    'title' => 'Size Not Available!',
+                    'message' => 'The selected size is not available for this product.',
+                    'hasActions' => false
+                ]);
             }
-            // Fallback for products that truly have no variants and rely on product-level stock (if applicable)
-            // if ($product->stock < $quantity) { return back()->with('error', 'Not enough stock for this product.'); }
         }
-
 
         // Handle 'buy_now' action: clear the cart first
         if ($action === 'buy_now') {
@@ -196,8 +192,6 @@ class CheckoutController extends Controller
                 'quantity' => $quantity,
                 'variant_size' => $selectedSize,
                 'variant_color' => $variantColor,
-                // Include product name and image directly for convenience in checkout view;
-                // though it's still best practice to re-fetch from DB in showCheckoutPage.
                 'product_name' => $product->name,
                 'product_image' => $product->image,
             ];
@@ -205,11 +199,20 @@ class CheckoutController extends Controller
 
         Session::put('cart', $cart);
 
-        // Redirect based on the action performed
         if ($action === 'buy_now') {
-            return redirect()->route('checkout.show')->with('success', 'Proceeding to checkout with your selection!');
+            return redirect()->route('checkout.show')->with('notification', [
+                'type' => 'success',
+                'title' => 'Proceeding to Checkout!',
+                'message' => 'Your selection has been added. Please complete your purchase.',
+                'hasActions' => false
+            ]);
         } else {
-            return back()->with('success', 'Product added to cart!');
+            return back()->with('notification', [
+                'type' => 'success',
+                'title' => 'Added to Cart!',
+                'message' => 'The product has been successfully added to your shopping cart.',
+                'hasActions' => false
+            ]);
         }
     }
 }

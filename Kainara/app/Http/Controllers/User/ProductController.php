@@ -7,9 +7,9 @@ use App\Models\Category;
 use App\Models\Gender;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\ProductReview;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use Illuminate\Support\Str; // Pastikan ini ada
 
 class ProductController extends Controller
 {
@@ -23,16 +23,16 @@ class ProductController extends Controller
         $categoryNameFilter = $request->route('category_name') ?? $request->query('category_name');
 
         if ($request->has('gender') && !$request->route('gender')) {
-            $queryParams = $request->except(['gender']); // Hapus gender dari query
+            $queryParams = $request->except(['gender']);
             return redirect()->route('products.gender.index', array_merge(['gender' => $request->query('gender')], $queryParams));
         }
         if ($request->has('category_name') && !$request->route('category_name')) {
-            $queryParams = $request->except(['category_name']); // Hapus category_name dari query
+            $queryParams = $request->except(['category_name']);
             return redirect()->route('products.category.index', array_merge(['category_name' => $request->query('category_name')], $queryParams));
         }
 
         if (!$genderFilter && !$categoryNameFilter) {
-            return redirect()->route('products.gender.index', ['gender' => 'Male']); // Default to Men's products
+            return redirect()->route('products.gender.index', ['gender' => 'Male']);
         }
 
         $products = Product::query()
@@ -117,12 +117,16 @@ class ProductController extends Controller
 
     public function show($slug)
     {
-        $product = Product::with(['variants', 'gender'])->where('slug', $slug)->firstOrFail();
+        $product = Product::with(['variants', 'gender', 'category'])->where('slug', $slug)->firstOrFail();
+
+        if ($product->category && Str::lower($product->category->name) === 'fabric') {
+            return redirect()->route('products.detailkain', ['slug' => $slug]);
+        }
 
         $sizeChartComponent = 'components.popupsizechart.default';
 
         if ($product->gender) {
-            $productNameLower = Str::lower($product->name); 
+            $productNameLower = Str::lower($product->name);
 
             if ($product->gender->name === 'Male') {
                 if (Str::startsWith($productNameLower, "men's woven vest")) {
@@ -147,6 +151,67 @@ class ProductController extends Controller
             }
         }
 
-        return view('products.detail', compact('product', 'sizeChartComponent'));
+        $productReviews = $product->reviews()
+                                   ->with('user') // Memuat relasi user
+                                   ->orderBy('created_at', 'desc')
+                                   ->get()
+                                   ->map(function($review) {
+                                       $firstName = $review->user->first_name ?? '';
+                                       $lastName = $review->user->last_name ?? '';
+
+                                       $fullName = trim(str_replace('  ', ' ', $firstName . ' ' . $lastName));
+
+                                       return [
+                                           'user_name' => $fullName ?: 'Pengguna Anonim',
+                                           'rating' => (float) $review->rating,
+                                           'comment' => $review->comment,
+                                           'created_at' => $review->created_at->toDateTimeString(),
+                                       ];
+                                   });
+
+        // Calculate hasOnlyOneSizeVariant here and pass it to the view
+        $availableSizesRaw = $product->variants->pluck('size')->unique();
+        $displayableSizes = $availableSizesRaw->filter(function ($size) {
+            return $size !== 'One Size';
+        });
+        $hasOnlyOneSizeVariant = $availableSizesRaw->count() > 0 && $displayableSizes->isEmpty();
+
+        return view('products.detail', compact('product', 'sizeChartComponent', 'productReviews', 'hasOnlyOneSizeVariant'));
+    }
+
+    public function showFabricProduct($slug)
+    {
+        $product = Product::with(['variants', 'gender', 'category', 'vendor'])
+                            ->where('slug', $slug)
+                            ->whereHas('category', function ($query) {
+                                $query->where('name', 'Fabric');
+                            })
+                            ->firstOrFail();
+
+        $productReviews = $product->reviews()
+                                   ->with('user') // Still load 'user' for review display
+                                   ->orderBy('created_at', 'desc')
+                                   ->get()
+                                   ->map(function($review) {
+                                       $firstName = $review->user->first_name ?? '';
+                                       $lastName = $review->user->last_name ?? '';
+                                       $fullName = trim(str_replace('  ', ' ', $firstName . ' ' . $lastName));
+                                       return [
+                                           'user_name' => $fullName ?: 'Pengguna Anonim',
+                                           'rating' => (float) $review->rating,
+                                           'comment' => $review->comment,
+                                           'created_at' => $review->created_at->toDateTimeString(),
+                                       ];
+                                   });
+
+        // Calculate hasOnlyOneSizeVariant for fabric products as well, if needed in detailkain
+        $availableSizesRaw = $product->variants->pluck('size')->unique();
+        $displayableSizes = $availableSizesRaw->filter(function ($size) {
+            return $size !== 'One Size';
+        });
+        $hasOnlyOneSizeVariant = $availableSizesRaw->count() > 0 && $displayableSizes->isEmpty();
+
+
+        return view('products.detailkain', compact('product', 'productReviews', 'hasOnlyOneSizeVariant'));
     }
 }

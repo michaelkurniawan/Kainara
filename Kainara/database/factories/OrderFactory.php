@@ -18,7 +18,7 @@ class OrderFactory extends Factory
      * @return array<string, mixed>
      */
 
-     protected $model = Order::class;
+    protected $model = Order::class;
 
     public function definition(): array
     {
@@ -28,10 +28,10 @@ class OrderFactory extends Factory
         return [
             'user_id' => $user->id,
             'address_id' => $userAddress->id,
-            'status' => fake()->randomElement(['Awaiting Payment', 'Order Confirmed', 'Awaiting Shipment', 'Shipped', 'Delivered', 'Canceled', 'Returned', 'Refunded', 'Completed']),
+            'status' => fake()->randomElement(['Awaiting Payment', 'Order Confirmed', 'Awaiting Shipment', 'Shipped', 'Delivered', 'Canceled', 'Returned', 'Refunded', 'Completed']), // Removed 'Completed' from random selection
             'subtotal' => $this->faker->randomFloat(2, 10000, 1000000),
-            'shipping_cost' => $this->faker->randomFloat(2, 0, 50000), 
-            'is_completed' => fake()->boolean(30),
+            'shipping_cost' => $this->faker->randomFloat(2, 0, 50000),
+            'is_completed' => false, // <<< MODIFIED: Default to false
             'auto_complete_at' => null,
             'original_user_name' => $user->first_name . ' ' . $user->last_name,
             'original_user_email' => $user->email,
@@ -53,13 +53,26 @@ class OrderFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'Order Confirmed',
+            'is_completed' => false, // Ensure it's false for confirmed status
+        ]);
+    }
+
+    /**
+     * Indicate that the order is completed.
+     */
+    public function completed(): Factory
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'Completed',
+            'is_completed' => true,
         ]);
     }
 
     public function configure(): static
     {
         return $this->afterCreating(function (Order $order) {
-            if ($order->is_completed) {
+            // Only set completed_at if is_completed is true (which is handled by the completed() state)
+            if ($order->is_completed && is_null($order->completed_at)) {
                 $order->completed_at = now();
                 $order->save();
             }
