@@ -26,15 +26,16 @@ class OrderController extends Controller
             'payment_method' => 'required|in:transfer_bank,credit_card,e_wallet',
             'total_amount' => 'required|numeric|min:0',
 
-            'address_type_input' => 'nullable|string',
-            'street_input' => 'nullable|string',
-            'sub_district_input' => 'nullable|string',
-            'district_input' => 'nullable|string',
-            'city_input' => 'nullable|string',
-            'province_input' => 'nullable|string',
-            'postal_code_input' => 'nullable|string',
-            'user_name_input' => 'nullable|string',
-            'user_phone_input' => 'nullable|string',
+            // UBAH NAMA VALIDASI INI AGAR SESUAI DENGAN INPUT HIDDEN
+            'shipping_recipient_name' => 'required|string|max:255', // Make required
+            'shipping_phone' => 'required|string|max:255',       // Make required
+            'shipping_address_line' => 'required|string|max:255', // This is for street/main address line
+            'shipping_sub_district' => 'nullable|string',
+            'shipping_district' => 'nullable|string',
+            'shipping_city' => 'required|string',                // Make required
+            'shipping_province' => 'required|string',             // Make required
+            'shipping_country' => 'required|string',              // Make required
+            'shipping_postal_code' => 'required|string|max:10', // Make required
         ]);
 
         $cartItems = Session::get('cart', []);
@@ -44,11 +45,13 @@ class OrderController extends Controller
 
         DB::beginTransaction();
         try {
-            $shippingCost = 0;
+            $shippingCost = 0; // Assuming this is calculated elsewhere or fixed
+            // ... (stock decrement logic remains the same)
 
             $calculatedSubtotal = 0;
             foreach ($cartItems as $item) {
-                $product = Product::find($item['product_id']);
+                // ... (your existing product/variant logic and stock checks)
+                 $product = Product::find($item['product_id']);
                 if (!$product) {
                     DB::rollBack();
                     return redirect()->back()->with('error', 'One or more products in your cart were not found.')->withInput();
@@ -94,39 +97,60 @@ class OrderController extends Controller
                 return redirect()->back()->with('error', 'There was a price discrepancy. Please try again or refresh the page.')->withInput();
             }
 
+            // AMBIL DATA DARI VALIDATED DATA SESUAI NAMA INPUT BARU
             $shippingAddressData = [
-                'type' => $request->input('address_type_input'),
-                'name' => $request->input('user_name_input'),
-                'phone' => $request->input('user_phone_input'),
-                'street' => $request->input('street_input'),
-                'sub_district' => $request->input('sub_district_input'),
-                'district' => $request->input('district_input'),
-                'city' => $request->input('city_input'),
-                'province' => $request->input('province_input'),
-                'postal_code' => $request->input('postal_code_input'),
-                'country' => 'Indonesia',
+                'type' => $validatedData['address_type_input'] ?? null, // Use validated data
+                'recipient_name' => $validatedData['shipping_recipient_name'],
+                'phone' => $validatedData['shipping_phone'],
+                'address' => $validatedData['shipping_address_line'], // This is the main street address
+                'sub_district' => $validatedData['shipping_sub_district'] ?? null,
+                'district' => $validatedData['shipping_district'] ?? null,
+                'city' => $validatedData['shipping_city'],
+                'province' => $validatedData['shipping_province'],
+                'postal_code' => $validatedData['shipping_postal_code'],
+                'country' => $validatedData['shipping_country'], // Should be 'Indonesia' from validation
             ];
+
+            // Construct full shipping address for the 'shipping_address' column
+            $fullShippingAddress = $shippingAddressData['address'];
+            if ($shippingAddressData['sub_district']) {
+                $fullShippingAddress .= ', ' . $shippingAddressData['sub_district'];
+            }
+            if ($shippingAddressData['district']) {
+                $fullShippingAddress .= ', ' . $shippingAddressData['district'];
+            }
+            // You might want to add city and province here too, depending on how detailed you want 'shipping_address' to be.
+            // For example:
+            // if ($shippingAddressData['city']) {
+            //     $fullShippingAddress .= ', ' . $shippingAddressData['city'];
+            // }
+            // if ($shippingAddressData['province']) {
+            //     $fullShippingAddress .= ', ' . $shippingAddressData['province'];
+            // }
+
 
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'subtotal' => $calculatedSubtotal,
                 'shipping_cost' => $shippingCost,
+                'grand_total' => $grandTotalCalculated, // Pastikan grand_total disimpan
                 'status' => 'Awaiting Payment',
                 'payment_method' => $validatedData['payment_method'],
                 'original_user_name' => Auth::check() ? Auth::user()->first_name . ' ' . Auth::user()->last_name : ($validatedData['first_name'] . ' ' . $validatedData['last_name']),
                 'original_user_email' => Auth::check() ? Auth::user()->email : $validatedData['email'],
-                'shipping_recipient_name' => $shippingAddressData['name'],
+                'shipping_recipient_name' => $shippingAddressData['recipient_name'],
                 'shipping_phone' => $shippingAddressData['phone'],
-                'shipping_address' => $shippingAddressData['street'] .
-                                        ($shippingAddressData['sub_district'] ? ', ' . $shippingAddressData['sub_district'] : '') .
-                                        ($shippingAddressData['district'] ? ', ' . $shippingAddressData['district'] : ''),
+                'shipping_address' => $fullShippingAddress, // GUNAKAN INI
                 'shipping_country' => $shippingAddressData['country'],
                 'shipping_city' => $shippingAddressData['city'],
                 'shipping_province' => $shippingAddressData['province'],
                 'shipping_postal_code' => $shippingAddressData['postal_code'],
             ]);
 
+            // ... (rest of the order item creation and session clearing)
+
             foreach ($cartItems as $itemData) {
+                // ... (item creation logic)
                 $product = Product::find($itemData['product_id']);
                 $productName = $product ? $product->name : 'Unknown Product';
                 $productImage = $product ? $product->image : 'https://placehold.co/80x80/cccccc/333333?text=No+Image';

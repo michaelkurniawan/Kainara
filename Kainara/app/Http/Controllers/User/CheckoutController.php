@@ -6,32 +6,27 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\UserAddress; // Import the UserAddress model
+use App\Models\UserAddress;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Auth; // Import Auth facade
+use Illuminate\Support\Facades\Auth;
 
 class CheckoutController extends Controller
 {
     public function showCheckoutPage()
     {
-        // Get the authenticated user
         $user = Auth::user();
 
-        // Fetch user addresses from the database
-        // If the user is not logged in, userAddresses will be empty.
         $userAddresses = $user ? $user->addresses()->get() : collect();
 
         $cartItems = Session::get('cart', []);
         $subtotal = 0;
 
-        // Iterate through cart items to fetch fresh product/variant data and calculate totals
         foreach ($cartItems as &$item) {
             $product = Product::find($item['product_id']);
             if ($product) {
                 $item['product_name'] = $product->name;
                 $item['product_image'] = $product->image;
 
-                // Check for product variant details if applicable
                 if (isset($item['product_variant_id']) && $item['product_variant_id']) {
                     $variant = ProductVariant::find($item['product_variant_id']);
                     if ($variant) {
@@ -53,7 +48,6 @@ class CheckoutController extends Controller
                 $item['total_price'] = $item['price'] * $item['quantity'];
                 $subtotal += $item['total_price'];
             } else {
-                // If product not found (e.g., deleted from database), mark it as unknown
                 $item['product_name'] = 'Unknown Product';
                 $item['product_image'] = 'https://placehold.co/80x80/cccccc/333333?text=No+Image'; // Placeholder image
                 $item['price'] = 0;
@@ -61,18 +55,13 @@ class CheckoutController extends Controller
             }
         }
 
-        // Determine the address to display on the checkout page
         $selectedAddressId = null;
-        $address = null; // Initialize address to null
+        $address = null;
 
-        // If a user is logged in and has addresses
         if ($user && $userAddresses->isNotEmpty()) {
             if (Session::has('selected_address_id')) {
-                // Priority 1: Use address ID from session (e.g., after user selects/adds an address in a modal)
                 $selectedAddressId = Session::get('selected_address_id');
                 $address = $userAddresses->firstWhere('id', $selectedAddressId);
-
-                // If the selected ID from session is not found in current user's addresses, fallback
                 if (!$address) {
                     $selectedAddressId = null;
                 }

@@ -226,15 +226,14 @@
                             </div>
                             <div class="vr mx-3"></div>
                             <div class="text-start flex-grow-1" id="currentAddressDetails">
-                                @if ($address) {{-- Add this check --}}
+                                @if ($address) 
                                     <p class="text-muted mb-0" data-address-line="address">{{ $address['address'] ?? '' }}{{ $address['sub_district'] ? ', ' . $address['sub_district'] : '' }}</p>
                                     <p class="text-muted mb-0" data-address-line="city-province">{{ $address['city'] ?? '' }}{{ $address['city'] && $address['province'] ? ', ' : '' }}{{ $address['province'] ?? '' }}</p>
                                     <p class="text-muted mb-0" data-address-line="country-postal">{{ $address['country'] ?? '' }} {{ $address['postal_code'] ?? '' }}</p>
                                 @else
                                     <p class="text-muted mb-0">No shipping address selected.</p>
-                                @endif {{-- End of check --}}
+                                @endif
                             </div>
-                            {{-- Kontainer baru untuk tombol Change --}}
                             <div class="btn-ubah-text-only-container">
                                 <button type="button" class="btn-ubah-text-only" data-bs-toggle="modal" data-bs-target="#addressSelectionModal">Change</button>
                             </div>
@@ -247,18 +246,17 @@
                         </h2>
                         <form action="{{ route('order.process') }}" method="POST">
                             @csrf
-                            {{-- Hidden inputs for selected address details --}}
                             <input type="hidden" name="address_id" id="address_id_input" value="{{ $address['id'] ?? '' }}">
                             <input type="hidden" name="address_type_input" id="address_type_input" value="{{ $address['label'] ?? ($address['type'] ?? '') }}"> {{-- Updated type input --}}
-                            <input type="hidden" name="recipient_name_input" id="recipient_name_input" value="{{ $address['recipient_name'] ?? '' }}">
-                            <input type="hidden" name="phone_input_shipping" id="phone_input_shipping" value="{{ $address['phone'] ?? '' }}">
-                            <input type="hidden" name="address_input" id="address_input" value="{{ $address['address'] ?? '' }}">
-                            <input type="hidden" name="sub_district_input" id="sub_district_input" value="{{ $address['sub_district'] ?? '' }}">
-                            <input type="hidden" name="district_input" id="district_input" value="{{ $address['district'] ?? '' }}">
-                            <input type="hidden" name="city_input" id="city_input" value="{{ $address['city'] ?? '' }}">
-                            <input type="hidden" name="province_input" id="province_input" value="{{ $address['province'] ?? '' }}">
-                            <input type="hidden" name="country_input" id="country_input" value="{{ $address['country'] ?? '' }}">
-                            <input type="hidden" name="postal_code_input" id="postal_code_input" value="{{ $address['postal_code'] ?? '' }}">
+                            <input type="hidden" name="shipping_recipient_name" id="recipient_name_input" value="{{ $address['recipient_name'] ?? '' }}">
+                            <input type="hidden" name="shipping_phone" id="phone_input_shipping" value="{{ $address['phone'] ?? '' }}">
+                            <input type="hidden" name="shipping_address_line" id="address_input" value="{{ $address['address'] ?? '' }}"> {{-- Gunakan nama yang lebih spesifik jika 'address' adalah hanya baris jalan --}}
+                            <input type="hidden" name="shipping_sub_district" id="sub_district_input" value="{{ $address['sub_district'] ?? '' }}">
+                            <input type="hidden" name="shipping_district" id="district_input" value="{{ $address['district'] ?? '' }}">
+                            <input type="hidden" name="shipping_city" id="city_input" value="{{ $address['city'] ?? '' }}">
+                            <input type="hidden" name="shipping_province" id="province_input" value="{{ $address['province'] ?? '' }}">
+                            <input type="hidden" name="shipping_country" id="country_input" value="{{ $address['country'] ?? '' }}">
+                            <input type="hidden" name="shipping_postal_code" id="postal_code_input" value="{{ $address['postal_code'] ?? '' }}">
 
                             <div class="row g-3 mb-5">
                                 <div class="col-md-6">
@@ -270,7 +268,6 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="phone" class="form-label">Phone</label>
-                                    {{-- Use optional chaining for $address['phone'] to avoid errors if $address is null --}}
                                     <input type="tel" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" placeholder="e.g., 081234567890" value="{{ old('phone', Auth::user()->phone ?? ($address['phone'] ?? '')) }}">
                                     @error('phone')
                                         <div class="invalid-feedback">{{ $message }}</div>
