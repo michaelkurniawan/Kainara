@@ -93,8 +93,8 @@
             </div>
 
             <div class="mb-3">
-                <label for="refund_image" class="form-label">Upload Image (Optional)</label>
-                <input type="file" class="form-control" id="refund_image" name="refund_image" accept="image/*">
+                <label for="refund_image" class="form-label">Upload Image <span class="text-danger">*</span></label>
+                <input type="file" class="form-control" id="refund_image" name="refund_image" accept="image/*" required>
                 <small class="form-text text-muted">Upload an image as proof (e.g., product damage). Max 2MB.</small>
                 <div class="image-preview-container" id="imagePreview">
                     <p>No Image Selected</p>
@@ -109,6 +109,31 @@
 
 @push('scripts')
 <script>
+    // Global function to display Toast notifications
+    function showToast(type, title, message) {
+        const toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            console.error('Toast container not found. Cannot show toast.');
+            return;
+        }
+        const toastElement = document.createElement('div');
+        toastElement.className = `toast align-items-center text-white bg-${type} border-0`;
+        toastElement.setAttribute('role', 'alert');
+        toastElement.setAttribute('aria-live', 'assertive');
+        toastElement.setAttribute('aria-atomic', 'true');
+        toastElement.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>${title}</strong><br>${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        toastContainer.appendChild(toastElement);
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const refundForm = document.getElementById('refundForm');
         const submitButton = refundForm.querySelector('.btn-submit-refund');
@@ -116,7 +141,6 @@
         const refundImageInput = document.getElementById('refund_image');
         const imagePreviewContainer = document.getElementById('imagePreview');
 
-        // Function to display image preview
         refundImageInput.addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
@@ -130,89 +154,105 @@
             }
         });
 
-        refundForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+        // Add a click event listener to the submit button
+        submitButton.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent the form from submitting immediately
 
+            // Client-side validation
             if (!reasonInput.value.trim()) {
-                window.showNotificationCard({
-                    type: 'error',
-                    title: 'Validation Failed',
-                    message: 'Please provide a reason for the refund request.',
-                    hasActions: false
-                });
+                showToast('warning', 'Validation Failed', 'Please provide a reason for the refund.');
                 reasonInput.focus();
                 return;
             }
+            if (refundImageInput.files.length === 0) {
+                showToast('warning', 'Validation Failed', 'Please upload an image as proof for the refund.');
+                return;
+            }
 
-            // Show a confirmation dialog before submitting
-            window.showNotificationCard({
-                type: 'confirmation',
-                title: 'Confirm Full Refund',
-                message: 'Are you sure you want to submit this full refund request? This action cannot be undone.',
-                hasActions: true,
-                onConfirm: () => {
-                    // User confirmed, proceed with submission
-                    submitButton.disabled = true;
-                    submitButton.textContent = 'Processing Refund...';
-
-                    const formData = new FormData(refundForm);
-
-                    fetch(refundForm.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(async response => {
-                        const data = await response.json();
-                        if (!response.ok) {
-                            let errorMessage;
-                            if (response.status === 422 && data.errors) {
-                                const errorMessages = Object.values(data.errors).flat().join(' ');
-                                errorMessage = `Validation failed: ${errorMessages}`;
-                            } else {
-                                errorMessage = data.message || `Server error occurred during refund request (Status: ${response.status}).`;
-                            }
-                            throw new Error(errorMessage);
-                        }
-                        return data;
-                    })
-                    .then(data => {
-                        window.showNotificationCard({
-                            type: 'success',
-                            title: 'Request Submitted',
-                            message: data.message,
-                            hasActions: false, // For simple success, no need for action buttons
-                            onConfirm: () => {
-                                if (data.redirect_url) {
-                                    window.location.href = data.redirect_url;
-                                } else {
-                                    window.location.reload();
-                                }
-                            }
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Refund request failed:', error);
-                        window.showNotificationCard({
-                            type: 'error',
-                            title: 'Request Failed',
-                            message: 'An error occurred: ' + error.message,
-                            hasActions: false
-                        });
-                    })
-                    .finally(() => {
-                        submitButton.disabled = false;
-                        submitButton.textContent = 'Confirm Full Refund';
-                    });
-                },
-                onCancel: () => {
-                    console.log('Refund request cancelled.');
+            // Show the confirmation dialog
+            // NOTE: This assumes `window.showNotificationCard` is defined globally as in your example.
+            if (typeof window.showNotificationCard === 'function') {
+                window.showNotificationCard({
+                    type: 'confirmation',
+                    title: 'Confirm Full Refund',
+                    message: 'Are you sure you want to submit this full refund request?',
+                    hasActions: true,
+                    onConfirm: () => {
+                        // If confirmed, proceed with the refund submission
+                        submitRefundRequest();
+                    },
+                    onCancel: () => {
+                        console.log('Refund request cancelled by user.');
+                    }
+                });
+            } else {
+                // Fallback to a simple confirm dialog if the custom one is not available
+                if (confirm('Are you sure you want to submit this full refund request?')) {
+                    submitRefundRequest();
                 }
-            });
+            }
+
+            if ($action === 'buy_now') {
+
+            return redirect()->route('profile.index', ['#order-history'])->with('notification', [
+                'type' => 'success',
+                'title' => 'Fully Request Refund',
+                'message' => 'Your refund request has been submitted and is awaiting admin review.',
+                'hasActions' => false
+            ]);
         });
+
+        // Function to handle the actual refund submission via Fetch API
+        function submitRefundRequest() {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Processing Refund...';
+
+            const formData = new FormData(refundForm);
+
+            fetch(refundForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (response.status === 422) {
+                    return response.json().then(data => {
+                        let errorMessage = '';
+                        for (const key in data.errors) {
+                            errorMessage += `${data.errors[key].join(', ')}\n`;
+                        }
+                        return Promise.reject(new Error(errorMessage));
+                    });
+                }
+                if (!response.ok) {
+                    return response.json().then(data => Promise.reject(new Error(data.message)));
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showToast('success', 'Refund Submitted', data.message);
+                    if (data.redirect_url) {
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 2000);
+                    }
+                } else {
+                    showToast('error', 'Request Failed', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Refund request failed:', error);
+                showToast('error', 'Request Failed', error.message);
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Confirm Full Refund';
+            });
+        }
     });
 </script>
 @endpush

@@ -1,116 +1,32 @@
 <style>
-    /* Base Modal Styling */
-    #reviewModal .modal-content {
-        overflow: hidden; /* Ensures no content overflows rounded corners */
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        background-color: #ffffff; /* Clean white background */
-    }
-
-    #reviewModal .modal-header {
-        background-color: #f8f9fa; /* Light grey header */
-        border-bottom: 1px solid #e9ecef;
-        padding: 30px 25px;
-    }
-
-    #reviewModal .modal-title {
-        font-family: 'Ancizar Serif', serif; /* Consistent with main page font */
-        font-weight: bold;
-        color: #343a40;
-        font-size: 1.4rem;
-    }
-
-    #reviewModal .modal-body {
-        padding: 30px 25px;
-    }
-
-    #stars {
-        font-size: 2.2rem; /* Slightly larger stars */
-        color: #ccc; /* Default empty star color */
-        margin-top: 10px;
-        display: flex;
-        justify-content: center;
-        gap: 5px; /* Space between stars */
-    }
-
-    #stars .fa-star {
-        cursor: pointer;
-        transition: color 0.3s ease-in-out, transform 0.2s ease-in-out;
-    }
-
-    #stars .fa-star:hover {
-        transform: translateY(-2px); /* Slight lift on hover */
-    }
-
-    #stars .fa-star.fas {
-        color: #ffc107; /* Filled star color - warm yellow */
-    }
-
-    #rating-text {
-        display: block; /* Ensure it takes its own line */
-        margin-top: 10px;
-        font-size: 0.9rem;
-        color: #6c757d;
-    }
-
-    #reviewModal #comment {
-        padding: 12px 15px;
-        min-height: 100px;
-        resize: vertical; /* Allow vertical resizing */
-        font-size: 1rem;
-        border: 1px solid #ced4da;
-        margin-bottom: 15px; /* Reduced space below comment box */
-    }
-
-    #reviewModal #comment::placeholder {
-        color: #adb5bd;
-    }
-
-    #reviewModal #comment:focus {
-        border-color: #B6B09F; /* Highlight color on focus */
-        box-shadow: 0 0 0 0.25rem rgba(182, 176, 159, 0.25);
-    }
-
-    .btn-custom-gold {
-        background-color: #B39C59;
-        border-color: #AD9D6D;
-        transition: all 0.2s ease-in-out;
-        border-radius: 0 !important; /* Make Save Changes button square */
-    }
-
-    .btn-custom-gold:hover {
-        background-color: #c9b071;
-        border-color: #B39C59;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .btn-outline-secondary {
-        border-color: #ced4da;
-        color: #6c757d;
-        transition: all 0.2s ease-in-out;
-        border-radius: 0 !important; /* Make Cancel button square */
-    }
-
-    .btn-outline-secondary:hover {
-        background-color: #e9ecef;
-        border-color: #adb5bd;
-        color: #495057;
-    }
-
-    /* Adjusted modal-footer padding */
-    #reviewModal .modal-footer-epi {
-        padding: 15px 25px; /* Reduced padding */
-    }
+    /* Kode CSS Anda tidak ada perubahan */
+    #reviewModal .modal-content { overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); background-color: #ffffff; }
+    #reviewModal .modal-header { background-color: #f8f9fa; border-bottom: 1px solid #e9ecef; padding: 30px 25px; }
+    #reviewModal .modal-title { font-family: 'Ancizar Serif', serif; font-weight: bold; color: #343a40; font-size: 1.4rem; }
+    #reviewModal .modal-body { padding: 30px 25px; }
+    #stars { font-size: 2.2rem; color: #ccc; margin-top: 10px; display: flex; justify-content: center; gap: 5px; }
+    #stars .fa-star { cursor: pointer; transition: color 0.3s ease-in-out, transform 0.2s ease-in-out; }
+    #stars .fa-star:hover { transform: translateY(-2px); }
+    #stars .fa-star.fas { color: #ffc107; }
+    #rating-text { display: block; margin-top: 10px; font-size: 0.9rem; color: #6c757d; }
+    #reviewModal #comment { padding: 12px 15px; min-height: 100px; resize: vertical; font-size: 1rem; border: 1px solid #ced4da; margin-bottom: 15px; }
+    #reviewModal #comment::placeholder { color: #adb5bd; }
+    #reviewModal #comment:focus { border-color: #B6B09F; box-shadow: 0 0 0 0.25rem rgba(182, 176, 159, 0.25); }
+    .btn-custom-gold { background-color: #B39C59; border-color: #AD9D6D; transition: all 0.2s ease-in-out; border-radius: 0 !important; }
+    .btn-custom-gold:hover { background-color: #c9b071; border-color: #B39C59; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+    .btn-outline-secondary { border-color: #ced4da; color: #6c757d; transition: all 0.2s ease-in-out; border-radius: 0 !important; }
+    .btn-outline-secondary:hover { background-color: #e9ecef; border-color: #adb5bd; color: #495057; }
+    #reviewModal .modal-footer-epi { padding: 15px 25px; }
 </style>
 
 <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg"> {{-- Added modal-lg class here --}}
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="reviewModalLabel">Submit Review & Complete Order</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="reviewForm">
+            <form id="reviewForm" method="POST" action="{{ route('reviews.store') }}">
                 @csrf
                 <input type="hidden" name="order_id" id="review_order_id">
                 <div class="modal-body">
@@ -148,7 +64,6 @@
         const ratingInput = document.getElementById('review_rating_input');
         const ratingText = document.getElementById('rating-text');
         const skipReviewButton = document.getElementById('skipReviewButton');
-        const submitReviewButton = reviewForm.querySelector('button[type="submit"]'); // Get the submit button
         let selectedRating = 0;
 
         // --- Star Rating Functionality ---
@@ -180,7 +95,7 @@
         });
 
         starsContainer.addEventListener('mouseout', function() {
-            updateStars(selectedRating); // Revert to selected rating on mouse out
+            updateStars(selectedRating);
         });
 
         starsContainer.addEventListener('click', function(e) {
@@ -192,95 +107,35 @@
 
         // --- Modal Initialization and Reset ---
         reviewModal.addEventListener('show.bs.modal', function(event) {
-            // Button that triggered the modal
             const button = event.relatedTarget;
-            // Extract info from data-bs-* attributes
             const orderId = button ? button.getAttribute('data-bs-order-id') : null;
-
             const reviewOrderIdInput = document.getElementById('review_order_id');
             if (reviewOrderIdInput) {
                 reviewOrderIdInput.value = orderId;
             }
-
-            // Reset form fields and star rating
             reviewForm.reset();
             selectedRating = 0;
             updateStars(0);
         });
 
-        // --- Function to handle form submission (for both review and skip) ---
-        const handleFormSubmission = async (isSkipAction) => {
-            const formData = new FormData(reviewForm);
-            const data = Object.fromEntries(formData.entries());
-
-            // Add the skip_review flag to the data
-            data.skip_review = isSkipAction;
-
-            // If skipping, rating and comment can be null/empty,
-            // otherwise, ensure rating is provided for review submission.
-            if (!isSkipAction && selectedRating === 0) {
-                alert('Please provide a rating (1-5 stars) or click "Skip".');
-                return; // Stop the submission
-            }
-            // If skipping, clear rating and comment from data to avoid sending unnecessary values
-            if (isSkipAction) {
-                data.rating = null; // Send null or remove if backend allows
-                data.comment = null; // Send null or remove if backend allows
-            }
-
-
-            // Disable buttons and show loading state
-            submitReviewButton.disabled = true;
-            skipReviewButton.disabled = true;
-            submitReviewButton.textContent = 'Submitting...';
-            skipReviewButton.textContent = 'Processing...';
-
-            try {
-                const response = await fetch('/reviews', { // Laravel route for reviews.store
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') // Ensure CSRF token is sent
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (response.ok) { // HTTP status 200-299
-                    alert(result.message); // Use a better UI for messages in a real app
-                    const bsModal = bootstrap.Modal.getInstance(reviewModal);
-                    if (bsModal) {
-                        bsModal.hide();
-                    }
-                    // Optionally, refresh the page or update UI to reflect completed order
-                    location.reload();
-                } else {
-                    // Handle server-side validation errors or other errors
-                    alert('Error: ' + result.message); // Display error message
-                }
-            } catch (error) {
-                console.error('Fetch error:', error);
-                alert('An unexpected error occurred. Please try again.');
-            } finally {
-                // Re-enable buttons and reset text
-                submitReviewButton.disabled = false;
-                skipReviewButton.disabled = false;
-                submitReviewButton.textContent = 'Submit Review';
-                skipReviewButton.textContent = 'Skip';
-            }
-        };
-
-        // --- Form Submission Event Listener ---
-        reviewForm.addEventListener('submit', async function(e) {
-            e.preventDefault(); // Prevent default form submission
-            handleFormSubmission(false); // Call with isSkipAction = false for review submission
+        skipReviewButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const skipInput = document.createElement('input');
+            skipInput.type = 'hidden';
+            skipInput.name = 'skip_review';
+            skipInput.value = '1';
+            reviewForm.appendChild(skipInput);
+            
+            reviewForm.submit();
         });
 
-        // --- Skip Button Functionality ---
-        skipReviewButton.addEventListener('click', async function(e) {
-            e.preventDefault(); // Prevent default button action
-            handleFormSubmission(true); // Call with isSkipAction = true for skipping
+        reviewForm.addEventListener('submit', function(e) {
+            const isSubmitReviewButton = e.submitter && e.submitter.id !== 'skipReviewButton';
+
+            if (isSubmitReviewButton && selectedRating === 0) {
+                e.preventDefault(); 
+                alert('Please provide a rating (1-5 stars) or click "Skip".');
+            }
         });
     });
 </script>

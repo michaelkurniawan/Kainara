@@ -307,7 +307,12 @@ class OrderController extends Controller
             $order->save();
 
             DB::commit();
-            return redirect()->route('profile.index', ['#order-history'])->with('success', 'Order has been successfully canceled and product stock returned.');
+            return redirect()->route('profile.index', ['#order-history'])->with('notification', [
+                'type' => 'success',
+                'title' => 'Order Cancellation!',
+                'message' => 'Order has been successfully canceled.',
+                'hasActions' => false
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Order cancellation failed: ' . $e->getMessage(), ['order_id' => $order->id, 'user_id' => Auth::id()]);
