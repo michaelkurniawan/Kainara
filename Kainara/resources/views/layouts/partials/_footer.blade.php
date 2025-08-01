@@ -94,11 +94,11 @@
             <div class="col-lg-2 col-md-3 col-6">
                 <h6 class="footer-heading">MENU</h6>
                 <ul class="list-unstyled footer-links">
-                    <li><a href="#">Woman</a></li>
-                    <li><a href="#">Men</a></li>
-                    <li><a href="#">My Order</a></li>
-                    <li><a href="#">About Us</a></li>
-                    <li><a href="#">Profile</a></li>
+                    <li><a href="{{ route('products.gender.index', ['gender' => 'Female']) }}">Woman</a></li>
+                    <li><a href="{{ route('products.gender.index', ['gender' => 'Male']) }}">Men</a></li>
+                    <li><a href="{{ route('my.orders') }}">My Order</a></li>
+                    <li><a href="{{ route('tentangkainara') }}">About Us</a></li>
+                    <li><a href="{{ route('profile.index') }}">Profile</a></li>
                 </ul>
             </div>
 
