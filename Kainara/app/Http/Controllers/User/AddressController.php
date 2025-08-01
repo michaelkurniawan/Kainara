@@ -43,38 +43,38 @@ class AddressController extends Controller
 
             $fromCheckout = $request->has('from_checkout') && $request->input('from_checkout') == '1';
             $redirectTarget = $fromCheckout ?
-                                route('checkout.show') :
-                                route('profile.index', ['#addresses']);
+                                 route('checkout.show') :
+                                 route('profile.index', ['#addresses']);
 
             return redirect($redirectTarget)->with('notification', [
                 'type' => 'success',
                 'title' => 'Address Added Successfully!',
                 'message' => 'Your new address has been saved.',
-                'hasActions' => false // No actions needed for a simple success notification
+                'hasActions' => false
             ]);
 
         } catch (ValidationException $e) {
             $fromCheckout = $request->has('from_checkout') && $request->input('from_checkout') == '1';
             $redirectBack = $fromCheckout ?
-                                redirect()->back() :
-                                redirect()->back()->withFragment('addresses');
+                                 redirect()->back() :
+                                 redirect()->back()->withFragment('addresses');
 
             return $redirectBack->with('notification', [
                 'type' => 'error',
                 'title' => 'Failed to Add Address!',
-                'message' => 'Please check your input. ' . $e->getMessage(), // You might want to refine this message for production
+                'message' => 'Please check your input. ' . $e->getMessage(),
                 'hasActions' => false
             ])->withErrors($e->errors())->onlyInput($request->except(['_token']));
         } catch (\Exception $e) {
             $fromCheckout = $request->has('from_checkout') && $request->input('from_checkout') == '1';
             $redirectBack = $fromCheckout ?
-                                redirect()->back() :
-                                redirect()->back()->withFragment('addresses');
+                                 redirect()->back() :
+                                 redirect()->back()->withFragment('addresses');
 
             return $redirectBack->with('notification', [
                 'type' => 'error',
                 'title' => 'An Error Occurred!',
-                'message' => 'Failed to add address: ' . $e->getMessage(), // Consider a more generic message for production
+                'message' => 'Failed to add address: ' . $e->getMessage(),
                 'hasActions' => false
             ])->withInput();
         }
@@ -82,7 +82,6 @@ class AddressController extends Controller
 
     /**
      * Fetches address data for editing.
-     * This is assumed to be an API endpoint called via AJAX.
      *
      * @param  \App\Models\UserAddress  $address
      * @return \Illuminate\Http\JsonResponse
@@ -113,8 +112,8 @@ class AddressController extends Controller
 
         if ($address->user_id !== Auth::id()) {
             $redirectTarget = $fromCheckout ?
-                                route('checkout.show') :
-                                route('profile.index', ['#addresses']);
+                                 route('checkout.show') :
+                                 route('profile.index', ['#addresses']);
 
             return redirect($redirectTarget)->with('notification', [
                 'type' => 'error',
@@ -150,8 +149,8 @@ class AddressController extends Controller
             $address->update($validatedData);
 
             $redirectTarget = $fromCheckout ?
-                                route('checkout.show') :
-                                route('profile.index', ['#addresses']);
+                                 route('checkout.show') :
+                                 route('profile.index', ['#addresses']);
 
             return redirect($redirectTarget)->with('notification', [
                 'type' => 'success',
@@ -162,8 +161,8 @@ class AddressController extends Controller
 
         } catch (ValidationException $e) {
             $redirectBack = $fromCheckout ?
-                                redirect()->back() :
-                                redirect()->back()->withFragment('addresses');
+                                 redirect()->back() :
+                                 redirect()->back()->withFragment('addresses');
 
             return $redirectBack->with('notification', [
                 'type' => 'error',
@@ -173,8 +172,8 @@ class AddressController extends Controller
             ])->withErrors($e->errors())->onlyInput($request->except(['_token', '_method']));
         } catch (\Exception $e) {
             $redirectBack = $fromCheckout ?
-                                redirect()->back() :
-                                redirect()->back()->withFragment('addresses');
+                                 redirect()->back() :
+                                 redirect()->back()->withFragment('addresses');
 
             return $redirectBack->with('notification', [
                 'type' => 'error',
@@ -193,8 +192,6 @@ class AddressController extends Controller
      */
     public function destroy(Address $address, Request $request)
     {
-        // The previous code had a request() helper call, but passing it as an argument is a cleaner practice.
-        // Let's stick with that for clarity.
         $fromCheckout = $request->has('from_checkout') && $request->input('from_checkout') == '1';
 
         if ($address->user_id !== Auth::id()) {

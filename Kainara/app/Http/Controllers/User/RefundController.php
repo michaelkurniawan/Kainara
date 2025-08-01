@@ -48,11 +48,7 @@ class RefundController extends Controller
         $availableForRefund = $fullOrderAmount - $totalRefundedAmount;
 
         if (abs($availableForRefund) < 0.01) {
-            return redirect()->route('my.orders')->with('notification', [
-                'type' => 'info',
-                'title' => 'Refund Complete',
-                'message' => 'This order has already been fully refunded.'
-            ]);
+            return redirect()->route('my.orders')->with('info', 'This order has already been fully refunded.');
         }
 
         return view('refund.form', compact('order', 'payment', 'availableForRefund'));
@@ -74,9 +70,10 @@ class RefundController extends Controller
         }
 
         try {
+            // Updated validation rules: 'refund_image' is now required
             $validated = $request->validate([
                 'reason' => 'required|string|max:255',
-                'refund_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'refund_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             ]);
             $userProvidedReason = $validated['reason'];
 
@@ -85,6 +82,8 @@ class RefundController extends Controller
         }
 
         $imagePath = null;
+        // The file check is no longer strictly necessary here due to the 'required' validation,
+        // but it's good practice to wrap the store call in case of other issues.
         if ($request->hasFile('refund_image')) {
             try {
                 $imagePath = $request->file('refund_image')->store('public/refund_images');
@@ -121,12 +120,14 @@ class RefundController extends Controller
 
             DB::commit();
 
-            // Updated redirect URL to profile with order history anchor
-            return response()->json([
-                'success' => true,
+
+            return redirect()->route('profile.index', ['#order-history'])->with('notification', [
+                'type' => 'success',
+                'title' => 'Refund Request!',
                 'message' => 'Your refund request has been submitted and is awaiting admin review.',
-                'redirect_url' => route('profile.index', ['#order-history'])
+                'hasActions' => false
             ]);
+            
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -135,11 +136,7 @@ class RefundController extends Controller
                 'order_id' => $order->id,
                 'payment_id' => $payment->id,
             ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'An error occurred while submitting the refund request.'
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'An error occurred while submitting the refund request: ' . $e->getMessage()], 500);
         }
     }
 }

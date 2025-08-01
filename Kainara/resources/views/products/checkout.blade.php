@@ -182,7 +182,7 @@
             margin-bottom: 0 !important;
         }
         .btn-checkout:hover {
-            background-color: #9a9a9a;
+            background-color: #9e957c;
         }
 
         .fixed-payment-method {

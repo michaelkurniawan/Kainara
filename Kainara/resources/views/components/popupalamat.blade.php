@@ -476,14 +476,10 @@
             });
         }
 
-        // Listener for when 'addAddressModal' closes after adding a new address
-        // This will re-open the address selection modal if 'add_from_checkout' was set
         if (addAddressModal) {
             addAddressModal.addEventListener('hidden.bs.modal', function () {
                 const addFromCheckoutInput = document.getElementById('add_from_checkout');
-                // Only re-open selection modal if it originated from checkout flow
                 if (addFromCheckoutInput && addFromCheckoutInput.value === '1') {
-                    // Reset the hidden input value
                     addFromCheckoutInput.value = '0';
                     const addressSelectionModalInstance = new bootstrap.Modal(addressSelectionModal);
                     addressSelectionModalInstance.show();
@@ -491,13 +487,10 @@
             });
         }
 
-        // Listener for when 'editAddressModal' closes after editing an address
-        // This will re-open the address selection modal if 'edit_from_checkout' was set
         if (editAddressModal) {
             editAddressModal.addEventListener('hidden.bs.modal', function () {
                 const editFromCheckoutInput = document.getElementById('edit_from_checkout');
                 if (editFromCheckoutInput && editFromCheckoutInput.value === '1') {
-                    // Reset the hidden input value
                     editFromCheckoutInput.value = '0';
                     const addressSelectionModalInstance = new bootstrap.Modal(addressSelectionModal);
                     addressSelectionModalInstance.show();

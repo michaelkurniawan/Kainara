@@ -337,10 +337,6 @@
         window.hideNotificationCard = function() {
             console.log('hideNotificationCard called.');
             overlay.classList.remove('show');
-            // Clear current callbacks only if needed,
-            // they will be set again by the next showNotificationCard call.
-            // currentOnConfirmCallback = null;
-            // currentOnCancelCallback = null;
             clearButtonListeners(); // Ensure all listeners are removed after hiding
         };
 
