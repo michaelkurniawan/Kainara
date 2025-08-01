@@ -4,6 +4,10 @@
 
 @push('styles')
 <style>
+    :root {
+        --font-primary: 'Ancizar Serif', serif;
+        --font-secondary: 'Ancizar Serif', serif;
+    }
     .form-container {
         max-width: 600px;
         margin: 50px auto;
@@ -71,27 +75,7 @@
 @section('content')
 <div class="container py-5 px-5">
     <div class="form-container">
-        <h2>Confirm Full Refund for Order #{{ $order->id }}</h2>
-
-        @if (session('error'))
-            <div class="alert alert-danger" role="alert">
-                {{ session('error') }}
-            </div>
-        @endif
-        @if (session('info'))
-            <div class="alert alert-info" role="alert">
-                {{ session('info') }}
-            </div>
-        @endif
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+        <h2 class="fs-4">Confirm Full Refund for Order #{{ $order->id }}</h2>
 
         <p class="alert-info-custom">
             Total Paid: <strong>IDR {{ number_format($payment->amount_paid, 0, ',', '.') }}</strong>
@@ -99,7 +83,6 @@
             Amount available for refund: <strong>IDR {{ number_format($availableForRefund, 0, ',', '.') }}</strong>
         </p>
 
-        {{-- IMPORTANT: Ensure enctype="multipart/form-data" for file uploads --}}
         <form id="refundForm" method="POST" action="{{ route('refund.request.submit', $order->id) }}" enctype="multipart/form-data">
             @csrf
 
@@ -151,61 +134,83 @@
             e.preventDefault();
 
             if (!reasonInput.value.trim()) {
-                alert('Please provide a reason for the refund.');
+                window.showNotificationCard({
+                    type: 'error',
+                    title: 'Validation Failed',
+                    message: 'Please provide a reason for the refund request.',
+                    hasActions: false
+                });
                 reasonInput.focus();
                 return;
             }
 
-            submitButton.disabled = true;
-            submitButton.textContent = 'Processing Refund...';
+            // Show a confirmation dialog before submitting
+            window.showNotificationCard({
+                type: 'confirmation',
+                title: 'Confirm Full Refund',
+                message: 'Are you sure you want to submit this full refund request? This action cannot be undone.',
+                hasActions: true,
+                onConfirm: () => {
+                    // User confirmed, proceed with submission
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Processing Refund...';
 
-            const formData = new FormData(this);
+                    const formData = new FormData(refundForm);
 
-            fetch(this.action, {
-                method: 'POST',
-                body: formData, // FormData automatically sets Content-Type for file uploads
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest' // Important for Laravel to receive JSON response
-                }
-            })
-            .then(response => response.json().then(data => {
-                if (!response.ok) {
-                    if (response.status === 422 && data.errors) {
-                        let errorMessage = 'Validation Failed:\n';
-                        for (const key in data.errors) {
-                            if (Array.isArray(data.errors[key])) {
-                                errorMessage += `- ${data.errors[key].join(', ')}\n`;
-                            } else {
-                                errorMessage += `- ${data.errors[key]}\n`;
-                            }
+                    fetch(refundForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
                         }
-                        throw new Error(errorMessage);
-                    } else {
-                        throw new Error(data.message || `Server error occurred during refund request (Status: ${response.status}).`);
-                    }
+                    })
+                    .then(async response => {
+                        const data = await response.json();
+                        if (!response.ok) {
+                            let errorMessage;
+                            if (response.status === 422 && data.errors) {
+                                const errorMessages = Object.values(data.errors).flat().join(' ');
+                                errorMessage = `Validation failed: ${errorMessages}`;
+                            } else {
+                                errorMessage = data.message || `Server error occurred during refund request (Status: ${response.status}).`;
+                            }
+                            throw new Error(errorMessage);
+                        }
+                        return data;
+                    })
+                    .then(data => {
+                        window.showNotificationCard({
+                            type: 'success',
+                            title: 'Request Submitted',
+                            message: data.message,
+                            hasActions: false, // For simple success, no need for action buttons
+                            onConfirm: () => {
+                                if (data.redirect_url) {
+                                    window.location.href = data.redirect_url;
+                                } else {
+                                    window.location.reload();
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Refund request failed:', error);
+                        window.showNotificationCard({
+                            type: 'error',
+                            title: 'Request Failed',
+                            message: 'An error occurred: ' + error.message,
+                            hasActions: false
+                        });
+                    })
+                    .finally(() => {
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Confirm Full Refund';
+                    });
+                },
+                onCancel: () => {
+                    console.log('Refund request cancelled.');
                 }
-                return data;
-            }))
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    if (data.redirect_url) {
-                        window.location.href = data.redirect_url;
-                    } else {
-                        window.location.reload();
-                    }
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Refund request failed:', error);
-                alert('An error occurred: ' + error.message);
-            })
-            .finally(() => {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Confirm Full Refund';
             });
         });
     });

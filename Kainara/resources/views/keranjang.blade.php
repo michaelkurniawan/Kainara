@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Keranjang')
+@section('title', 'Shopping Cart')
 
 @push('styles')
     <style>
@@ -106,47 +106,46 @@
 
 
         .product-quantity-controls-wrapper { 
-            width: 100px; /* Overall width for the controls group */
+            width: 100px;
             flex-shrink: 0; 
             display: flex;
             justify-content: center;
             align-items: center;
             margin-right: 2.8rem;
-            gap: 0.5rem; /* Space between buttons and input/span */
+            gap: 0.5rem;
         }
 
         .quantity-display-span {
             display: inline-block;
-            width: 50px; /* Fixed width for alignment */
+            width: 50px;
             text-align: center;
             padding: 0.375rem 0.25rem;
             cursor: pointer;
-            border-bottom: 1px solid transparent; /* Default transparent underline */
+            border-bottom: 1px solid transparent;
             transition: border-color 0.2s;
-            line-height: 1.5; /* Ensure text baseline alignment with buttons */
-            box-sizing: border-box; /* Include padding and border in width/height */
+            line-height: 1.5;
+            box-sizing: border-box;
         }
 
         .quantity-input-active {
             width: 50px;
             text-align: center;
-            padding: 0; /* Remove padding entirely for minimal box */
-            border: none; /* No borders */
-            background-color: transparent; /* No background */
-            box-shadow: none; /* No shadows */
-            border-radius: 0; /* No border radius */
-            border-bottom: 2px solid #000; /* Only a bottom border (underline) */
-            outline: none; /* Remove default outline on focus */
-            height: 1.5em; /* Set height based on font-size to avoid extra space */
-            font-size: inherit; /* Inherit font size from parent span/text */
-            font-family: inherit; /* Inherit font family */
-            color: inherit; /* Inherit text color */
-            box-sizing: border-box; /* Crucial for sizing */
+            padding: 0;
+            border: none;
+            background-color: transparent;
+            box-shadow: none;
+            border-radius: 0;
+            border-bottom: 2px solid #000;
+            outline: none;
+            height: 1.5em;
+            font-size: inherit;
+            font-family: inherit;
+            color: inherit;
+            box-sizing: border-box;
 
-            /* Remove default appearance for number inputs (spinners etc.) */
-            -webkit-appearance: none; /* For Chrome, Safari, Edge */
-            -moz-appearance: textfield; /* For Firefox */
-            appearance: none; /* Standard */
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+            appearance: none;
         }
 
         .quantity-input-active::-webkit-inner-spin-button,
@@ -155,7 +154,7 @@
             margin: 0;
         }
         .quantity-input-active {
-            -moz-appearance: textfield; /* Remove Firefox spinner */
+            -moz-appearance: textfield;
         }
 
         .cart-col-total {
@@ -213,7 +212,7 @@
 
 @section('content')
     <div class="container-fluid py-5 px-5">
-        <x-bangga title="Shopping Cart" subtitle="Bangga Pakai Karya UMKM" />
+        <x-bangga title="Shopping Cart" subtitle="Be Proud to Wear UMKM Products" />
 
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -296,11 +295,11 @@
                                     <button type="button" class="btn btn-outline-secondary btn-sm me-2 quantity-minus" data-product-id="{{ $item['product_id'] }}" data-variant-id="{{ $item['product_variant_id'] ?? '' }}" {{ $item['quantity'] <= 1 ? 'disabled' : '' }}>−</button>
                                     
                                     <span class="quantity-display-span" 
-                                          data-quantity="{{ $item['quantity'] }}" 
-                                          data-min="1" 
-                                          data-max="{{ $item['max_stock_available'] }}"
-                                          data-product-id="{{ $item['product_id'] }}"
-                                          data-variant-id="{{ $item['product_variant_id'] ?? '' }}">
+                                            data-quantity="{{ $item['quantity'] }}" 
+                                            data-min="1" 
+                                            data-max="{{ $item['max_stock_available'] }}"
+                                            data-product-id="{{ $item['product_id'] }}"
+                                            data-variant-id="{{ $item['product_variant_id'] ?? '' }}">
                                         {{ $item['quantity'] }}
                                     </span>
                                     
@@ -326,7 +325,7 @@
                     </div>
                 @empty
                     <div class="alert alert-info text-center" role="alert">
-                        Keranjang belanja Anda kosong. <a href="{{ route('products.index') }}" class="alert-link">Lanjutkan belanja</a>.
+                        Your shopping cart is empty. <a href="{{ route('products.index') }}" class="alert-link">Continue shopping</a>.
                     </div>
                 @endforelse
             </div>
@@ -337,10 +336,10 @@
                         <h5 class="fw-bold mb-0">Subtotal</h5>
                         <h5 class="fw-bold mb-0">IDR {{ number_format($subtotal, 0, ',', '.') }}</h5>
                     </div>
-                    <p class="text-muted small mb-1">Sudah termasuk pajak</p>
+                    <p class="text-muted small mb-1">Taxes included</p>
                     <hr>
                     <a href="{{ route('checkout.show') }}" class="btn btn-gold w-100 mt-2">Checkout</a>
-                    <a href="{{ route('products.index') }}" class="btn btn-outline-dark w-100 mt-2">Lanjutkan Belanja</a>
+                    <a href="{{ route('products.index') }}" class="btn btn-outline-dark w-100 mt-2">Continue Shopping</a>
                 </div>
             </div>
         </div>
@@ -358,7 +357,7 @@
         function updateAndSubmitQuantity(targetElement, newQuantity) {
             const form = targetElement.closest('form');
             const hiddenQuantityInput = form.querySelector('.hidden-quantity-input');
-            const displaySpan = form.querySelector('.quantity-display-span'); // Reference to the actual span
+            const displaySpan = form.querySelector('.quantity-display-span');
 
             const minQuantity = parseInt(displaySpan.dataset.min);
             const maxQuantity = parseInt(displaySpan.dataset.max);
@@ -399,10 +398,10 @@
                 // Create an input element
                 const input = document.createElement('input');
                 input.type = 'number';
-                input.className = 'quantity-input-active'; // Apply minimalist style
-                input.value = this.dataset.quantity; // Get current quantity
-                input.min = this.dataset.min; // Get min from data attribute
-                input.max = this.dataset.max; // Get max from data attribute
+                input.className = 'quantity-input-active';
+                input.value = this.dataset.quantity;
+                input.min = this.dataset.min;
+                input.max = this.dataset.max;
                 
                 // Set data attributes from span to input
                 input.dataset.productId = this.dataset.productId;
@@ -410,13 +409,13 @@
 
                 // Insert the input before the span and hide the span
                 this.parentNode.insertBefore(input, this);
-                this.style.display = 'none'; // Hide the span
+                this.style.display = 'none';
 
                 input.focus();
                 input.select();
 
                 // Store a reference to the original span for later replacement
-                input.originalSpan = this; // Store original span
+                input.originalSpan = this;
                 
                 // Event listener for when the input loses focus (user clicks outside or tabs out)
                 input.addEventListener('blur', function() {
@@ -427,21 +426,18 @@
                     originalSpan.classList.remove('active-edit-mode');
 
                     // Validate and update value on blur
-                    // Pass the originalSpan as the target element because it holds the data attributes
                     updateAndSubmitQuantity(originalSpan, newValue);
 
                     // Revert back to span after submission (or immediately if no submission needed)
-                    // The page will reload on submit, so immediate replacement is mainly for non-submitting blur.
-                    // For a smooth feel without reload, we would update the span's text content here.
-                    originalSpan.textContent = newValue; // Update span with new value
-                    this.parentNode.replaceChild(originalSpan, this); // Replace input with original span
+                    originalSpan.textContent = newValue;
+                    this.parentNode.replaceChild(originalSpan, this);
                 });
 
                 // Event listener for 'Enter' key press
                 input.addEventListener('keydown', function(event) {
                     if (event.key === 'Enter') {
-                        event.preventDefault(); // Prevent form default submission on Enter
-                        this.blur(); // Trigger blur to run validation and update
+                        event.preventDefault();
+                        this.blur();
                     }
                 });
             });
@@ -451,7 +447,7 @@
         quantityPlusButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const form = this.closest('form');
-                const displaySpan = form.querySelector('.quantity-display-span'); // Always get the span
+                const displaySpan = form.querySelector('.quantity-display-span');
 
                 let currentQuantity = parseInt(displaySpan.dataset.quantity);
                 const maxQuantity = parseInt(displaySpan.dataset.max);
@@ -468,7 +464,7 @@
         quantityMinusButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const form = this.closest('form');
-                const displaySpan = form.querySelector('.quantity-display-span'); // Always get the span
+                const displaySpan = form.querySelector('.quantity-display-span');
 
                 let currentQuantity = parseInt(displaySpan.dataset.quantity);
                 const minQuantity = parseInt(displaySpan.dataset.min);

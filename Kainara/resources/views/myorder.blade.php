@@ -75,8 +75,7 @@
     .status-partially-refunded { background-color: #e1f5fe; color: #03a9f4; }
     .status-refund-pending { background-color: #fffde7; color: #ffc107; }
     .status-refund-failed { background-color: #fce4ec; color: #e91e63; }
-    .status-refund-rejected { background-color: #6c757d; color: #fff; } /* Added for Refund Rejected */
-
+    .status-refund-rejected { background-color: #6c757d; color: #fff; }
 
     .order-details-summary {
         display: flex;
@@ -262,12 +261,10 @@
                             <br>
                             <span>INV/{{ \Carbon\Carbon::parse($order->created_at)->format('Ymd') }}/{{ $order->id }}</span>
                         </div>
-                        {{-- LOGIC DIBERIKAN PERBAIKAN DI SINI --}}
                         @php
                             $displayStatus = $order->status;
                             $statusClass = Str::slug($order->status);
 
-                            // Prioritize the latest refund status if available
                             if ($order->payment && $order->payment->refunds->isNotEmpty()) {
                                 $latestRefund = $order->payment->refunds->sortByDesc('created_at')->first();
                                 if ($latestRefund) {
@@ -285,7 +282,7 @@
                                             $statusClass = 'rejected';
                                             break;
                                         case 'succeeded':
-                                            $displayStatus = 'Refunded'; // Fully refunded by Stripe
+                                            $displayStatus = 'Refunded';
                                             $statusClass = 'refunded';
                                             break;
                                         case 'failed':
@@ -294,10 +291,7 @@
                                             break;
                                     }
                                 }
-                            }
-                            // If no refund is active, use the order's status directly.
-                            // This replaces the old logic that incorrectly showed "Order Confirmed".
-                            else {
+                            } else {
                                 $displayStatus = $order->status;
                                 $statusClass = Str::slug($order->status);
                             }
@@ -336,10 +330,10 @@
                     <div class="order-actions">
                         @if ($order->status === 'Awaiting Payment')
                             <a href="{{ route('payment.continue', $order->id) }}" class="btn btn-track">Continue Payment</a>
-                            <form action="{{ route('order.cancel', $order->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order? This action cannot be undone and product stock will be returned.');">
+                            <form id="cancelOrderForm-{{ $order->id }}" action="{{ route('order.cancel', $order->id) }}" method="POST" class="d-inline-block">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-cancel-order">Cancel Order</button>
+                                <button type="button" class="btn btn-cancel-order cancel-order-btn" data-order-id="{{ $order->id }}">Cancel Order</button>
                             </form>
                         @elseif ($order->status === 'Delivered')
                             @php
@@ -348,14 +342,12 @@
                                 $hasAnyRefundRecord = $order->payment && $order->payment->refunds->isNotEmpty();
                             @endphp
 
-                            {{-- Only show "Complete Order & Review" if not refund-managed --}}
                             @if (!$hasAnyRefundRecord)
                                 <button type="button" class="btn btn-complete-order" data-bs-toggle="modal" data-bs-target="#reviewModal" data-order-id="{{ $order->id }}" {{ $order->hasReview() ? 'disabled' : '' }}>
                                     {{ $order->hasReview() ? 'Reviewed' : 'Complete Order' }}
                                 </button>
                             @endif
 
-                            {{-- Refund Request Button for FULL Refund only --}}
                             @php
                                 $canInitiateFullRefund = false;
                                 if ($order->payment && $order->payment->status === 'succeeded' && !$hasAnyRefundRecord) {
@@ -369,7 +361,6 @@
 
                             <button type="button" class="btn btn-transaction-detail" data-bs-toggle="modal" data-bs-target="#transactionDetailModal" data-order-id="{{ $order->id }}">Transaction Detail</button>
                         @else
-                            {{-- For other statuses (e.g., Partially Refunded, Refund Pending, Refund Failed, Completed) --}}
                             <button type="button" class="btn btn-transaction-detail" data-bs-toggle="modal" data-bs-target="#transactionDetailModal" data-order-id="{{ $order->id }}">Transaction Detail</button>
                         @endif
 
@@ -389,7 +380,6 @@
     </div>
 
     <x-review-modal/>
-    {{-- Assuming components.transaction-detail-modal exists and is correctly defined --}}
     @include('components.transaction-detail-modal')
 
 @endsection
@@ -397,7 +387,6 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Review Modal Logic
         const reviewModalElement = document.getElementById('reviewModal');
         const reviewModal = new bootstrap.Modal(reviewModalElement);
         const reviewForm = document.getElementById('reviewForm');
@@ -414,7 +403,6 @@
             const button = event.relatedTarget;
             const orderId = button.dataset.orderId;
             reviewOrderIdInput.value = orderId;
-
             currentRating = 0;
             reviewRatingInput.value = 0;
             updateStarsDisplay(0);
@@ -456,15 +444,12 @@
 
         reviewForm.addEventListener('submit', function(e) {
             e.preventDefault();
-
             if (currentRating === 0) {
                 alert('Please select a star rating before submitting your review.');
                 return;
             }
-
             submitReviewButton.disabled = true;
             submitReviewButton.textContent = 'Submitting...';
-
             const formData = new FormData(this);
             fetch('{{ route('reviews.store') }}', {
                 method: 'POST',
@@ -500,18 +485,15 @@
             })
             .finally(() => {
                 submitReviewButton.disabled = false;
-                submitButton.textContent = 'Submit Review';
+                submitReviewButton.textContent = 'Submit Review';
             });
         });
 
-        // Transaction Detail Modal Logic
         const transactionDetailModalElement = document.getElementById('transactionDetailModal');
-
         if (transactionDetailModalElement) {
             transactionDetailModalElement.addEventListener('show.bs.modal', function (event) {
                 const button = event.relatedTarget;
                 const orderId = button.dataset.orderId;
-
                 document.getElementById('modalOrderId').textContent = 'Loading...';
                 document.getElementById('modalInvoice').textContent = 'Loading...';
                 document.getElementById('modalOrderDate').textContent = 'Loading...';
@@ -523,8 +505,6 @@
                 document.getElementById('modalShippingCountryPostal').textContent = 'Loading...';
                 document.getElementById('modalOrderItems').innerHTML = '<div class="text-center py-4 text-muted">Loading items...</div>';
                 document.getElementById('modalTotalAmount').textContent = 'Loading...';
-
-
                 fetch(`/orders/${orderId}/modal-details`)
                     .then(response => {
                         if (!response.ok) {
@@ -540,25 +520,20 @@
                         document.getElementById('modalOrderId').textContent = data.order_id;
                         document.getElementById('modalInvoice').textContent = data.invoice;
                         document.getElementById('modalOrderDate').textContent = data.order_date;
-
                         const statusBadge = document.getElementById('modalOrderStatus');
                         statusBadge.textContent = data.status;
                         statusBadge.className = 'order-status';
                         statusBadge.classList.add(`status-${data.status.toLowerCase().replace(/\s/g, '-')}`);
-
-
                         document.getElementById('modalShippingNamePhone').textContent = `${data.shipping_recipient_name} (${data.shipping_phone})`;
                         document.getElementById('modalShippingAddress').textContent = data.shipping_address;
                         document.getElementById('modalShippingCityProvince').textContent = `${data.shipping_city}, ${data.shipping_province}`;
                         document.getElementById('modalShippingCountryPostal').textContent = `${data.shipping_country} ${data.shipping_postal_code}`;
-
                         const orderItemsContainer = document.getElementById('modalOrderItems');
                         orderItemsContainer.innerHTML = '';
                         if (data.order_items && data.order_items.length > 0) {
                             data.order_items.forEach(item => {
                                 const formattedPrice = new Intl.NumberFormat('id-ID').format(item.price);
                                 const formattedSubtotal = new Intl.NumberFormat('id-ID').format(item.quantity * item.price);
-
                                 const itemHtml = `
                                     <div class="list-group-item d-flex align-items-center">
                                         <img src="${item.product_image}" alt="${item.product_name}" class="me-3" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
@@ -577,9 +552,7 @@
                         } else {
                             orderItemsContainer.innerHTML = '<div class="text-center py-4 text-muted">No items found for this order.</div>';
                         }
-
                         document.getElementById('modalTotalAmount').textContent = `IDR ${new Intl.NumberFormat('id-ID').format(data.total_amount)}`;
-
                     })
                     .catch(error => {
                         console.error('Error fetching transaction details:', error);
@@ -597,6 +570,26 @@
                     });
             });
         }
+    });
+
+    const cancelButtons = document.querySelectorAll('.cancel-order-btn');
+    cancelButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const orderId = this.dataset.orderId;
+            const form = document.getElementById(`cancelOrderForm-${orderId}`);
+            window.showNotificationCard({
+                type: 'confirmation',
+                title: 'Confirm Cancellation',
+                message: 'Are you sure you want to cancel this order?',
+                hasActions: true,
+                onConfirm: () => {
+                    form.submit();
+                },
+                onCancel: () => {
+                    console.log('Order cancellation cancelled by user.');
+                }
+            });
+        });
     });
 </script>
 @endpush
