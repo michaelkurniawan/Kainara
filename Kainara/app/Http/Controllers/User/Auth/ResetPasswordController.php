@@ -7,12 +7,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
-use App\Models\User; // Pastikan model User diimpor
+use App\Models\User; // Ensure the User model is imported
 
 class ResetPasswordController extends Controller
 {
     /**
-     * Tampilkan form reset password.
+     * Display the password reset form.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\View\View
@@ -25,7 +25,7 @@ class ResetPasswordController extends Controller
     }
 
     /**
-     * Reset password pengguna yang diberikan.
+     * Reset the given user's password.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
@@ -35,7 +35,7 @@ class ResetPasswordController extends Controller
     {
         $request->validate($this->rules(), $this->validationErrorMessages());
 
-        // Dapatkan status dari proses reset password
+        // Get the status of the password reset process
         $response = $this->broker()->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, $password) {
@@ -45,24 +45,24 @@ class ResetPasswordController extends Controller
         );
 
         if ($response == Password::PASSWORD_RESET) {
-            // Flash notifikasi sukses
+            // Flash success notification
             session()->flash('notification', [
                 'type' => 'success',
-                'title' => 'Reset Password Berhasil!',
-                'message' => 'Password Anda telah berhasil direset. Silakan login dengan password baru Anda.',
+                'title' => 'Password Reset Successful!',
+                'message' => 'Your password has been successfully reset. Please log in with your new password.',
                 'hasActions' => false
             ]);
             return redirect()->route('login')->with('status', __($response));
         }
 
-        // Jika reset gagal
+        // If reset fails
         throw ValidationException::withMessages([
             'email' => [trans($response)],
         ]);
     }
 
     /**
-     * Dapatkan aturan validasi untuk reset password.
+     * Get the password reset validation rules.
      *
      * @return array
      */
@@ -71,12 +71,12 @@ class ResetPasswordController extends Controller
         return [
             'token' => 'required',
             'email' => 'required|email',
-            'password' => 'required|string|min:8|confirmed', // 'confirmed' membutuhkan field password_confirmation
+            'password' => 'required|string|min:8|confirmed', // 'confirmed' requires a password_confirmation field
         ];
     }
 
     /**
-     * Dapatkan pesan error validasi kustom untuk reset password.
+     * Get the custom validation error messages for the password reset.
      *
      * @return array
      */
@@ -86,7 +86,7 @@ class ResetPasswordController extends Controller
     }
 
     /**
-     * Dapatkan broker password yang digunakan oleh controller.
+     * Get the password broker used by the controller.
      *
      * @return \Illuminate\Contracts\Auth\Passwords\PasswordBroker
      */

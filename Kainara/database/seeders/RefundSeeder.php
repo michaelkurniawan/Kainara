@@ -6,7 +6,9 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Refund;
 use App\Models\Payment;
-use App\Models\Order; // Order model is not directly used for seeding refunds, but good to have if needed for context
+use App\Models\Order;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class RefundSeeder extends Seeder
 {
@@ -15,60 +17,90 @@ class RefundSeeder extends Seeder
      */
     public function run(): void
     {
-        // Daftar alasan yang diizinkan oleh Stripe
+        // Alasan yang diizinkan oleh Stripe untuk API
         $stripeAllowedReasons = ['duplicate', 'fraudulent', 'requested_by_customer'];
+        // Semua status yang mungkin untuk refund (sesuai dengan AdminRefundController)
+        $allPossibleAdminStatuses = ['pending', 'approved', 'rejected', 'succeeded', 'failed'];
 
-        // Get payments that are succeeded or partially refunded and are not fully refunded yet
-        $succeededPayments = Payment::where(function($query) {
-                                $query->where('status', 'succeeded')
-                                      ->orWhere('status', 'partially_refunded');
-                            })
-                            // Eager load refunds to correctly calculate availableForRefund
-                            ->with('refunds')
-                            ->get();
 
-        foreach ($succeededPayments as $payment) {
+        // Ambil payment yang sudah sukses dan belum direfund sepenuhnya
+        $eligiblePayments = Payment::where('status', 'succeeded')
+                                   ->with('refunds')
+                                   ->get();
+
+        foreach ($eligiblePayments as $payment) {
             $totalRefundedAmount = $payment->refunds->where('status', 'succeeded')->sum('refunded_amount');
             $availableForRefund = $payment->amount_paid - $totalRefundedAmount;
 
-            // Only attempt to create a refund if there's a significant amount left to refund
             if ($availableForRefund > 0.01) {
-                // 50% chance to create a refund for this payment
-                if (fake()->boolean(50)) {
-                    $refundAmount = 0;
-                    $status = 'succeeded';
-
-                    // 70% chance to attempt a full refund, otherwise a partial refund
-                    if (fake()->boolean(70) && $availableForRefund > 0.01) {
-                        $refundAmount = $availableForRefund;
-                    } else {
-                        // Ensure partial refund is less than or equal to available amount
-                        $refundAmount = fake()->randomFloat(2, $availableForRefund * 0.1, $availableForRefund);
+                // 70% kemungkinan user mengajukan refund (status 'pending')
+                if (fake()->boolean(70)) {
+                    try {
+                        Refund::factory()->pending()->create([
+                            'payment_id' => $payment->id,
+                            'refunded_amount' => $availableForRefund,
+                            'reason' => fake()->randomElement($stripeAllowedReasons), // <--- Menggunakan stripeAllowedReasons
+                            'refund_image' => fake()->boolean(40) ? 'public/refund_images/' . Str::uuid() . '.jpg' : null,
+                            'admin_notes' => fake()->boolean(10) ? fake()->sentence() : null,
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Seeder failed to create pending refund: ' . $e->getMessage(), ['payment_id' => $payment->id]);
                     }
-
-                    // Prevent creating a refund with zero or negative amount
-                    if ($refundAmount <= 0) {
-                        continue;
-                    }
-
-                    // 10% chance for the refund to be pending or failed
-                    if (fake()->boolean(10)) {
-                        $status = fake()->randomElement(['pending', 'failed']);
-                        // For pending/failed, the amount could still be a part of the original payment,
-                        // or a random amount up to the available for refund. Let's keep it within bounds.
-                        $refundAmount = fake()->randomFloat(2, $availableForRefund * 0.1, $availableForRefund);
-                    }
-
-                    // Create the refund and let the RefundFactory's `afterCreating` callback update the payment status
-                    Refund::factory()->create([
-                        'payment_id' => $payment->id,
-                        'refunded_amount' => $refundAmount,
-                        'status' => $status,
-                        'refunded_at' => ($status === 'succeeded') ? now() : null,
-                        'reason' => fake()->randomElement($stripeAllowedReasons),
-                    ]);
                 }
             }
+        }
+
+        // --- Buat skenario refund untuk pengujian admin ---
+
+        // 1. Refund yang sudah disetujui dan berhasil diproses Stripe
+        $approvedAndSucceededPayment = Payment::factory()->succeeded()->create();
+        try {
+            Refund::factory()->succeeded()->create([
+                'payment_id' => $approvedAndSucceededPayment->id,
+                'refunded_amount' => $approvedAndSucceededPayment->amount_paid,
+                'reason' => fake()->randomElement($stripeAllowedReasons), // <--- Menggunakan stripeAllowedReasons
+                'refund_image' => 'public/refund_images/' . Str::uuid() . '.jpg',
+                'admin_notes' => 'Approved and successfully processed by Stripe.',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Seeder failed to create succeeded refund: ' . $e->getMessage(), ['payment_id' => $approvedAndSucceededPayment->id]);
+        }
+
+        // 2. Refund yang sudah disetujui tapi gagal diproses Stripe
+        $approvedAndFailedPayment = Payment::factory()->succeeded()->create();
+        try {
+            Refund::factory()->failed()->create([
+                'payment_id' => $approvedAndFailedPayment->id,
+                'refunded_amount' => $approvedAndFailedPayment->amount_paid,
+                'reason' => fake()->randomElement($stripeAllowedReasons), // <--- Menggunakan stripeAllowedReasons
+                'refund_image' => 'public/refund_images/' . Str::uuid() . '.jpg',
+                'admin_notes' => 'Approved but failed to process on Stripe.',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Seeder failed to create failed refund: ' . $e->getMessage(), ['payment_id' => $approvedAndFailedPayment->id]);
+        }
+
+        // 3. Refund yang ditolak oleh admin
+        $rejectedPayment1 = Payment::factory()->succeeded()->create();
+        try {
+            Refund::factory()->rejected()->create([
+                'payment_id' => $rejectedPayment1->id,
+                'reason' => fake()->randomElement($stripeAllowedReasons), // <--- Menggunakan stripeAllowedReasons
+                'admin_notes' => 'Customer did not provide valid proof.',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Seeder failed to create rejected refund 1: ' . $e->getMessage(), ['payment_id' => $rejectedPayment1->id]);
+        }
+
+        $rejectedPayment2 = Payment::factory()->succeeded()->create();
+        try {
+            Refund::factory()->rejected()->create([
+                'payment_id' => $rejectedPayment2->id,
+                'reason' => fake()->randomElement($stripeAllowedReasons), // <--- Menggunakan stripeAllowedReasons
+                'admin_notes' => 'Flagged as suspicious by fraud detection.',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Seeder failed to create rejected refund 2: ' . $e->getMessage(), ['payment_id' => $rejectedPayment2->id]);
         }
     }
 }

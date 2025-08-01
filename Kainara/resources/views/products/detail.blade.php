@@ -190,19 +190,7 @@
 @section('content')
     <div class="container-fluid px-5 py-5">
 
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        @if (session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
+        {{-- Removed the old Bootstrap alert messages --}}
 
         <div class="row g-5 mb-5">
             <div class="col-lg-6">
@@ -445,49 +433,62 @@
         // Initial call to set button states correctly on page load
         updateQuantityControls();
 
-        // --- New Logic: Handle form submission for login check ---
+        const notificationData = @json(session('notification'));
+        if (notificationData) {
+            setTimeout(() => {
+                if (typeof window.showNotificationCard === 'function') {
+                    window.showNotificationCard(notificationData);
+                } else {
+                    // Fallback if window.showNotificationCard is not defined
+                    alert(`${notificationData.title || ''}\n${notificationData.message || ''}`);
+                }
+            }, 300); // Small delay, adjust as needed
+        }
+        // --- End of server-side notification handling ---
+
+        // --- Existing Logic: Handle form submission for login check ---
         if (addToCheckoutForm) {
             addToCheckoutForm.addEventListener('submit', function(event) {
                 if (!isAuthenticated) {
                     event.preventDefault(); // Stop the form from submitting
 
-                    // Show the custom notification card
+                    // Show the custom notification card for login required
                     window.showNotificationCard({
                         type: 'info', // Or 'error'
                         title: 'Login Required',
-                        message: 'You must log in to add products to your cart or proceed with the purchase.',
-                        hasActions: false, // No YES/NO buttons
+                        message: 'You must log in to add products to your cart or proceed with purchase.',
+                        hasActions: true, // Set to true to show 'Login Now' button
                         onConfirm: () => {
-                            // Optional: Redirect to login page after user clicks OK
                             window.location.href = '{{ route('login') }}';
-                        }
+                        },
+                        // onCancel is not explicitly needed here as we only have one action
                     });
 
-                    // Set the OK button to redirect to login
+                    // Customize the notification buttons
                     const confirmBtn = document.getElementById('globalNotificationConfirmBtn');
                     if (confirmBtn) {
                         confirmBtn.textContent = 'Login Now';
-                        confirmBtn.style.display = 'inline-block';
-                        confirmBtn.removeEventListener('click', window.hideNotificationCard); // Remove default hide
-                        confirmBtn.addEventListener('click', () => {
+                        // Ensure event listener from showNotificationCard is correctly assigned,
+                        // or re-assign it to your specific `onConfirm` callback.
+                        confirmBtn.removeEventListener('click', window.hideNotificationCard); // Remove default hide if exists
+                        confirmBtn.addEventListener('click', function() {
                             window.hideNotificationCard();
                             window.location.href = '{{ route('login') }}';
                         });
                     }
                     const cancelBtn = document.getElementById('globalNotificationCancelBtn');
                     if (cancelBtn) {
-                        cancelBtn.style.display = 'none'; // Hide NO button
+                        cancelBtn.style.display = 'none'; // Hide the 'Cancel' button
                     }
                     const actionsDiv = document.getElementById('globalNotificationActions');
                     if (actionsDiv) {
                         actionsDiv.style.display = 'flex'; // Ensure actions div is visible for the single button
                     }
-
                 }
                 // If authenticated, the form will submit normally
             });
         }
-        // --- End of New Logic ---
+        // --- End of Existing Logic ---
 
 
         function generateStarsHtml(rating) {
@@ -622,6 +623,10 @@
         }
 
         renderReviews();
+
+        setTimeout(() => {
+            window.scrollTo(0, 0);
+        }, 100);
     });
 </script>
 @endpush

@@ -30,11 +30,10 @@ class CheckoutController extends Controller
                 if (isset($item['product_variant_id']) && $item['product_variant_id']) {
                     $variant = ProductVariant::find($item['product_variant_id']);
                     if ($variant) {
-                        $item['price'] = $variant->price ?: $product->price; // Use variant's price if set, otherwise product's
+                        $item['price'] = $variant->price ?: $product->price;
                         $item['variant_size'] = $variant->size;
                         $item['variant_color'] = $variant->color;
                     } else {
-                        // Fallback if variant is not found (e.g., deleted)
                         $item['price'] = $product->price;
                         $item['variant_size'] = null;
                         $item['variant_color'] = null;
@@ -48,12 +47,19 @@ class CheckoutController extends Controller
                 $item['total_price'] = $item['price'] * $item['quantity'];
                 $subtotal += $item['total_price'];
             } else {
+                // If product not found, remove it from the cart to prevent issues
+                // Note: This modifies the array during iteration, which can be tricky.
+                // A safer approach might be to build a new $validCartItems array.
+                // For simplicity here, we're setting placeholders.
                 $item['product_name'] = 'Unknown Product';
                 $item['product_image'] = 'https://placehold.co/80x80/cccccc/333333?text=No+Image'; // Placeholder image
                 $item['price'] = 0;
                 $item['total_price'] = 0;
             }
         }
+
+        // After the loop, if you removed items, you'd want to re-save the session.
+        // For now, let's just make sure the iteration safety note is there.
 
         $selectedAddressId = null;
         $address = null;
@@ -64,31 +70,33 @@ class CheckoutController extends Controller
                 $address = $userAddresses->firstWhere('id', $selectedAddressId);
                 if (!$address) {
                     $selectedAddressId = null;
+                    // Flash notification if previously selected address is no longer valid
+                    session()->flash('notification', [
+                        'type' => 'warning',
+                        'title' => 'Address Not Found!',
+                        'message' => 'The previously selected address could not be found. Please choose another one.',
+                        'hasActions' => false
+                    ]);
                 }
             }
 
             if (!$selectedAddressId) {
-                // Priority 2: Find if a primary/default address is set in the database
                 $defaultAddress = $userAddresses->firstWhere('is_default', true);
                 if ($defaultAddress) {
                     $selectedAddressId = $defaultAddress->id;
                     $address = $defaultAddress;
                 } elseif ($userAddresses->isNotEmpty()) {
-                    // Priority 3: If no default, use the first available address
                     $selectedAddressId = $userAddresses->first()->id;
                     $address = $userAddresses->first();
                 }
             }
         }
 
-
-        // The $address variable now holds the full address object (or null)
         return view('products.checkout', compact('cartItems', 'subtotal', 'userAddresses', 'selectedAddressId', 'address'));
     }
 
     public function addToCheckout(Request $request)
     {
-        // ... (your existing addToCheckout method remains the same)
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
@@ -107,44 +115,42 @@ class CheckoutController extends Controller
         $variantColor = null;
 
         $productVariant = null;
-        // Logic to find the correct product variant based on selected size
         if ($selectedSize) {
             $productVariant = ProductVariant::where('product_id', $productId)
                                             ->where('size', $selectedSize)
                                             ->first();
         } else {
-            // If no specific size is selected, try to find a 'One Size' variant
             $productVariant = ProductVariant::where('product_id', $productId)
                                             ->where('size', 'One Size')
                                             ->first();
         }
 
         if ($productVariant) {
-            $price = $productVariant->price ?: $product->price; // Use variant price if set, otherwise base product price
+            $price = $productVariant->price ?: $product->price;
             $productVariantId = $productVariant->id;
             $variantColor = $productVariant->color;
-            // Check stock before adding to cart/checkout
             if ($productVariant->stock < $quantity) {
                 return back()->with('notification', [
                     'type' => 'error',
                     'title' => 'Limited Stock!',
-                    'message' => 'Not enough stock for the selected variant. Available: ' . $productVariant->stock,
+                    'message' => 'Sorry, only ' . $productVariant->stock . ' items are available for the selected variant.',
                     'hasActions' => false
                 ]);
             }
         } else {
-            // If a specific size was requested but not found, or no 'One Size' variant exists for a product needing one
             if ($selectedSize && $selectedSize !== 'One Size') {
                 return back()->with('notification', [
                     'type' => 'error',
                     'title' => 'Size Not Available!',
-                    'message' => 'The selected size is not available for this product.',
+                    'message' => 'The selected size is currently out of stock or not available for this product.',
                     'hasActions' => false
                 ]);
             }
+            // If it's a product without specific size variants and no 'One Size' variant found,
+            // or if it's meant to be a simple product, continue without variant details.
+            // You might want to add a stock check for the base product here if applicable.
         }
 
-        // Handle 'buy_now' action: clear the cart first
         if ($action === 'buy_now') {
             Session::forget('cart');
             $cart = [];
@@ -153,19 +159,17 @@ class CheckoutController extends Controller
         }
 
         $itemFound = false;
-        // Check if the exact product and variant combination already exists in the cart
         foreach ($cart as $key => $cartItem) {
             if ($cartItem['product_id'] == $productId &&
                 (
                     ($productVariantId && $cartItem['product_variant_id'] == $productVariantId) ||
-                    (!$productVariantId && !$cartItem['product_variant_id']) // For products without variants
+                    (!$productVariantId && !$cartItem['product_variant_id'])
                 )
             ) {
-                // If found, update the quantity
                 if ($action === 'buy_now') {
-                    $cart[$key]['quantity'] = $quantity; // For buy now, overwrite quantity
+                    $cart[$key]['quantity'] = $quantity;
                 } else {
-                    $cart[$key]['quantity'] += $quantity; // For add to cart, increment quantity
+                    $cart[$key]['quantity'] += $quantity;
                 }
                 $itemFound = true;
                 break;
@@ -173,11 +177,10 @@ class CheckoutController extends Controller
         }
 
         if (!$itemFound) {
-            // If the item (product + variant) is new to the cart, add it
             $cart[] = [
                 'product_id' => $productId,
                 'product_variant_id' => $productVariantId,
-                'price' => $price, // The per-unit price determined above
+                'price' => $price,
                 'quantity' => $quantity,
                 'variant_size' => $selectedSize,
                 'variant_color' => $variantColor,
@@ -192,7 +195,7 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.show')->with('notification', [
                 'type' => 'success',
                 'title' => 'Proceeding to Checkout!',
-                'message' => 'Your selection has been added. Please complete your purchase.',
+                'message' => 'Your selected item is ready for checkout. Please review your order.',
                 'hasActions' => false
             ]);
         } else {

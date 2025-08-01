@@ -67,8 +67,8 @@ class StripePaymentController extends Controller
                     'amount_paid' => $order->grand_total, // Simpan jumlah, akan dikonfirmasi setelah berhasil
                     'currency' => strtoupper($paymentIntent->currency),
                     'payment_method_type' => 'card', // Diasumsikan rute ini untuk pembayaran kartu
-                    'card_details' => null,              // Ini akan diisi setelah pembayaran berhasil
-                    'payment_method_details' => null,    // Ini akan diisi setelah pembayaran berhasil
+                    'card_details' => null,             // Ini akan diisi setelah pembayaran berhasil
+                    'payment_method_details' => null,   // Ini akan diisi setelah pembayaran berhasil
                 ]);
                 $clientSecret = $paymentIntent->client_secret;
 
@@ -78,7 +78,15 @@ class StripePaymentController extends Controller
 
                 // Jika PaymentIntent yang ada sudah sukses atau sedang diproses, arahkan ke halaman sukses
                 if (in_array($paymentIntent->status, ['succeeded', 'processing'])) {
-                    return redirect()->route('my.orders')->with('success', 'Pembayaran untuk pesanan ini sudah diproses.');
+                    // Flash a success notification before redirecting
+                    session()->flash('notification', [
+                        'type' => 'success',
+                        'title' => 'Payment Already Processed',
+                        'message' => 'This order has already been paid successfully.',
+                        'hasActions' => false,
+                        'redirect_url' => route('my.orders') // Provide redirect for JS
+                    ]);
+                    return redirect()->route('my.orders'); // Redirect for server-side
                 }
 
                 // Jika jumlah PaymentIntent tidak cocok dengan grand_total order saat ini (misalnya, perubahan harga), perbarui
@@ -134,8 +142,8 @@ class StripePaymentController extends Controller
 
             // Temukan record Payment lokal yang sesuai di database Anda
             $payment = Payment::where('order_id', $order->id)
-                               ->where('stripe_payment_intent_id', $paymentIntentId)
-                               ->first();
+                             ->where('stripe_payment_intent_id', $paymentIntentId)
+                             ->first();
 
             if (!$payment) {
                 return response()->json([
@@ -180,45 +188,73 @@ class StripePaymentController extends Controller
                 $order->save();
                 $payment->save(); // Simpan record pembayaran yang diperbarui
 
+                // **CHANGE START: Use session flash for notification**
+                session()->flash('notification', [
+                    'type' => 'success',
+                    'title' => 'Payment Successful!',
+                    'message' => 'Your payment for Order #' . $order->id . ' was successful. Your order has been confirmed.',
+                    'hasActions' => false, // No actions needed for a simple success
+                    'redirect_url' => route('my.orders') // Redirect URL after notification dismissal
+                ]);
                 return response()->json([
                     'success' => true,
-                    'message' => 'Pembayaran berhasil!',
-                    'redirect_url' => route('my.orders') // Redirect to 'my.orders' route
+                    'message' => 'Payment successful!',
+                    'redirect_url' => route('my.orders') // We still send this for the JS to handle after notification
                 ]);
+                // **CHANGE END**
+
             } elseif ($stripePaymentIntent->status === 'requires_action' || $stripePaymentIntent->status === 'requires_source_action') {
                 $payment->save();
-                // Untuk 'requires_action', Stripe.js biasanya menangani pengalihan yang diperlukan (misal: 3D Secure)
-                // Respons JSON ini memberitahu frontend bahwa tindakan lebih lanjut diperlukan dan menyediakan URL pengalihan potensial
+                // For 'requires_action', Stripe.js usually handles the necessary redirection (e.g.: 3D Secure)
+                // This JSON response tells the frontend that further action is needed and provides a potential redirect URL
                 return response()->json([
                     'success' => false,
                     'message' => 'Pembayaran memerlukan tindakan tambahan. Harap selesaikan di Stripe.',
-                    // Fallback redirect jika tidak ada URL tindakan spesifik
+                    // Fallback redirect if no specific action URL
                     'redirect_url' => $stripePaymentIntent->next_action->redirect_to_url->url ?? route('my.orders')
                 ]);
             } else {
-                // Tangani semua status tidak sukses lainnya (misalnya, 'failed', 'canceled', 'requires_payment_method' jika tidak ditangani sebelumnya)
-                $order->status = 'Canceled'; // Tandai order sebagai dibatalkan karena kegagalan pembayaran
+                // Handle all other unsuccessful statuses (e.g., 'failed', 'canceled', 'requires_payment_method' if not handled earlier)
+                $order->status = 'Canceled'; // Mark order as canceled due to payment failure
                 $order->save();
-                $payment->save(); // Simpan status akhir record pembayaran
+                $payment->save(); // Save final status of the payment record
 
+                // **CHANGE START: Use session flash for notification**
+                session()->flash('notification', [
+                    'type' => 'error',
+                    'title' => 'Payment Failed',
+                    'message' => 'Your payment could not be completed. Please try again or use a different payment method. Status: ' . $stripePaymentIntent->status,
+                    'hasActions' => false,
+                    'redirect_url' => route('order.fail', $order->id) // Redirect URL after notification dismissal
+                ]);
                 return response()->json([
                     'success' => false,
-                    'message' => 'Pembayaran gagal atau tidak selesai: ' . $stripePaymentIntent->status,
-                    'redirect_url' => route('order.fail', $order->id) // Arahkan ke halaman kegagalan
+                    'message' => 'Payment failed or incomplete: ' . $stripePaymentIntent->status,
+                    'redirect_url' => route('order.fail', $order->id) // We still send this for the JS to handle after notification
                 ]);
+                // **CHANGE END**
             }
         } catch (Exception $e) {
-            // Tangkap setiap pengecualian selama proses konfirmasi (misalnya, masalah jaringan, kunci API tidak valid)
+            // Catch any exception during the confirmation process (e.g., network issues, invalid API key)
             Log::error('Stripe Payment confirmation failed: ' . $e->getMessage(), [
                 'payment_intent_id' => $request->input('payment_intent_id'),
                 'order_id' => $order->id,
-                'request_data' => $request->all() // Sertakan data permintaan untuk debugging
+                'request_data' => $request->all() // Include request data for debugging
+            ]);
+            // **CHANGE START: Use session flash for notification**
+            session()->flash('notification', [
+                'type' => 'error',
+                'title' => 'Payment Error',
+                'message' => 'An unexpected error occurred during payment confirmation. Please try again. ' . $e->getMessage(),
+                'hasActions' => false,
+                'redirect_url' => route('checkout.show') // Redirect URL after notification dismissal
             ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan tak terduga selama konfirmasi pembayaran. Silakan coba lagi.',
-                'redirect_url' => route('checkout.show') // Arahkan ke checkout sebagai fallback aman
-            ], 500); // Status Kesalahan Server Internal
+                'redirect_url' => route('checkout.show') // We still send this for the JS to handle after notification
+            ], 500); // Internal Server Error Status
+            // **CHANGE END**
         }
     }
 }

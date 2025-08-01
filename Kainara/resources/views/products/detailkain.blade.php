@@ -302,7 +302,7 @@
 
         const addToCartButton = document.querySelector('.btn-add-to-cart');
         const buyNowButton = document.querySelector('.btn-buy-it-now');
-        const addToCheckoutForm = document.getElementById('addToCheckoutForm'); // Get the form
+        const addToCheckoutForm = document.getElementById('addToCheckoutForm');
 
         const reviewsContainer = document.getElementById('reviews-container');
         const prevBtn = document.getElementById('prev-review-btn');
@@ -315,21 +315,28 @@
 
         const isAuthenticated = {{ Auth::check() ? 'true' : 'false' }};
 
+        // Determine maxQuantity for products with or without variants
         if (product.variants && product.variants.length > 0) {
+            // For products with variants, sum up the stock of 'One Size' variants
             maxQuantity = product.variants.reduce((sum, variant) => {
                 return variant.size === 'One Size' ? sum + variant.stock : sum;
             }, 0);
         } else {
-            maxQuantity = product.stock || 100; // Fallback to a default if product.stock is not defined
+            // For products without variants, use the product's main stock
+            maxQuantity = product.stock || 0; // Fallback to 0 if product.stock is not defined
         }
         
+        // If stock is 0 but product ID exists, still allow quantity 1 for display/testing
+        // (Consider actual business logic for out-of-stock items)
         if (maxQuantity === 0 && product.id) {
-            maxQuantity = 1; 
+            maxQuantity = 1; // Allows "Add to Cart" button to be enabled for items with 0 stock to show "out of stock" logic
+                            // Or, you could keep it at 0 to truly disable the buttons if out of stock.
+                            // The current logic in updateQuantityControls will disable if maxQuantity is 0.
         }
 
         function updateQuantityControls() {
             quantity = Math.min(quantity, maxQuantity);
-            quantity = Math.max(1, quantity);
+            quantity = Math.max(1, quantity); // Ensure quantity is at least 1
 
             quantityDisplay.innerText = quantity;
             quantityInput.value = quantity;
@@ -339,8 +346,10 @@
             plusBtn.disabled = quantity >= maxQuantity;
 
             const isAvailable = maxQuantity > 0;
-            addToCartButton.disabled = !isAvailable;
-            buyNowButton.disabled = !isAvailable;
+            // Disable buttons if maxQuantity is 0, implying out of stock.
+            // If maxQuantity is 1 (as per fallback above) but actually 0 stock, this still works.
+            if (addToCartButton) addToCartButton.disabled = !isAvailable;
+            if (buyNowButton) buyNowButton.disabled = !isAvailable;
         }
 
         updateQuantityControls(); // Initial call to set button states
@@ -359,6 +368,19 @@
             }
         });
 
+        // --- Handle server-side notifications ---
+        const notificationData = @json(session('notification'));
+        if (notificationData) {
+            setTimeout(() => {
+                if (typeof window.showNotificationCard === 'function') {
+                    window.showNotificationCard(notificationData);
+                } else {
+                    alert(`${notificationData.title || ''}\n${notificationData.message || ''}`);
+                }
+            }, 300); // Small delay to allow page rendering before showing notification
+        }
+        // --- End of server-side notification handling ---
+
         // --- Logic to handle form submission and login check ---
         if (addToCheckoutForm) {
             addToCheckoutForm.addEventListener('submit', function(event) {
@@ -366,36 +388,36 @@
                     event.preventDefault(); // Stop the form from submitting
 
                     window.showNotificationCard({
-                        type: 'info', // Or 'error'
+                        type: 'info',
                         title: 'Login Required',
                         message: 'You must log in to add products to your cart or proceed with the purchase.',
-                        hasActions: false, // No YES/NO buttons
+                        hasActions: true, // Set to true to show 'Login Now' button
                         onConfirm: () => {
                             window.location.href = '{{ route('login') }}';
-                        }
+                        },
                     });
 
-                    // Set the OK button to redirect to login
+                    // Customize the notification buttons to ensure only 'Login Now' is visible
                     const confirmBtn = document.getElementById('globalNotificationConfirmBtn');
                     if (confirmBtn) {
                         confirmBtn.textContent = 'Login Now';
-                        confirmBtn.style.display = 'inline-block';
+                        confirmBtn.style.display = 'inline-block'; // Ensure it's visible
+                        // Re-attach listener if the custom notification system replaces them
                         confirmBtn.removeEventListener('click', window.hideNotificationCard); // Remove default hide
-                        confirmBtn.addEventListener('click', () => {
+                        confirmBtn.addEventListener('click', function() {
                             window.hideNotificationCard();
                             window.location.href = '{{ route('login') }}';
                         });
                     }
                     const cancelBtn = document.getElementById('globalNotificationCancelBtn');
                     if (cancelBtn) {
-                        cancelBtn.style.display = 'none'; // Hide NO button
+                        cancelBtn.style.display = 'none'; // Hide the 'Cancel' button
                     }
                     const actionsDiv = document.getElementById('globalNotificationActions');
                     if (actionsDiv) {
                         actionsDiv.style.display = 'flex'; // Ensure actions div is visible for the single button
                     }
                 }
-                // If authenticated, the form will submit normally
             });
         }
         // --- End of Login Check Logic ---
@@ -532,6 +554,10 @@
         }
 
         renderReviews();
+
+        setTimeout(() => {
+            window.scrollTo(0, 0);
+        }, 100); // 100ms delay, adjust if needed for your specific page loading speed
     });
 </script>
 @endpush

@@ -14,10 +14,12 @@ class Refund extends Model
     protected $fillable = [
         'payment_id',
         'stripe_refund_id',
-        'refunded_amount', // This will now store the total monetary value of THIS refund
+        'refunded_amount',
         'reason',
+        'refund_image',
         'refunded_at',
         'status',
+        'admin_notes',
     ];
 
     protected $casts = [
@@ -29,7 +31,7 @@ class Refund extends Model
         return $this->belongsTo(Payment::class);
     }
 
-    public function refundItems(): HasMany // Keep this if you might use RefundItem for historical tracking later
+    public function refundItems(): HasMany
     {
         return $this->hasMany(RefundItem::class);
     }

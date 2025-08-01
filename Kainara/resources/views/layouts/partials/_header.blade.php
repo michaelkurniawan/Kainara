@@ -44,17 +44,18 @@
             color: var(--color-brand);
         }
 
+        /* --- UPDATED DROPDOWN STYLES --- */
         header .header-dropdown .dropdown-menu {
-            background-color: var(--color-brand); /* Warna background dropdown */
-            border: none; /* Hilangkan border default Bootstrap */
-            border-radius: var(--header-dropdown-border-radius); /* Rounded corner sesuai desain */
+            background-color: white; /* Changed to white */
+            border: 1px solid #e2e8f0; /* Added a subtle border for definition */
+            border-radius: 0; /* Changed to square corners */
             box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15); /* Shadow halus */
             padding: 0.5rem 0; /* Padding atas/bawah internal menu */
             margin-top: 0.75rem !important; /* Beri sedikit jarak dari toggle (override Bootstrap) */
         }
 
         header .header-dropdown .dropdown-item {
-            color: var(--color-dropdown-text); /* Warna teks item */
+            color: black; /* Changed to black */
             padding: 0.6rem 1.5rem; /* Padding item */
             font-family: var(--font-primary); /* Font yang lebih elegan untuk item dropdown */
             font-weight: 600; /* Sedikit tebal */
@@ -64,13 +65,15 @@
 
         header .header-dropdown .dropdown-item:hover,
         header .header-dropdown .dropdown-item:focus {
-            background-color: var(--color-dropdown-hover-bg); /* Warna background saat hover */
-            color: var(--color-dropdown-text); /* Warna teks tetap sama atau sedikit berubah */
+            background-color: #f0f0f0; /* Light grey background on hover */
+            color: black; /* Text remains black on hover */
         }
+        /* --- END UPDATED DROPDOWN STYLES --- */
+
 
         header .nav-group-left .dropdown > .dropdown-toggle::after {
             margin-left: 0.4em; /* Jarak antara teks "Store" dan panah */
-            vertical-align: 0.1em; 
+            vertical-align: 0.1em;
         }
 
         header .nav-group-left .dropdown > a.nav-link.dropdown-toggle::after {
@@ -94,7 +97,7 @@
             transform: translate(-50%, -50%);
             z-index: 1031;
             width: 180px;
-            display: flex; 
+            display: flex;
             align-items: center;
             justify-content: center;
         }
@@ -113,12 +116,12 @@
         header #logo-rotator .logo-image.active {
             opacity: 1; /* Logo aktif terlihat penuh */
         }
-        
+
         header img.logo-size-medium { height: var(--logo-height-medium, 70px) !important; }
         header img.logo-size-large { height: var(--logo-height-large, 100px) !important; }
 
         header img#rotating-logo {
-             width: auto; display: block; vertical-align: middle;
+              width: auto; display: block; vertical-align: middle;
         }
 
 
@@ -135,13 +138,34 @@
         header .icon-group-right .nav-icon-link:hover .header-icon {
             opacity: 0.7;
         }
-    </style>
+
+        /* New styles for the user dropdown */
+        .user-dropdown-toggle {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.5rem; /* Adjust padding as needed */
+            border-radius: 9999px; /* For a circular toggle */
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .user-dropdown-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1); /* Light hover effect */
+        }
+
+        .user-dropdown-toggle img {
+            border-radius: 50%; /* Make profile picture circular */
+            object-fit: cover;
+            height: var(--target-icon-size); /* Match other icons */
+            width: var(--target-icon-size); /* Match other icons */
+        }
+</style>
 
 
 <header>
     <div class="container-fluid px-5">
         <div class="nav-group-left">
-            <div class="dropdown header-dropdown me-3"> 
+            <div class="dropdown header-dropdown me-3">
                 <a class="nav-link fw-bold dropdown-toggle" href="#" role="button" id="storeDropdown" data-bs-toggle="dropdown" aria-expanded="false">Store</a>
                 <ul class="dropdown-menu" aria-labelledby="storeDropdown">
                     <li><a class="dropdown-item" href="{{ route('products.gender.index', ['gender' => 'Male']) }}">Men</a></li>
@@ -159,10 +183,10 @@
                 <img id="rotating-logo-current"
                     src="{{ $logosData[0]['src'] }}"
                     alt="Kainara Logo"
-                    class="{{ $logosData[0]['class'] }} logo-image active"> 
+                    class="{{ $logosData[0]['class'] }} logo-image active">
 
                 <img id="rotating-logo-next"
-                    src="" 
+                    src=""
                     alt="Kainara Logo"
                     class="logo-image">
             </a>
@@ -172,9 +196,32 @@
             <a href="{{ route('cart.index') }}" class="nav-icon-link">
                 <img src="{{ asset('images/icons/icon-cart.png') }}" alt="Cart" class="header-icon">
             </a>
-            <a href="{{ route('profile.index') }}" class="nav-icon-link" title="My Account"> 
-                <img src="{{ asset('images/icons/icon-account.png') }}" alt="Account" class="header-icon">
-            </a>
+
+            @auth {{-- Display this section only if a user is logged in --}}
+                <div class="dropdown header-dropdown">
+                    <a class="nav-icon-link user-dropdown-toggle" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{-- Always display the generic account icon --}}
+                        <img src="{{ asset('images/icons/icon-account.png') }}"
+                             alt="Account"
+                             class="header-icon">
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><h6 class="dropdown-header">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</h6></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ route('profile.index') }}">Profile</a></li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="dropdown-item">Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            @else {{-- Display login/register links if no user is logged in --}}
+                <a href="{{ route('login') }}" class="nav-icon-link" title="Login">
+                    <img src="{{ asset('images/icons/icon-account.png') }}" alt="Account" class="header-icon">
+                </a>
+            @endauth
         </div>
     </div>
 </header>

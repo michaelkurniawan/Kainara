@@ -426,13 +426,10 @@
 
             let initialTabId = null;
 
-            // Priority 1: Check URL hash
             if (window.location.hash) {
                 const hashId = window.location.hash.substring(1);
                 if (document.getElementById(hashId) && document.getElementById(hashId + '-tab')) {
                     initialTabId = hashId;
-                    // Remove the hash from the URL to prevent default browser scrolling behavior
-                    // and allow our custom scroll logic to take over.
                     history.replaceState(null, '', window.location.pathname + window.location.search);
                 }
             }
