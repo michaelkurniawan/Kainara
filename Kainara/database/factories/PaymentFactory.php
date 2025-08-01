@@ -50,7 +50,7 @@ class PaymentFactory extends Factory
         }
 
         return [
-            'order_id' => Order::factory(), // Akan membuat Order baru jika tidak di-override
+            'order_id' => Order::factory(),
             'stripe_payment_intent_id' => 'pi_' . Str::random(24),
             'status' => $status,
             'amount_paid' => $amountPaid,

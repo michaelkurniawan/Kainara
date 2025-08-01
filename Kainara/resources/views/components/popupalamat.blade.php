@@ -21,6 +21,7 @@
             border-bottom: 1px solid #ddd;
             padding: 0.75rem 2rem;
             border-radius: 0;
+            flex-shrink: 0;
         }
         #addressSelectionModal .modal-header h5 {
             font-family: 'AncizarSerif', serif;
@@ -32,13 +33,13 @@
             filter: invert(0%);
         }
 
-
         #addressSelectionModal .modal-body {
             padding: 1.5rem 2rem;
             color: #333;
-            max-height: 60vh;
+            max-height: 37vh;
             overflow-y: auto;
             border-radius: 0;
+            flex-grow: 1;
         }
         #addressSelectionModal .modal-body::-webkit-scrollbar {
             width: 8px;
@@ -53,7 +54,6 @@
             background: #555;
         }
 
-
         #addressSelectionModal .modal-body .address-item {
             border: 1px solid #ccc;
             padding: 1.25rem 1.5rem;
@@ -63,6 +63,9 @@
             transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             border-radius: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         #addressSelectionModal .modal-body .address-item:hover {
             background-color: #f8f8f8;
@@ -91,6 +94,7 @@
         #addressSelectionModal .modal-body .address-item .address-details {
             flex-grow: 1;
         }
+
         #addressSelectionModal .modal-body .address-item .address-actions {
             display: flex;
             flex-direction: column;
@@ -99,23 +103,42 @@
             align-items: flex-end;
             white-space: nowrap;
         }
+
         #addressSelectionModal .modal-body .address-item .address-actions .action-links {
             display: flex;
+            align-items: center;
             gap: 0.75rem;
         }
-        #addressSelectionModal .modal-body .address-item .address-actions a {
-            color: #666;
-            text-decoration: underline;
-            padding: 0;
-            border-radius: 0;
-            transition: color 0.2s;
+
+        /* Style for the separator if you choose to keep it */
+        #addressSelectionModal .modal-body .address-item .address-actions .action-links > span {
+            color: #ccc;
+            margin: 0 -0.25rem;
         }
-        #addressSelectionModal .modal-body .address-item .address-actions a:hover {
-            color: #333;
+
+        .btn-address-action-modal {
             background-color: transparent;
+            color: #AD9D6D;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
+
+        .btn-address-action-modal:hover {
+            background-color: rgba(173, 157, 109, 0.1);
+            color: #AD9D6D;
+            text-decoration: none;
+        }
+
         .primary-address-tag {
-            background-color: #EAE4D5;
+            background-color: transparent;
             color: #000;
             border-radius: 0.75rem;
             font-size: 0.8rem;
@@ -151,6 +174,7 @@
             border-radius: 0;
             background-color: #FFFFFF;
             gap: 1rem;
+            flex-shrink: 0;
         }
         .modal-footer .btn-confirm {
             background-color: #B6B09F;
@@ -192,19 +216,35 @@
             </div>
             <div class="modal-body">
                 @forelse ($userAddresses as $userAddress)
-                    <div class="address-item d-flex justify-content-between align-items-start mb-3 {{ $userAddress['id'] == $selectedAddressId ? 'selected-address' : '' }}" data-address-id="{{ $userAddress['id'] }}">
+                    <div class="address-item d-flex justify-content-between align-items-center mb-3 {{ ($userAddress->id == $selectedAddressId) ? 'selected-address' : '' }}" data-address-id="{{ $userAddress->id }}">
                         <div class="address-details">
-                            <h6 class="mb-0">{{ $userAddress['type'] ?? 'Alamat' }}</h6>
-                            <p class="address-name-phone fw-bold mb-0">{{ $userAddress['name'] ?? '' }} | {{ $userAddress['phone'] ?? '' }}</p>
-                            <p class="text-muted mb-0" data-address-line="street">{{ $userAddress['street'] ?? '' }}, {{ $userAddress['sub_district'] ?? '' }},</p>
-                            <p class="text-muted mb-0" data-address-line="district-city">{{ $userAddress['district'] ?? '' }}, {{ $userAddress['city'] ?? '' }}</p>
-                            <p class="text-muted mb-0" data-address-line="province-postal">{{ $userAddress['province'] ?? '' }} {{ $userAddress['postal_code'] ?? '' }}</p>
+                            <h6 class="mb-0">{{ $userAddress->label ?? 'Address' }}</h6>
+                            <p class="address-name-phone fw-bold mb-0">{{ $userAddress->recipient_name ?? '' }} | {{ $userAddress->phone ?? '' }}</p>
+                            <p class="text-muted mb-0" data-address-line="address">{{ $userAddress->address ?? '' }}{{ $userAddress->sub_district ? ', ' . $userAddress->sub_district : '' }}</p>
+                            <p class="text-muted mb-0" data-address-line="city-province">{{ $userAddress->city ?? '' }}{{ ($userAddress->city && $userAddress->province) ? ', ' : '' }}{{ $userAddress->province ?? '' }}</p>
+                            <p class="text-muted mb-0" data-address-line="country-postal">{{ $userAddress->country ?? '' }} {{ $userAddress->postal_code ?? '' }}</p>
                         </div>
                         <div class="address-actions">
                             <div class="action-links">
-                                <a href="#" class="text-decoration-underline">Edit</a> | <a href="#" class="text-decoration-underline">Delete</a>
+                                {{-- Changed to button with new class and data attributes for edit modal --}}
+                                <button type="button" class="btn btn-sm btn-address-action-modal edit-address-from-checkout" data-address-id="{{ $userAddress->id }}">
+                                    Edit
+                                </button>
+                                <span>|</span>
+                                {{-- Changed to button with new class and added data attributes for JS confirmation --}}
+                                {{-- The form for the actual DELETE request --}}
+                                <form action="{{ route('addresses.destroy', ['address' => $userAddress->id, 'from_checkout' => 1]) }}" method="POST" class="d-inline" id="delete-address-form-{{ $userAddress->id }}-checkout">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button"
+                                        class="btn btn-sm btn-address-action-modal trigger-delete-address-notification-checkout"
+                                        data-address-id="{{ $userAddress->id }}"
+                                        data-address-label="{{ $userAddress->label ?? 'this address' }}">
+                                        Delete
+                                    </button>
+                                </form>
                             </div>
-                            @if ($userAddress['is_primary'])
+                            @if ($userAddress->is_default)
                                 <span class="primary-address-tag">Primary Address</span>
                             @endif
                         </div>
@@ -213,7 +253,7 @@
                     <p class="text-center text-muted">No addresses found. Please add a new address.</p>
                 @endforelse
 
-                <button type="button" class="add-new-address-btn">
+                <button type="button" class="add-new-address-btn" id="addNewAddressFromCheckout">
                     <i class="bi bi-plus-circle"></i> Add New Address
                 </button>
             </div>
@@ -230,64 +270,179 @@
     document.addEventListener('DOMContentLoaded', function() {
         const addressSelectionModal = document.getElementById('addressSelectionModal');
         const confirmAddressSelectionBtn = document.getElementById('confirmAddressSelection');
-        const userAddressesData = @json($userAddresses); // This will come from the parent Blade file
+        const addAddressModal = document.getElementById('addAddressModal');
+        const editAddressModal = document.getElementById('editAddressModal');
 
+        const userAddressesData = @json($userAddresses->toArray());
         let currentSelectedAddressId = {{ Js::from($selectedAddressId) }};
 
+        // Function to handle address item click for selection
         function handleAddressItemClick(event) {
             const clickedItem = event.currentTarget;
-
             document.querySelectorAll('#addressSelectionModal .address-item').forEach(item => {
                 item.classList.remove('selected-address');
             });
-
             clickedItem.classList.add('selected-address');
             currentSelectedAddressId = clickedItem.dataset.addressId;
-            console.log('Selected Address ID:', currentSelectedAddressId);
+            console.log('Selected Address ID in modal:', currentSelectedAddressId);
         }
 
+        // Function to handle edit button click
+        function handleEditButtonClick(event) {
+            event.preventDefault(); // Prevent default button behavior
+
+            const addressId = this.dataset.addressId;
+            const addressSelectionModalInstance = bootstrap.Modal.getInstance(addressSelectionModal);
+            if (addressSelectionModalInstance) {
+                addressSelectionModalInstance.hide(); // Hide the selection modal
+            }
+
+            if (editAddressModal) {
+                const editAddressModalInstance = new bootstrap.Modal(editAddressModal);
+
+                // Find the address data in the pre-loaded array
+                const address = userAddressesData.find(addr => addr.id == addressId);
+                if (address) {
+                    const editAddressForm = document.getElementById('editAddressForm');
+                    editAddressForm.action = `/addresses/${address.id}`;
+                    document.getElementById('edit_address_label').value = address.label || '';
+                    document.getElementById('edit_recipient_name').value = address.recipient_name || '';
+                    document.getElementById('edit_phone').value = address.phone || '';
+                    document.getElementById('edit_address_full').value = address.address || '';
+                    document.getElementById('edit_country').value = address.country || '';
+                    document.getElementById('edit_city').value = address.city || '';
+                    document.getElementById('edit_province').value = address.province || '';
+                    document.getElementById('edit_postal_code').value = address.postal_code || '';
+                    document.getElementById('edit_is_default').checked = address.is_default;
+
+                    // Set the hidden input to indicate the request is from checkout (or current context)
+                    const editFromCheckoutInput = document.getElementById('edit_from_checkout');
+                    if (editFromCheckoutInput) {
+                        editFromCheckoutInput.value = '1';
+                    }
+
+                } else {
+                    console.error('Address data not found for ID:', addressId);
+                    alert('Failed to load address data for editing. Please try again.');
+                    editAddressModalInstance.hide();
+                    return;
+                }
+
+                editAddressModalInstance.show(); // Show the edit address modal
+            }
+        }
+
+        // Function to handle delete button click
+        function handleDeleteButtonClick(event) {
+            event.preventDefault();
+
+            const addressId = this.dataset.addressId;
+            const addressLabel = this.dataset.addressLabel;
+            const targetForm = document.getElementById(`delete-address-form-${addressId}-checkout`);
+
+            const addressSelectionModalInstance = bootstrap.Modal.getInstance(addressSelectionModal);
+
+            // Hide the address selection modal immediately BEFORE showing the confirmation
+            if (addressSelectionModalInstance) {
+                addressSelectionModalInstance.hide();
+            }
+
+            if (typeof window.showNotificationCard === 'function') {
+                window.showNotificationCard({
+                    type: 'confirmation',
+                    title: 'Confirm Address Deletion',
+                    message: `Are you sure you want to delete "${addressLabel}"? This action cannot be undone.`,
+                    hasActions: true,
+                    onConfirm: () => {
+                        if (targetForm) {
+                            // Add hidden input to form to indicate origin from checkout
+                            const hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.name = 'from_checkout';
+                            hiddenInput.value = '1';
+                            targetForm.appendChild(hiddenInput);
+
+                            targetForm.submit(); // Submit the form!
+                        }
+                    },
+                    onCancel: () => {
+                        // If canceled, re-open the address selection modal
+                        if (addressSelectionModalInstance) {
+                            addressSelectionModalInstance.show();
+                        }
+                    }
+                });
+            } else {
+                console.warn('window.showNotificationCard function not found. Falling back to native confirm.');
+                if (confirm(`Are you sure you want to delete "${addressLabel}"?`)) {
+                    if (targetForm) {
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = 'from_checkout';
+                        hiddenInput.value = '1';
+                        targetForm.appendChild(hiddenInput);
+                        targetForm.submit();
+                    }
+                } else {
+                    if (addressSelectionModalInstance) {
+                        addressSelectionModalInstance.show();
+                    }
+                }
+            }
+        }
+
+        // Event listener for when the address selection modal is shown
         addressSelectionModal.addEventListener('show.bs.modal', function () {
             document.querySelectorAll('#addressSelectionModal .address-item').forEach(item => {
+                // Ensure unique listeners by removing them first
                 item.removeEventListener('click', handleAddressItemClick);
                 item.addEventListener('click', handleAddressItemClick);
 
-                const currentDisplayedStreet = document.querySelector('#currentAddressDetails [data-address-line="street"]') ?.textContent.split(',')[0].trim();
-                const currentDisplayedSubDistrict = document.querySelector('#currentAddressDetails [data-address-line="street"]') ?.textContent.split(',')[1]?.trim();
-                
-                const itemStreet = item.querySelector('[data-address-line="street"]') ?.textContent.split(',')[0]?.trim();
-                const itemSubDistrict = item.querySelector('[data-address-line="street"]') ?.textContent.split(',')[1]?.trim();
-
-
-                if (currentDisplayedStreet === itemStreet && currentDisplayedSubDistrict === itemSubDistrict) {
+                // Set initial selection based on prop
+                if (item.dataset.addressId == currentSelectedAddressId) {
                     item.classList.add('selected-address');
-                    currentSelectedAddressId = item.dataset.addressId;
                 } else {
                     item.classList.remove('selected-address');
                 }
             });
 
+            // If no address is initially selected, try to select default or first
             const selectedInModal = document.querySelector('#addressSelectionModal .address-item.selected-address');
             if (!selectedInModal && userAddressesData.length > 0) {
-                const defaultSelect = userAddressesData.find(addr => addr.is_primary) || userAddressesData[0];
-                document.querySelector(`.address-item[data-address-id="${defaultSelect.id}"]`)?.classList.add('selected-address');
-                currentSelectedAddressId = defaultSelect.id;
+                const defaultSelect = userAddressesData.find(addr => addr.is_default) || userAddressesData[0];
+                if (defaultSelect) {
+                    document.querySelector(`.address-item[data-address-id="${defaultSelect.id}"]`)?.classList.add('selected-address');
+                    currentSelectedAddressId = defaultSelect.id;
+                }
             }
+
+            // Attach listeners for Edit/Delete buttons each time modal is shown
+            document.querySelectorAll('#addressSelectionModal .edit-address-from-checkout').forEach(button => {
+                button.removeEventListener('click', handleEditButtonClick); // Prevent duplicate listeners
+                button.addEventListener('click', handleEditButtonClick);
+            });
+
+            document.querySelectorAll('#addressSelectionModal .trigger-delete-address-notification-checkout').forEach(button => {
+                button.removeEventListener('click', handleDeleteButtonClick); // Prevent duplicate listeners
+                button.addEventListener('click', handleDeleteButtonClick);
+            });
         });
 
-
+        // Event listener for "Confirm" button in address selection modal
         if (confirmAddressSelectionBtn) {
             confirmAddressSelectionBtn.addEventListener('click', function() {
                 if (currentSelectedAddressId) {
                     const selectedAddressData = userAddressesData.find(addr => addr.id == currentSelectedAddressId);
 
                     if (selectedAddressData) {
+                        // Dispatch custom event to parent page (e.g., checkout.blade.php)
                         const event = new CustomEvent('addressSelected', {
                             detail: {
                                 addressId: currentSelectedAddressId,
                                 addressData: selectedAddressData
                             }
                         });
-                        window.dispatchEvent(event); // Dispatch the event globally
+                        window.dispatchEvent(event);
 
                         const bsModal = bootstrap.Modal.getInstance(addressSelectionModal);
                         if (bsModal) {
@@ -300,10 +455,53 @@
             });
         }
 
-        const addNewAddressBtn = document.querySelector('#addressSelectionModal .add-new-address-btn');
+        // Event listener for "Add New Address" button in address selection modal
+        const addNewAddressBtn = document.getElementById('addNewAddressFromCheckout');
         if (addNewAddressBtn) {
             addNewAddressBtn.addEventListener('click', function() {
-                alert('Fungsionalitas "Tambah Alamat Baru" akan dimuat di sini!');
+                const addressSelectionModalInstance = bootstrap.Modal.getInstance(addressSelectionModal);
+                if (addressSelectionModalInstance) {
+                    addressSelectionModalInstance.hide(); // Hide the first modal completely
+                }
+
+                if (addAddressModal) {
+                    // Set the hidden input to indicate the request is from checkout context
+                    const addFromCheckoutInput = document.getElementById('add_from_checkout');
+                    if (addFromCheckoutInput) {
+                        addFromCheckoutInput.value = '1';
+                    }
+                    const addAddressModalInstance = new bootstrap.Modal(addAddressModal);
+                    addAddressModalInstance.show();
+                }
+            });
+        }
+
+        // Listener for when 'addAddressModal' closes after adding a new address
+        // This will re-open the address selection modal if 'add_from_checkout' was set
+        if (addAddressModal) {
+            addAddressModal.addEventListener('hidden.bs.modal', function () {
+                const addFromCheckoutInput = document.getElementById('add_from_checkout');
+                // Only re-open selection modal if it originated from checkout flow
+                if (addFromCheckoutInput && addFromCheckoutInput.value === '1') {
+                    // Reset the hidden input value
+                    addFromCheckoutInput.value = '0';
+                    const addressSelectionModalInstance = new bootstrap.Modal(addressSelectionModal);
+                    addressSelectionModalInstance.show();
+                }
+            });
+        }
+
+        // Listener for when 'editAddressModal' closes after editing an address
+        // This will re-open the address selection modal if 'edit_from_checkout' was set
+        if (editAddressModal) {
+            editAddressModal.addEventListener('hidden.bs.modal', function () {
+                const editFromCheckoutInput = document.getElementById('edit_from_checkout');
+                if (editFromCheckoutInput && editFromCheckoutInput.value === '1') {
+                    // Reset the hidden input value
+                    editFromCheckoutInput.value = '0';
+                    const addressSelectionModalInstance = new bootstrap.Modal(addressSelectionModal);
+                    addressSelectionModalInstance.show();
+                }
             });
         }
     });

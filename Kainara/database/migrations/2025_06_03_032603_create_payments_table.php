@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->unique()->constrained('orders')->onDelete('cascade');
             $table->string('stripe_payment_intent_id')->unique(); 
+            $table->string('stripe_charge_id')->nullable(); 
             $table->string('status')->default('pending'); 
             $table->decimal('amount_paid', 12, 2); 
             $table->timestamp('paid_at')->nullable(); 
@@ -28,10 +29,12 @@ return new class extends Migration
         Schema::create('refunds', function (Blueprint $table) {
             $table->id();
             $table->foreignId('payment_id')->constrained('payments')->onDelete('cascade');
-            $table->string('stripe_refund_id')->unique();
+            $table->string('stripe_refund_id')->nullable()->unique();
             $table->decimal('refunded_amount', 12, 2); 
+            $table->string('refund_image')->nullable();
+            $table->text('admin_notes')->nullable();
             $table->string('reason')->nullable(); 
-            $table->timestamp('refunded_at'); 
+            $table->timestamp('refunded_at')->nullable(); 
             $table->string('status')->default('pending'); 
             $table->timestamps();
         });

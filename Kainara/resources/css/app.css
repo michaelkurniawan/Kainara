@@ -1,34 +1,3 @@
-@font-face {
-    font-family: 'Ancizar Serif';
-    src: url('/fonts/AncizarSerif-VariableFont_wght.ttf') format('truetype');
-    font-weight: 100 900; /* Ini menunjukkan rentang bobot font variabel */
-    font-style: normal;
-    font-display: swap; /* Disarankan untuk kinerja pemuatan font */
-}
-
-@font-face {
-    font-family: 'Ancizar Serif';
-    src: url('/fonts/AncizarSerif-Italic-VariableFont_wght.ttf') format('truetype');
-    font-weight: 100 900; /* Ini menunjukkan rentang bobot font variabel */
-    font-style: italic; /* Penting: Atur sebagai italic */
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Ancizar Sans'; /* Nama yang akan digunakan di CSS dan Tailwind */
-    src: url('/fonts/AncizarSans-VariableFont_wght_0.ttf') format('truetype'); /* Perhatikan perubahan nama file jika ada */
-    font-weight: 100 900; /* Menunjukkan rentang bobot font variabel */
-    font-style: normal;
-    font-display: swap; /* Disarankan untuk kinerja pemuatan font */
-}
-
-@font-face {
-    font-family: 'Ancizar Sans'; /* Nama yang sama dengan versi normal */
-    src: url('/fonts/AncizarSans-Italic-VariableFont_wght.ttf') format('truetype');
-    font-weight: 100 900;
-    font-style: italic; /* Penting: Atur sebagai italic agar browser menggunakannya untuk gaya italic */
-    font-display: swap;
-}
 
 @tailwind base;
 @tailwind components;

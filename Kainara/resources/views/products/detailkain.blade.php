@@ -12,16 +12,6 @@
     .btn-link {
         text-decoration: none !important;
     }
-    .btn-size {
-        width: 48px;
-        height: 48px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 0;
-        border: 1px solid #6c757d;
-        color: #6c757d;
-    }
     .card .text-muted {
         font-size: 0.9rem !important;
     }
@@ -129,32 +119,12 @@
         z-index: -1;
     }
 
-    .btn-size.selected {
-        background-color: #AD9D6C !important;
-        color: white !important;
-        border-color: #AD9D6C !important;
-    }
-
-    .btn-size:not(:disabled):hover {
-        background-color: #AD9D6C;
-        color: white;
-        border-color: #AD9D6C;
-        transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-    }
-
-    .btn-size:disabled {
-        background-color: #e9ecef;
-        color: #6c757d;
-        border-color: #e9ecef;
-        cursor: not-allowed;
-        opacity: 0.65;
-    }
-
     .product-image-container {
         width: 100%;
         max-width: 736px;
         display: flex;
         justify-content: flex-start;
+        align-items: center;
         overflow: hidden;
         margin: 0;
     }
@@ -190,7 +160,19 @@
 @section('content')
     <div class="container-fluid px-5 py-5">
 
-        {{-- Removed the old Bootstrap alert messages --}}
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
         <div class="row g-5 mb-5">
             <div class="col-lg-6">
@@ -200,30 +182,39 @@
             </div>
 
             <div class="col-lg-6">
-                <h1 class="fw-bold mb-3 fs-1">{{ $product->name }}</h1>
+                <h1 class="font-serif-medium mb-3 fs-1">{{ $product->name }}</h1>
 
                 <div class="d-flex align-items-center text-secondary mb-3">
                     <i class="fas fa-location-dot fs-6 me-3"></i>
                     <span class="fs-5 d-flex align-items-center gap-2">
                         <span>{{ $product->origin }}</span>
-
-                        @php
-                            $colors = $product->variants->pluck('color')->unique();
-                        @endphp
-
-                        @if ($colors->isNotEmpty())
-                            <div class="d-flex align-items-center gap-3 ms-2">
-                                <span class="ms-2 me-2">|</span>
+                        <div class="d-flex align-items-center gap-3 ms-2">
+                            <span class="ms-2 me-2">|</span>
+                            @php
+                                $colors = $product->variants->pluck('color')->unique();
+                            @endphp
+                            @if ($colors->isNotEmpty())
                                 @foreach ($colors as $color)
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="rounded-circle d-inline-block"
-                                            style="width: 16px; height: 16px; background-color: {{ strtolower($color) }}; border: 1px solid #999;">
+                                            style="width: 16px; height: 16px; background-color: {{ strtolower($color) }}; border: 1px solid #999;" title="{{ $color }}">
                                         </span>
                                         <span class="text-capitalize ms-2">{{ $color }}</span>
                                     </div>
                                 @endforeach
-                            </div>
-                        @endif
+                            @else
+                                @if ($product->color)
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="rounded-circle d-inline-block"
+                                            style="width: 16px; height: 16px; background-color: {{ strtolower($product->color) }}; border: 1px solid #999;" title="{{ $product->color }}">
+                                        </span>
+                                        <span class="text-capitalize ms-2">{{ $product->color }}</span>
+                                    </div>
+                                @else
+                                    <span>Multi-color</span>
+                                @endif
+                            @endif
+                        </div>
                     </span>
                 </div>
 
@@ -231,7 +222,9 @@
                     {{ $product->description }}
                 </p>
 
-                <p class="fs-3 fw-bold mb-2">IDR {{ number_format($product->price, 0, ',', '.') }}</p>
+                <p class="fs-4 font-serif-light mb-2">Size 2 x 1 Meter</p>
+                
+                <p class="fs-3 font-serif mb-2">IDR {{ number_format($product->price, 0, ',', '.') }}</p>
 
                 <div class="d-flex align-items-center mb-4">
                     <div class="text-warning me-2 fs-4" id="average-rating-stars">
@@ -240,42 +233,17 @@
                     </span>
                 </div>
 
-                <p class="mb-4 fs-6 d-flex align-items-center gap-2 text-secondary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#sizeChartModal">
-                    <i class="fas fa-shirt fs-4"></i>
-                    <span class="text-decoration-underline fs-4 ms-2">Size Chart</span>
-                </p>
-
-                {{-- Form for Add to Cart / Buy Now (no longer inside @guest/@else) --}}
                 <form action="{{ route('checkout.add') }}" method="POST" id="addToCheckoutForm">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
-                    <input type="hidden" name="selected_size" id="selected_size_input">
+                    <input type="hidden" name="selected_size" id="selected_size_input_one_size" value="One Size"> 
 
-                    @php
-                        $availableSizesRaw = $product->variants->pluck('size')->unique();
-                        $displayableSizes = $availableSizesRaw->filter(function ($size) {
-                            return $size !== 'One Size';
-                        })->sort()->toArray();
-                        // hasOnlyOneSizeVariant is now passed from the controller, no need to recalculate here
-                    @endphp
+                    <p class="mb-2 fs-4 fw-semibold">Fabric's Vendor</p>
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="fas fa-store fs-5 me-3" ></i>
+                        <span class="fs-5">{{ $product->vendor->name ?? 'Craftsman Partner' }}</span>
+                    </div>
 
-                    @if (!$hasOnlyOneSizeVariant)
-                        <div class="d-flex align-items-center mb-5 fw-semibold gap-3 fs-4">
-                            <span>Size</span>
-                            <div class="d-flex gap-3">
-                                @foreach(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as $size)
-                                    @if(in_array($size, $displayableSizes))
-                                        <button type="button" class="btn btn-outline-secondary rounded-0 btn-size" data-size="{{ $size }}">{{ $size }}</button>
-                                    @else
-                                        <button type="button" class="btn btn-outline-secondary rounded-0 btn-size" disabled title="Not available for this product">{{ $size }}</button>
-                                    @endif
-                                @endforeach
-                            </div>
-                        </div>
-                    @else
-                        <p class="mb-4 fs-4 fw-semibold">Size: One Size Only</p>
-                        <input type="hidden" name="selected_size" id="selected_size_input_one_size" value="One Size">
-                    @endif
 
                     <div class="mb-4" style="max-width: 57%;">
                         <div class="d-flex gap-2 mb-4">
@@ -313,32 +281,19 @@
         </div>
 
     </div>
-
-    @include($sizeChartComponent)
 @endsection
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        let selectedSize = null;
         let quantity = 1;
         let maxQuantity = 0;
 
-        const productVariants = @json($product->variants);
+        const product = @json($product);
         const productReviews = @json($productReviews);
+
         const reviewsPerPage = 3;
         let currentPage = 0;
-
-        const sizeStockMap = {};
-        productVariants.forEach(variant => {
-            if (variant.size) {
-                sizeStockMap[variant.size] = (sizeStockMap[variant.size] || 0) + variant.stock;
-            }
-        });
-
-        const sizeButtons = document.querySelectorAll('.btn-size');
-        const selectedSizeInput = document.getElementById('selected_size_input');
-        const selectedSizeInputOneSize = document.getElementById('selected_size_input_one_size');
 
         const minusBtn = document.querySelector('.btn-minus');
         const plusBtn = document.querySelector('.btn-plus');
@@ -347,9 +302,7 @@
 
         const addToCartButton = document.querySelector('.btn-add-to-cart');
         const buyNowButton = document.querySelector('.btn-buy-it-now');
-        const addToCheckoutForm = document.getElementById('addToCheckoutForm'); // Get the form
-
-        const hasOnlyOneSizeVariant = {{ json_encode($hasOnlyOneSizeVariant) }};
+        const addToCheckoutForm = document.getElementById('addToCheckoutForm');
 
         const reviewsContainer = document.getElementById('reviews-container');
         const prevBtn = document.getElementById('prev-review-btn');
@@ -362,9 +315,28 @@
 
         const isAuthenticated = {{ Auth::check() ? 'true' : 'false' }};
 
+        // Determine maxQuantity for products with or without variants
+        if (product.variants && product.variants.length > 0) {
+            // For products with variants, sum up the stock of 'One Size' variants
+            maxQuantity = product.variants.reduce((sum, variant) => {
+                return variant.size === 'One Size' ? sum + variant.stock : sum;
+            }, 0);
+        } else {
+            // For products without variants, use the product's main stock
+            maxQuantity = product.stock || 0; // Fallback to 0 if product.stock is not defined
+        }
+        
+        // If stock is 0 but product ID exists, still allow quantity 1 for display/testing
+        // (Consider actual business logic for out-of-stock items)
+        if (maxQuantity === 0 && product.id) {
+            maxQuantity = 1; // Allows "Add to Cart" button to be enabled for items with 0 stock to show "out of stock" logic
+                            // Or, you could keep it at 0 to truly disable the buttons if out of stock.
+                            // The current logic in updateQuantityControls will disable if maxQuantity is 0.
+        }
+
         function updateQuantityControls() {
             quantity = Math.min(quantity, maxQuantity);
-            quantity = Math.max(1, quantity);
+            quantity = Math.max(1, quantity); // Ensure quantity is at least 1
 
             quantityDisplay.innerText = quantity;
             quantityInput.value = quantity;
@@ -373,30 +345,14 @@
             minusBtn.disabled = quantity <= 1;
             plusBtn.disabled = quantity >= maxQuantity;
 
-            // Enable/disable Add to Cart and Buy Now buttons based on size selection and stock
-            if ((selectedSize || hasOnlyOneSizeVariant) && maxQuantity > 0) {
-                if (addToCartButton) addToCartButton.disabled = false;
-                if (buyNowButton) buyNowButton.disabled = false;
-            } else {
-                if (addToCartButton) addToCartButton.disabled = true;
-                if (buyNowButton) buyNowButton.disabled = true;
-            }
+            const isAvailable = maxQuantity > 0;
+            // Disable buttons if maxQuantity is 0, implying out of stock.
+            // If maxQuantity is 1 (as per fallback above) but actually 0 stock, this still works.
+            if (addToCartButton) addToCartButton.disabled = !isAvailable;
+            if (buyNowButton) buyNowButton.disabled = !isAvailable;
         }
 
-        sizeButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                sizeButtons.forEach(btn => btn.classList.remove('selected'));
-                this.classList.add('selected');
-
-                selectedSize = this.dataset.size;
-                if (selectedSizeInput) {
-                    selectedSizeInput.value = selectedSize;
-                }
-
-                maxQuantity = sizeStockMap[selectedSize] || 0;
-                updateQuantityControls();
-            });
-        });
+        updateQuantityControls(); // Initial call to set button states
 
         minusBtn.addEventListener('click', function () {
             if (quantity > 1) {
@@ -412,65 +368,42 @@
             }
         });
 
-        if (hasOnlyOneSizeVariant) {
-            selectedSize = 'One Size';
-            if (selectedSizeInput) {
-                selectedSizeInput.value = 'One Size';
-            }
-            if (selectedSizeInputOneSize) {
-                selectedSizeInputOneSize.value = 'One Size';
-            }
-
-            const oneSizeTotalStock = productVariants.reduce((sum, variant) => {
-                return variant.size === 'One Size' ? sum + variant.stock : sum;
-            }, 0);
-            maxQuantity = oneSizeTotalStock;
-        } else {
-            maxQuantity = 0;
-            selectedSize = null;
-        }
-
-        // Initial call to set button states correctly on page load
-        updateQuantityControls();
-
+        // --- Handle server-side notifications ---
         const notificationData = @json(session('notification'));
         if (notificationData) {
             setTimeout(() => {
                 if (typeof window.showNotificationCard === 'function') {
                     window.showNotificationCard(notificationData);
                 } else {
-                    // Fallback if window.showNotificationCard is not defined
                     alert(`${notificationData.title || ''}\n${notificationData.message || ''}`);
                 }
-            }, 300); // Small delay, adjust as needed
+            }, 300); // Small delay to allow page rendering before showing notification
         }
         // --- End of server-side notification handling ---
 
-        // --- Existing Logic: Handle form submission for login check ---
+        // --- Logic to handle form submission and login check ---
         if (addToCheckoutForm) {
             addToCheckoutForm.addEventListener('submit', function(event) {
                 if (!isAuthenticated) {
                     event.preventDefault(); // Stop the form from submitting
 
-                    // Show the custom notification card for login required
                     window.showNotificationCard({
-                        type: 'info', // Or 'error'
+                        type: 'info',
                         title: 'Login Required',
-                        message: 'You must log in to add products to your cart or proceed with purchase.',
+                        message: 'You must log in to add products to your cart or proceed with the purchase.',
                         hasActions: true, // Set to true to show 'Login Now' button
                         onConfirm: () => {
                             window.location.href = '{{ route('login') }}';
                         },
-                        // onCancel is not explicitly needed here as we only have one action
                     });
 
-                    // Customize the notification buttons
+                    // Customize the notification buttons to ensure only 'Login Now' is visible
                     const confirmBtn = document.getElementById('globalNotificationConfirmBtn');
                     if (confirmBtn) {
                         confirmBtn.textContent = 'Login Now';
-                        // Ensure event listener from showNotificationCard is correctly assigned,
-                        // or re-assign it to your specific `onConfirm` callback.
-                        confirmBtn.removeEventListener('click', window.hideNotificationCard); // Remove default hide if exists
+                        confirmBtn.style.display = 'inline-block'; // Ensure it's visible
+                        // Re-attach listener if the custom notification system replaces them
+                        confirmBtn.removeEventListener('click', window.hideNotificationCard); // Remove default hide
                         confirmBtn.addEventListener('click', function() {
                             window.hideNotificationCard();
                             window.location.href = '{{ route('login') }}';
@@ -485,11 +418,9 @@
                         actionsDiv.style.display = 'flex'; // Ensure actions div is visible for the single button
                     }
                 }
-                // If authenticated, the form will submit normally
             });
         }
-        // --- End of Existing Logic ---
-
+        // --- End of Login Check Logic ---
 
         function generateStarsHtml(rating) {
             let starsHtml = '';
@@ -626,7 +557,7 @@
 
         setTimeout(() => {
             window.scrollTo(0, 0);
-        }, 100);
+        }, 100); // 100ms delay, adjust if needed for your specific page loading speed
     });
 </script>
 @endpush

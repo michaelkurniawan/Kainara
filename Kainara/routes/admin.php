@@ -7,8 +7,9 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminProductsController;
 use App\Http\Controllers\Admin\AdminArticlesController;
 use App\Http\Controllers\Admin\AdminOrderController;
-use App\Http\Controllers\Admin\AdminAffiliateReqController; 
-use App\Http\Controllers\Admin\AdminVendorController; 
+use App\Http\Controllers\Admin\AdminAffiliateReqController;
+use App\Http\Controllers\Admin\AdminVendorController;
+use App\Http\Controllers\Admin\AdminRefundController; // Import the new AdminRefundController
 use App\Http\Controllers\Admin\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Admin\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Admin\Auth\EmailVerificationPromptController;
@@ -51,6 +52,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Admin Order Management Route
         Route::resource('orders', AdminOrderController::class);
         Route::get('orders/{order}/download-label', [AdminOrderController::class, 'downloadShippingLabel'])->name('orders.download-label');
+
+        // --- NEW: Admin Refund Management Routes ---
+        Route::prefix('refunds')->name('refunds.')->group(function () {
+            Route::get('/', [AdminRefundController::class, 'index'])->name('index');
+            Route::get('/{refund}', [AdminRefundController::class, 'show'])->name('show');
+            Route::put('/{refund}/update-status', [AdminRefundController::class, 'updateStatus'])->name('updateStatus');
+        });
+        // --- END NEW: Admin Refund Management Routes ---
 
         // Password Update Route
         Route::put('password', [PasswordController::class, 'update'])->name('password.update');

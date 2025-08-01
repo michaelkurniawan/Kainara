@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use App\Models\UserAddress;
+use App\Models\UserAddress as Address;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 class AddressController extends Controller
 {
     /**
-     * Menyimpan alamat baru ke database.
+     * Stores a new address in the database.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
@@ -28,90 +28,98 @@ class AddressController extends Controller
                 'province' => 'required|string|max:255',
                 'country' => 'required|string|max:255',
                 'postal_code' => 'required|string|max:10',
-                'is_default' => 'boolean', // Ini sekarang bekerja dengan input hidden
+                'is_default' => 'boolean',
             ]);
 
             $user = Auth::user();
 
-            // Jika alamat ini diatur sebagai default, set semua alamat lain user menjadi non-default
             if (isset($validatedData['is_default']) && $validatedData['is_default']) {
                 $user->addresses()->update(['is_default' => false]);
             } elseif ($user->addresses()->doesntExist()) {
-                // Jika ini alamat pertama user, otomatis jadikan default
                 $validatedData['is_default'] = true;
             }
 
-            // Buat alamat baru
             $user->addresses()->create($validatedData);
 
-            // Redirect sukses kembali ke tab 'Addresses'
-            return redirect()->route('profile.index', ['#addresses'])->with('notification', [
+            $fromCheckout = $request->has('from_checkout') && $request->input('from_checkout') == '1';
+            $redirectTarget = $fromCheckout ?
+                                route('checkout.show') :
+                                route('profile.index', ['#addresses']);
+
+            return redirect($redirectTarget)->with('notification', [
                 'type' => 'success',
-                'title' => 'Alamat Berhasil Ditambahkan!',
-                'message' => 'Alamat baru Anda telah berhasil disimpan.',
-                'hasActions' => false
+                'title' => 'Address Added Successfully!',
+                'message' => 'Your new address has been saved.',
+                'hasActions' => false // No actions needed for a simple success notification
             ]);
 
         } catch (ValidationException $e) {
-            // Redirect kembali dengan error validasi, tetap di tab 'Addresses'
-            return redirect()->back()->with('notification', [
+            $fromCheckout = $request->has('from_checkout') && $request->input('from_checkout') == '1';
+            $redirectBack = $fromCheckout ?
+                                redirect()->back() :
+                                redirect()->back()->withFragment('addresses');
+
+            return $redirectBack->with('notification', [
                 'type' => 'error',
-                'title' => 'Gagal Menambahkan Alamat!',
-                'message' => 'Mohon periksa kembali input Anda. ' . $e->getMessage(),
+                'title' => 'Failed to Add Address!',
+                'message' => 'Please check your input. ' . $e->getMessage(), // You might want to refine this message for production
                 'hasActions' => false
-            ])->withErrors($e->errors())->onlyInput($request->except(['_token']))
-              ->withFragment('addresses'); // Pertahankan tab aktif
+            ])->withErrors($e->errors())->onlyInput($request->except(['_token']));
         } catch (\Exception $e) {
-            // Redirect kembali dengan error umum, tetap di tab 'Addresses'
-            return redirect()->back()->with('notification', [
+            $fromCheckout = $request->has('from_checkout') && $request->input('from_checkout') == '1';
+            $redirectBack = $fromCheckout ?
+                                redirect()->back() :
+                                redirect()->back()->withFragment('addresses');
+
+            return $redirectBack->with('notification', [
                 'type' => 'error',
-                'title' => 'Terjadi Kesalahan!',
-                'message' => 'Gagal menambahkan alamat: ' . $e->getMessage(),
+                'title' => 'An Error Occurred!',
+                'message' => 'Failed to add address: ' . $e->getMessage(), // Consider a more generic message for production
                 'hasActions' => false
-            ])->withInput()
-              ->withFragment('addresses'); // Pertahankan tab aktif
+            ])->withInput();
         }
     }
 
     /**
-     * Mengambil data alamat untuk mengisi modal edit.
-     * Ini diasumsikan sebagai endpoint API yang dipanggil oleh AJAX.
+     * Fetches address data for editing.
+     * This is assumed to be an API endpoint called via AJAX.
      *
      * @param  \App\Models\UserAddress  $address
      * @return \Illuminate\Http\JsonResponse
      */
-    public function edit(UserAddress $address)
+    public function edit(Address $address)
     {
-        // Pastikan pengguna memiliki akses ke alamat ini
         if ($address->user_id !== Auth::id()) {
-            // Jika akses ditolak, kembalikan response JSON error
             return response()->json([
                 'type' => 'error',
-                'title' => 'Akses Ditolak!',
-                'message' => 'Anda tidak memiliki izin untuk melakukan tindakan ini.'
-            ], 403); // Status code 403 Forbidden
+                'title' => 'Access Denied!',
+                'message' => 'You do not have permission to perform this action.'
+            ], 403);
         }
 
-        // Kembalikan data alamat dalam format JSON
         return response()->json($address);
     }
 
     /**
-     * Memperbarui alamat yang ada di database.
+     * Updates an existing address in the database.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\UserAddress  $address
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, UserAddress $address)
+    public function update(Request $request, Address $address)
     {
-        // Pastikan pengguna memiliki akses ke alamat ini
+        $fromCheckout = $request->has('from_checkout') && $request->input('from_checkout') == '1';
+
         if ($address->user_id !== Auth::id()) {
-            // Redirect kembali ke tab 'Addresses' jika akses ditolak
-            return redirect()->route('profile.index', ['#addresses'])->with('notification', [
+            $redirectTarget = $fromCheckout ?
+                                route('checkout.show') :
+                                route('profile.index', ['#addresses']);
+
+            return redirect($redirectTarget)->with('notification', [
                 'type' => 'error',
-                'title' => 'Akses Ditolak!',
-                'message' => 'Anda tidak memiliki izin untuk melakukan tindakan ini.',
+                'title' => 'Access Denied!',
+                'message' => 'You do not have permission to perform this action.',
                 'hasActions' => false
             ]);
         }
@@ -126,76 +134,81 @@ class AddressController extends Controller
                 'province' => 'required|string|max:255',
                 'country' => 'required|string|max:255',
                 'postal_code' => 'required|string|max:10',
-                'is_default' => 'boolean', // Ini sekarang bekerja dengan input hidden
+                'is_default' => 'boolean',
             ]);
 
             $user = Auth::user();
 
-            // Logika untuk mengatur alamat default
             if (isset($validatedData['is_default']) && $validatedData['is_default']) {
-                // Set semua alamat lain user menjadi non-default
                 $user->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
             } else {
-                // Jika alamat yang sedang diedit adalah default dan di-uncheck,
-                // dan ada alamat lain, set alamat pertama yang ditemukan sebagai default baru.
                 if ($address->is_default && $user->addresses()->where('id', '!=', $address->id)->exists()) {
                     $user->addresses()->where('id', '!=', $address->id)->first()->update(['is_default' => true]);
                 }
             }
 
-            // Perbarui alamat
             $address->update($validatedData);
 
-            // Redirect sukses kembali ke tab 'Addresses'
-            return redirect()->route('profile.index', ['#addresses'])->with('notification', [
+            $redirectTarget = $fromCheckout ?
+                                route('checkout.show') :
+                                route('profile.index', ['#addresses']);
+
+            return redirect($redirectTarget)->with('notification', [
                 'type' => 'success',
-                'title' => 'Alamat Berhasil Diperbarui!',
-                'message' => 'Perubahan alamat Anda telah berhasil disimpan.',
+                'title' => 'Address Updated Successfully!',
+                'message' => 'Your address changes have been saved.',
                 'hasActions' => false
             ]);
 
         } catch (ValidationException $e) {
-            // Redirect kembali dengan error validasi, tetap di tab 'Addresses'
-            return redirect()->back()->with('notification', [
+            $redirectBack = $fromCheckout ?
+                                redirect()->back() :
+                                redirect()->back()->withFragment('addresses');
+
+            return $redirectBack->with('notification', [
                 'type' => 'error',
-                'title' => 'Gagal Memperbarui Alamat!',
-                'message' => 'Mohon periksa kembali input Anda. ' . $e->getMessage(),
+                'title' => 'Failed to Update Address!',
+                'message' => 'Please check your input. ' . $e->getMessage(),
                 'hasActions' => false
-            ])->withErrors($e->errors())->onlyInput($request->except(['_token', '_method']))
-              ->withFragment('addresses'); // Pertahankan tab aktif
+            ])->withErrors($e->errors())->onlyInput($request->except(['_token', '_method']));
         } catch (\Exception $e) {
-            // Redirect kembali dengan error umum, tetap di tab 'Addresses'
-            return redirect()->back()->with('notification', [
+            $redirectBack = $fromCheckout ?
+                                redirect()->back() :
+                                redirect()->back()->withFragment('addresses');
+
+            return $redirectBack->with('notification', [
                 'type' => 'error',
-                'title' => 'Terjadi Kesalahan!',
-                'message' => 'Gagal memperbarui alamat: ' . $e->getMessage(),
+                'title' => 'An Error Occurred!',
+                'message' => 'Failed to update address: ' . $e->getMessage(),
                 'hasActions' => false
-            ])->withInput()
-              ->withFragment('addresses'); // Pertahankan tab aktif
+            ])->withInput();
         }
     }
 
     /**
-     * Menghapus alamat dari database.
+     * Deletes an address from the database.
      *
-     * @param  \App\Models\UserAddress  $address
+     * @param \App\Models\UserAddress $address
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(UserAddress $address)
+    public function destroy(Address $address, Request $request)
     {
-        // Pastikan pengguna memiliki akses ke alamat ini
+        // The previous code had a request() helper call, but passing it as an argument is a cleaner practice.
+        // Let's stick with that for clarity.
+        $fromCheckout = $request->has('from_checkout') && $request->input('from_checkout') == '1';
+
         if ($address->user_id !== Auth::id()) {
-            // Redirect kembali ke tab 'Addresses' jika akses ditolak
-            return redirect()->route('profile.index', ['#addresses'])->with('notification', [
+            $redirectTarget = $fromCheckout ? route('checkout.show') : route('profile.index', ['#addresses']);
+
+            return redirect($redirectTarget)->with('notification', [
                 'type' => 'error',
-                'title' => 'Akses Ditolak!',
-                'message' => 'Anda tidak memiliki izin untuk melakukan tindakan ini.',
+                'title' => 'Access Denied!',
+                'message' => 'You do not have permission to perform this action.',
                 'hasActions' => false
             ]);
         }
 
         try {
-            // Jika alamat yang dihapus adalah default, cari alamat lain dan jadikan default baru
             if ($address->is_default) {
                 $user = Auth::user();
                 $newDefaultAddress = $user->addresses()->where('id', '!=', $address->id)->first();
@@ -204,24 +217,25 @@ class AddressController extends Controller
                 }
             }
 
-            // Hapus alamat
             $address->delete();
 
-            // Redirect sukses kembali ke tab 'Addresses'
-            return redirect()->route('profile.index', ['#addresses'])->with('notification', [
+            $redirectTarget = $fromCheckout ? route('checkout.show') : route('profile.index', ['#addresses']);
+
+            return redirect($redirectTarget)->with('notification', [
                 'type' => 'success',
-                'title' => 'Alamat Berhasil Dihapus!',
-                'message' => 'Alamat telah berhasil dihapus dari daftar Anda.',
+                'title' => 'Address Deleted Successfully!',
+                'message' => 'The address has been removed from your list.',
                 'hasActions' => false
             ]);
         } catch (\Exception $e) {
-            // Redirect kembali dengan error umum, tetap di tab 'Addresses'
-            return redirect()->back()->with('notification', [
+            $redirectTarget = $fromCheckout ? route('checkout.show') : route('profile.index', ['#addresses']);
+
+            return redirect($redirectTarget)->with('notification', [
                 'type' => 'error',
-                'title' => 'Gagal Menghapus Alamat!',
-                'message' => 'Terjadi kesalahan saat menghapus alamat: ' . $e->getMessage(),
+                'title' => 'Failed to Delete Address!',
+                'message' => 'An error occurred while deleting the address: ' . $e->getMessage(),
                 'hasActions' => false
-            ])->withFragment('addresses'); // Pertahankan tab aktif
+            ]);
         }
     }
 }
