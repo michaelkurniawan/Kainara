@@ -8,11 +8,11 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-// Hapus penggunaan trait RegistersUsers karena kita akan mengimplementasikan logikanya secara manual
+// Remove the RegistersUsers trait as we will implement the logic manually
 // use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Auth\Events\Registered;
 use App\Providers\RouteServiceProvider;
-use Illuminate\Validation\ValidationException; // Import exception ini
+use Illuminate\Validation\ValidationException; // Import this exception
 
 class RegisterController extends Controller
 {
@@ -53,14 +53,14 @@ class RegisterController extends Controller
             // This will trigger the Notification/Listener responsible for sending the verification email.
             event(new Registered($user));
 
-            // PENTING: Do NOT call Auth::login($user) or Auth::guard()->login($user) here.
+            // IMPORTANT: Do NOT call Auth::login($user) or Auth::guard()->login($user) here.
             // This is the key to preventing automatic login.
 
             // 4. Flash a success message and redirect to the login page.
             $request->session()->flash('notification', [
                 'type' => 'success',
                 'title' => 'Registration Success!',
-                'message' => 'Akun Anda telah dibuat. Email verifikasi telah dikirim ke email Anda, mohon periksa untuk memverifikasi alamat email Anda.',
+                'message' => 'Your account has been created. A verification email has been sent to your email, please check to verify your email address.',
                 'hasActions' => true // Notification will have an 'Okay' button
             ]);
 
@@ -68,21 +68,21 @@ class RegisterController extends Controller
             return redirect()->route('login');
 
         } catch (ValidationException $e) {
-            // Jika validasi gagal, redirect kembali dengan error dan input lama
+            // If validation fails, redirect back with errors and old input
             return redirect()->back()->withInput($request->except('password'))->withErrors($e->errors());
         } catch (\Exception $e) {
-            // Tangkap exception lain yang mungkin terjadi
+            // Catch other exceptions that might occur
             \Log::error('Registration error: ' . $e->getMessage(), ['exception' => $e]);
 
-            // Flash notifikasi error kustom
+            // Flash custom error notification
             $request->session()->flash('notification', [
                 'type' => 'error',
                 'title' => 'Registration Failed!',
-                'message' => 'Terjadi kesalahan tak terduga saat pendaftaran. Silakan coba lagi.',
+                'message' => 'An unexpected error occurred during registration. Please try again.',
                 'hasActions' => false
             ]);
 
-            // Redirect kembali ke halaman registrasi atau halaman lain yang sesuai
+            // Redirect back to the registration page or another appropriate page
             return redirect()->back()->withInput($request->except('password'));
         }
     }

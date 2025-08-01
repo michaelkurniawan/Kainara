@@ -138,6 +138,119 @@
     .profile-options {
         font-size: 1.2rem;
     }
+
+    /* New styles for the compact order history card based on the image */
+    .order-card-compact {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        padding: 15px 20px; /* Reduced padding */
+        margin-bottom: 15px; /* Reduced margin */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Lighter shadow */
+        display: flex; /* Menggunakan flexbox untuk tata letak horizontal */
+        align-items: center; /* Align items vertically in the center */
+        justify-content: space-between; /* Space out content and status */
+        min-height: 100px; /* Ensure a minimum height for visual consistency */
+        position: relative; /* Needed for absolute positioning of M badge if used */
+        overflow: hidden; /* Prevent content overflow */
+        gap: 15px; /* Spasi antar item flex (gambar, konten, status) */
+    }
+
+    /* Gaya untuk gambar produk pertama */
+    .order-card-compact .product-image-thumbnail {
+        width: 80px; /* Ukuran gambar produk */
+        height: 80px;
+        object-fit: cover;
+        border-radius: 4px; /* Sedikit rounded corner */
+        flex-shrink: 0; /* Pastikan gambar tidak mengecil */
+    }
+
+    .order-card-content {
+        flex-grow: 1; /* Allows content to take available space */
+        display: flex;
+        flex-direction: column;
+        text-align: left; /* Ensure text inside is left-aligned */
+    }
+
+    .order-card-content .order-id-line {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px; /* Space below ID line */
+    }
+
+    .order-card-content .order-summary-line {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 3px;
+    }
+
+    .order-card-content .order-address-line {
+        font-size: 0.85rem;
+        color: #888;
+        line-height: 1.4;
+    }
+
+    /* Status badge for compact card */
+    .order-status-compact {
+        padding: 8px 12px;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 0.85rem;
+        text-transform: capitalize;
+        white-space: nowrap; /* Prevent text from wrapping */
+        flex-shrink: 0; /* Prevent shrinking */
+        margin-left: 15px; /* Space from content */
+    }
+
+    /* Status colors (re-using existing ones) */
+    .status-completed { background-color: #d4edda; color: #155724; } /* Green */
+    .status-canceled { background-color: #f8d7da; color: #721c24; } /* Red */
+    .status-returned { background-color: #fff3cd; color: #856404; } /* Yellow */
+    .status-refunded { background-color: #d1ecf1; color: #0c5460; } /* Light Blue */
+
+    /* Generic empty state card styling (if it exists outside the order card) */
+    .empty-order-card {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 40px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        text-align: left; /* Ensure text is left-aligned */
+    }
+    .empty-order-card p.lead {
+        font-size: 1.25rem;
+        color: #000;
+    }
+    .empty-order-card p {
+        color: #777;
+        margin-bottom: 10px;
+    }
+    .empty-order-card .btn {
+        font-size: 1rem;
+        padding: 10px 25px;
+    }
+
+    /* Responsive adjustments for compact card */
+    @media (max-width: 768px) {
+        .order-card-compact {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 15px;
+        }
+        .order-card-compact .product-image-thumbnail {
+            margin-bottom: 10px; /* Spasi bawah gambar pada mobile */
+        }
+        .order-card-content {
+            width: 100%;
+            margin-bottom: 10px; /* Space between content and status on small screens */
+        }
+        .order-status-compact {
+            margin-left: 0; /* Remove side margin */
+            width: 100%; /* Full width badge on small screens */
+            text-align: center; /* Center status text */
+        }
+    }
 </style>
 @endpush
 
@@ -216,6 +329,7 @@
                 const button = event.relatedTarget;
                 const addressId = button.getAttribute('data-address-id');
 
+                // Store active tab before opening modal
                 const activeTab = document.querySelector('.profile-tabs .nav-link.active');
                 if (activeTab) {
                     const activeTabId = activeTab.getAttribute('data-bs-target').substring(1);
@@ -247,6 +361,7 @@
         const editPersonalInfoModal = document.getElementById('editPersonalInfoModal');
         if (editPersonalInfoModal) {
             editPersonalInfoModal.addEventListener('show.bs.modal', function (event) {
+                // Store active tab before opening modal
                 const activeTab = document.querySelector('.profile-tabs .nav-link.active');
                 if (activeTab) {
                     const activeTabId = activeTab.getAttribute('data-bs-target').substring(1);
@@ -272,12 +387,14 @@
         const profileTab = document.getElementById('profileTab');
         if (profileTab) {
             const tabButtons = profileTab.querySelectorAll('.nav-link');
+            const profileTabContent = document.getElementById('profileTabContent'); // Get the tab content container
 
             const activateTab = (tabId) => {
                 const targetTabButton = document.getElementById(tabId + '-tab');
-                const targetTabContent = document.getElementById(tabId);
+                const targetTabContentPane = document.getElementById(tabId); // Correctly target the tab pane
 
-                if (targetTabButton && targetTabContent) {
+                if (targetTabButton && targetTabContentPane) {
+                    // Deactivate all tabs
                     tabButtons.forEach(link => {
                         link.classList.remove('active');
                         link.setAttribute('aria-selected', 'false');
@@ -286,10 +403,16 @@
                         pane.classList.remove('show', 'active');
                     });
 
+                    // Activate the target tab
                     targetTabButton.classList.add('active');
                     targetTabButton.setAttribute('aria-selected', 'true');
+                    targetTabContentPane.classList.add('show', 'active');
 
-                    targetTabContent.classList.add('show', 'active');
+                    // Scroll to the top of the tab-content area AFTER tab activation
+                    // Use a slight delay to allow Bootstrap's transitions to complete
+                    setTimeout(() => {
+                        profileTabContent.scrollTop = 0;
+                    }, 50); // Adjust delay if needed
                 }
             };
 
@@ -297,6 +420,7 @@
                 button.addEventListener('click', function () {
                     const activeTabId = this.getAttribute('data-bs-target').substring(1);
                     localStorage.setItem('lastActiveProfileTab', activeTabId);
+                    activateTab(activeTabId); // Call activateTab on click as well
                 });
             });
 
@@ -306,9 +430,11 @@
                 const hashId = window.location.hash.substring(1);
                 if (document.getElementById(hashId) && document.getElementById(hashId + '-tab')) {
                     initialTabId = hashId;
+                    history.replaceState(null, '', window.location.pathname + window.location.search);
                 }
             }
 
+            // Priority 2: Check localStorage
             if (!initialTabId) {
                 const storedTabId = localStorage.getItem('lastActiveProfileTab');
                 if (storedTabId && document.getElementById(storedTabId) && document.getElementById(storedTabId + '-tab')) {
@@ -316,11 +442,22 @@
                 }
             }
 
+            // Fallback: Default to 'personal-info'
             if (!initialTabId) {
                 initialTabId = 'personal-info';
             }
 
+            // Activate the determined initial tab
             activateTab(initialTabId);
+
+            // If a hash was initially present, and we activated the tab,
+            // ensure the overall window is scrolled to the top or a comfortable position
+            // after the initial tab activation, to prevent browser's auto-scroll to hash.
+            if (window.location.hash) { // Re-check if hash was present initially
+                setTimeout(() => {
+                    window.scrollTo(0, 0); // Scroll window to top
+                }, 100); // Give a bit more time for all rendering to settle
+            }
         }
     });
 
@@ -345,7 +482,7 @@
                             const activeTab = document.querySelector('.profile-tabs .nav-link.active');
                             if (activeTab) {
                                 const activeTabId = activeTab.getAttribute('data-bs-target').substring(1);
-                                localStorage.setItem('lastActiveProfileTab', activeTabId);
+                                localStorage.setItem('lastActiveProfileTab', activeTabId); // Save tab before submit
                             }
                             targetForm.submit();
                         }
@@ -353,13 +490,14 @@
                     onCancel: () => {
                     }
                 });
-            } else {
+            } 
+            else {
                 if (confirm(`Are you sure you want to delete "${addressLabel}"?`)) {
                     if (targetForm) {
                         const activeTab = document.querySelector('.profile-tabs .nav-link.active');
                         if (activeTab) {
                             const activeTabId = activeTab.getAttribute('data-bs-target').substring(1);
-                            localStorage.setItem('lastActiveProfileTab', activeTabId);
+                            localStorage.setItem('lastActiveProfileTab', activeTabId); // Save tab before submit
                         }
                         targetForm.submit();
                     }
@@ -368,6 +506,7 @@
         });
     });
 
+    // Transaction Detail Modal Logic (kept as is)
     document.addEventListener('DOMContentLoaded', function () {
         const transactionDetailModal = document.getElementById('transactionDetailModal');
         if (transactionDetailModal) {

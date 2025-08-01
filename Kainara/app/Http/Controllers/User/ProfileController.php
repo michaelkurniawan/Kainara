@@ -7,13 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use App\Models\Order; // Make sure to import the Order model
-use App\Models\UserAddress; // Make sure to import the Address model (assuming this is your UserAddress model, renamed for clarity)
+use App\Models\Order;
+use App\Models\UserAddress;
 
 class ProfileController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display the user profile page with personal information, addresses, and order history.
      */
     public function index()
     {
@@ -23,10 +23,11 @@ class ProfileController extends Controller
         // Fetch orders for the profile's Order History tab
         // These are orders that are considered "finished" or "archived"
         $userOrdersHistory = $user->orders()
-                                    ->whereIn('status', ['Completed', 'Canceled', 'Returned', 'Refunded'])
-                                    ->with('orderItems.product') // Eager load relationships needed for display
-                                    ->orderByDesc('created_at')
-                                    ->get();
+                                        // Include 'Refund Rejected' in the history filter
+                                        ->whereIn('status', ['Completed', 'Canceled', 'Returned', 'Refunded', 'Refund Pending', 'Refund Failed', 'Refund Rejected'])
+                                        ->with(['orderItems.product', 'payment.refunds'])
+                                        ->orderByDesc('created_at')
+                                        ->get();
 
         return view('profile', compact(['user', 'userAddresses', 'userOrdersHistory']));
     }
@@ -47,8 +48,11 @@ class ProfileController extends Controller
             ]);
 
             // Delete old profile picture if it exists and is not the default
-            if ($user->profile_picture && $user->profile_picture !== 'images/default-profile.png') {
-                Storage::disk('public')->delete(str_replace('storage/', '', $user->profile_picture));
+            if ($user->profile_picture && !str_contains($user->profile_picture, 'default-profile.png')) {
+                $oldPath = str_replace('storage/', '', $user->profile_picture);
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
             }
 
             // Store the new image
@@ -66,24 +70,30 @@ class ProfileController extends Controller
             ]);
 
         } catch (ValidationException $e) {
-            return redirect()->back()->with('notification', [
-                'type' => 'error',
-                'title' => 'Upload Failed!',
-                'message' => 'Please check the image file. ' . $e->getMessage(),
-                'hasActions' => false
-            ])->withErrors($e->errors())->onlyInput($request->all())
-              ->withFragment('personal-info'); // Stay on personal info tab
+            return redirect()->back()->withErrors($e->errors())->withInput()
+                ->with('notification', [
+                    'type' => 'error',
+                    'title' => 'Upload Failed!',
+                    'message' => 'Please check the image file. ' . $e->getMessage(),
+                    'hasActions' => false
+                ])->withFragment('personal-info');
         } catch (\Exception $e) {
-            return redirect()->back()->with('notification', [
-                'type' => 'error',
-                'title' => 'An Error Occurred!',
-                'message' => 'Failed to update profile picture: ' . $e->getMessage(),
-                'hasActions' => false
-            ])->withInput()
-              ->withFragment('personal-info'); // Stay on personal info tab
+            return redirect()->back()->withInput()
+                ->with('notification', [
+                    'type' => 'error',
+                    'title' => 'An Error Occurred!',
+                    'message' => 'Failed to update profile picture: ' . $e->getMessage(),
+                    'hasActions' => false
+                ])->withFragment('personal-info');
         }
     }
 
+    /**
+     * Update the user's personal information.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function updatePersonalInformation(Request $request)
     {
         $user = Auth::user();
@@ -105,21 +115,21 @@ class ProfileController extends Controller
             ]);
 
         } catch (ValidationException $e) {
-            return redirect()->back()->with('notification', [
-                'type' => 'error',
-                'title' => 'Update Failed!',
-                'message' => 'Please check your input. ' . $e->getMessage(),
-                'hasActions' => false
-            ])->withErrors($e->errors())->onlyInput($request->except(['_token', '_method']))
-              ->withFragment('personal-info'); // Stay on personal info tab
+            return redirect()->back()->withErrors($e->errors())->withInput($request->except(['_token', '_method']))
+                ->with('notification', [
+                    'type' => 'error',
+                    'title' => 'Update Failed!',
+                    'message' => 'Please check your input. ' . $e->getMessage(),
+                    'hasActions' => false
+                ])->withFragment('personal-info');
         } catch (\Exception $e) {
-            return redirect()->back()->with('notification', [
-                'type' => 'error',
-                'title' => 'An Error Occurred!',
-                'message' => 'Failed to update personal information: ' . $e->getMessage(),
-                'hasActions' => false
-            ])->withInput()
-              ->withFragment('personal-info'); // Stay on personal info tab
+            return redirect()->back()->withInput()
+                ->with('notification', [
+                    'type' => 'error',
+                    'title' => 'An Error Occurred!',
+                    'message' => 'Failed to update personal information: ' . $e->getMessage(),
+                    'hasActions' => false
+                ])->withFragment('personal-info');
         }
     }
 }

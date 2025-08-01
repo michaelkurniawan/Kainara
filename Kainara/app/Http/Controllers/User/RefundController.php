@@ -7,139 +7,137 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Refund;
+use App\Models\Product; // Still needed for stock management in case of full refund
+use App\Models\ProductVariant; // Still needed for stock management in case of full refund
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Stripe\Stripe;
-use Exception;
+use Illuminate\Support\Facades\Storage; // Make sure Storage is imported
+use Illuminate\Validation\ValidationException;
+use Stripe\Stripe; // Still needed for showPaymentForm if it was the original Stripe controller
+use Stripe\StripeClient; // Still needed for showPaymentForm if it was the original Stripe controller
+use Exception; // Still needed for general exception handling
+use Illuminate\Support\Str; // Make sure Str is imported for string manipulation
 
 class RefundController extends Controller
 {
-    protected $stripe;
+    // Note: Stripe properties are commented out as per the new flow where Stripe API calls
+    // are handled by the AdminRefundController.
+    // However, if this controller also handles initial Stripe payments (like StripePaymentController),
+    // then these properties and the __construct method would be necessary.
+    // For a dedicated RefundController (user-facing request only), they are not.
+    // protected $stripe;
 
     public function __construct()
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
-        $this->stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+        //
     }
 
-    /**
-     * Memproses permintaan refund untuk pesanan.
-     * Metode ini akan memperbarui record pembayaran dan refund, tidak langsung order.
-     *
-     * @param Request $request
-     * @param Order $order
-     * @return \Illuminate\Http\JsonResponse
-     */
+    public function showRefundForm(Order $order)
+    {
+        if (Auth::id() !== $order->user_id) {
+            return redirect()->route('my.orders')->with('error', 'Anda tidak memiliki izin untuk mengakses pesanan ini.');
+        }
+
+        if ($order->status !== 'Delivered') {
+            return redirect()->route('my.orders')->with('error', 'Refund hanya dapat diajukan untuk pesanan yang telah dikirim.');
+        }
+
+        $payment = $order->payment()->with('refunds')->first();
+
+        if (!$payment || !$payment->stripe_charge_id || $payment->status !== 'succeeded') {
+            return redirect()->route('my.orders')->with('error', 'Pembayaran untuk pesanan ini tidak memenuhi syarat untuk refund penuh. (Status pembayaran: ' . ($payment->status ?? 'Tidak ada') . ')');
+        }
+
+        $totalRefundedAmount = $payment->refunds->where('status', 'succeeded')->sum('refunded_amount');
+        $fullOrderAmount = $payment->amount_paid;
+
+        $availableForRefund = $fullOrderAmount - $totalRefundedAmount;
+
+        if (abs($availableForRefund) < 0.01) {
+            return redirect()->route('my.orders')->with('info', 'Pesanan ini sudah direfund sepenuhnya.');
+        }
+
+        return view('refund.form', compact('order', 'payment', 'availableForRefund'));
+    }
+
     public function requestRefund(Request $request, Order $order)
     {
-        // 1. Otorisasi: Pastikan pengguna adalah pemilik pesanan
         if (Auth::id() !== $order->user_id) {
             return response()->json(['success' => false, 'message' => 'Akses tidak sah.'], 403);
         }
 
-        // 2. Dapatkan pembayaran terkait untuk pesanan ini
-        // Kita perlu eager load refunds di sini untuk mendapatkan jumlah yang sudah direfund
+        if ($order->status !== 'Delivered') {
+            return response()->json(['success' => false, 'message' => 'Refund hanya dapat diajukan untuk pesanan yang telah dikirim.'], 400);
+        }
+
         $payment = $order->payment()->with('refunds')->first();
-
-        // Validasi apakah pembayaran ada dan memiliki Stripe Charge ID (diperlukan untuk refund)
-        if (!$payment || !$payment->stripe_charge_id) {
-            return response()->json(['success' => false, 'message' => 'Record pembayaran tidak ditemukan atau belum berhasil (tidak ada ID Charge Stripe).'], 404);
+        if (!$payment || !$payment->stripe_charge_id || $payment->status !== 'succeeded') {
+            return response()->json(['success' => false, 'message' => 'Pembayaran untuk pesanan ini tidak memenuhi syarat untuk refund penuh.'], 400);
         }
-
-        // 3. Validasi Status Pembayaran untuk Refund
-        // Pembayaran harus 'succeeded' atau 'refund_pending'
-        if ($payment->status !== 'succeeded' && $payment->status !== 'refund_pending') {
-             return response()->json(['success' => false, 'message' => 'Status pembayaran tidak memungkinkan refund (saat ini: ' . $payment->status . ').'], 400);
-        }
-
-        // Hitung total jumlah yang sudah direfund untuk pembayaran ini
-        $totalRefundedAmount = $payment->refunds->where('status', 'succeeded')->sum('refunded_amount');
-        $availableForRefund = $payment->amount_paid - $totalRefundedAmount;
-
-        // Cek jika ada jumlah yang tersisa untuk direfund (beri toleransi kecil untuk masalah floating point)
-        if ($availableForRefund <= 0.01) {
-            return response()->json(['success' => false, 'message' => 'Pesanan ini sudah direfund sepenuhnya atau tidak ada lagi jumlah yang tersedia untuk direfund.'], 400);
-        }
-
-        // 4. Validasi Data Permintaan untuk jumlah dan alasan
-        $validated = $request->validate([
-            'amount' => 'nullable|numeric|min:0.01', // Jumlah dalam mata uang penuh (IDR)
-            'reason' => 'nullable|string|max:255',
-        ]);
-
-        $requestedRefundAmount = $validated['amount'] ? (float)$validated['amount'] : null; // Simpan sebagai float untuk perbandingan
-        $reason = $validated['reason'] ?? null;
-
-        // Jika jumlah spesifik diminta, pastikan tidak melebihi yang tersedia
-        if ($requestedRefundAmount !== null && $requestedRefundAmount > $availableForRefund + 0.01) { // Tambahkan buffer kecil untuk perbandingan float
-            return response()->json(['success' => false, 'message' => 'Jumlah refund yang diminta (' . number_format($requestedRefundAmount, 0, ',', '.') . ') melebihi jumlah yang tersedia untuk direfund (' . number_format($availableForRefund, 0, ',', '.') . ').'], 400);
-        }
-
-        // Tentukan jumlah sebenarnya yang akan dikirim ke Stripe (dalam cent)
-        $amountToSendToStripe = $requestedRefundAmount ? (int)($requestedRefundAmount * 100) : null;
-        // Jika amount null, Stripe akan mengembalikan sisa jumlah penuh
 
         try {
-            // 5. Buat Refund melalui Stripe API
-            $params = [
-                'charge' => $payment->stripe_charge_id,
-            ];
+            $validated = $request->validate([
+                'reason' => 'required|string|max:255',
+                'refund_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            ]);
+            $userProvidedReason = $validated['reason'];
 
-            if ($amountToSendToStripe !== null) {
-                $params['amount'] = $amountToSendToStripe; // Kirim dalam cent
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'message' => 'Validasi Gagal', 'errors' => $e->errors()], 422);
+        }
+
+        $imagePath = null;
+        if ($request->hasFile('refund_image')) {
+            try {
+                $imagePath = $request->file('refund_image')->store('public/refund_images');
+            } catch (\Exception $e) {
+                Log::error('Gagal mengunggah gambar refund: ' . $e->getMessage(), ['order_id' => $order->id]);
+                return response()->json(['success' => false, 'message' => 'Gagal mengunggah gambar: ' . $e->getMessage()], 500);
             }
-            if ($reason) {
-                $params['reason'] = $reason;
-            }
+        }
 
-            $stripeRefund = $this->stripe->refunds->create($params);
+        $amountToRefund = $payment->amount_paid;
 
-            // 6. Catat Refund di Database Lokal
+        if ($amountToRefund <= 0) {
+            return response()->json(['success' => false, 'message' => 'Jumlah refund tidak valid. Tidak ada jumlah yang harus direfund.'], 400);
+        }
+
+        DB::beginTransaction();
+        try {
             $refund = Refund::create([
                 'payment_id' => $payment->id,
-                'stripe_refund_id' => $stripeRefund->id,
-                'refunded_amount' => $stripeRefund->amount / 100, // Simpan dalam mata uang penuh (IDR)
-                'reason' => $reason,
-                'refunded_at' => $stripeRefund->status === 'succeeded' ? now() : null,
-                'status' => $stripeRefund->status, // e.g., 'succeeded', 'pending', 'failed'
+                'stripe_refund_id' => null,
+                'refunded_amount' => $amountToRefund,
+                'reason' => $userProvidedReason,
+                'refund_image' => $imagePath,
+                'refunded_at' => null,
+                'status' => 'pending',
+                'admin_notes' => 'Permintaan refund diajukan oleh pengguna.',
             ]);
 
-            // 7. Perbarui Status Pembayaran berdasarkan refund
-            // Jika refund Stripe berhasil DAN sisa jumlah yang bisa direfund secara efektif nol,
-            // maka status pembayaran dapat disetel menjadi 'refunded'.
-            // Jika tidak, itu mungkin tetap 'succeeded' atau menjadi 'refund_pending'.
-            if ($stripeRefund->status === 'succeeded') {
-                // Hitung ulang total yang direfund setelah refund berhasil saat ini
-                $newTotalRefundedAmount = $totalRefundedAmount + ($stripeRefund->amount / 100);
-                if ($newTotalRefundedAmount >= $payment->amount_paid - 0.01) { // Periksa apakah efektif sepenuhnya direfund
-                    $payment->status = 'refunded';
-                } else {
-                    $payment->status = 'partially_refunded'; // Status baru untuk kejelasan
-                }
-                $message = 'Refund berhasil diproses.';
-            } elseif ($stripeRefund->status === 'pending') {
-                $payment->status = 'refund_pending';
-                $message = 'Permintaan refund sedang diproses.';
-            } else {
-                $payment->status = 'refund_failed';
-                $message = 'Gagal memproses refund: ' . ($stripeRefund->failure_reason ?? 'Alasan tidak diketahui');
-            }
+            $payment->status = 'refund_pending';
             $payment->save();
 
-            // Sesuai permintaan Anda, tidak ada modifikasi langsung pada $order->status di sini.
-            // Status utama order (misalnya, 'Delivered', 'Completed') akan tetap sama.
-            // Informasi refund akan disimpulkan dari status pembayaran dan record refund.
+            $order->status = 'Refund Pending';
+            $order->save();
 
-            return response()->json(['success' => true, 'message' => $message]);
+            DB::commit();
 
-        } catch (Exception $e) {
-            Log::error('Stripe Refund gagal untuk order ' . $order->id . ': ' . $e->getMessage(), [
+            return response()->json([
+                'success' => true,
+                'message' => 'Permintaan refund Anda telah diajukan dan sedang menunggu tinjauan admin.',
+                'redirect_url' => route('profile.index', ['#order-history']) // Redirect to order history
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Gagal mengajukan permintaan refund oleh pengguna: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'order_id' => $order->id,
                 'payment_id' => $payment->id,
-                'charge_id' => $payment->stripe_charge_id ?? 'N/A'
             ]);
-            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat mengajukan refund: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat mengajukan permintaan refund: ' . $e->getMessage()], 500);
         }
     }
 }

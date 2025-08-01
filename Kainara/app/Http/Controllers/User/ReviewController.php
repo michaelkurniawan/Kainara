@@ -47,14 +47,14 @@ class ReviewController extends Controller
 
             $order = Order::with('orderItems.product')->find($orderId); // Eager load orderItems and their products
 
-            // 2. Otorisasi: Pastikan pengguna adalah pemilik pesanan
+            // 2. Authorization: Ensure the user is the owner of the order
             if (!$order || $order->user_id !== $userId) {
                 DB::rollBack();
                 Log::warning('Unauthorized review submission attempt or order not found.', ['order_id' => $orderId, 'user_id' => $userId]);
                 return response()->json(['success' => false, 'message' => 'Tindakan tidak diizinkan. Pesanan tidak ditemukan atau Anda tidak memiliki akses ke pesanan ini.'], 403);
             }
 
-            // 3. Status Pesanan: Pastikan pesanan sudah berstatus 'Delivered'
+            // 3. Order Status: Ensure the order is 'Delivered'
             if ($order->status !== 'Delivered') {
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => 'Pesanan tidak dapat diproses. Hanya pesanan yang sudah Delivered yang bisa diselesaikan.'], 400);
@@ -83,21 +83,21 @@ class ReviewController extends Controller
                 }
                 $existingReview = $existingReviewQuery->first();
 
-                // 5. Simpan atau Perbarui Review
+                // 5. Save or Update Review
                 if ($existingReview) {
-                    // Perbarui review yang sudah ada
+                    // Update existing review
                     $existingReview->rating = $rating;
                     $existingReview->comment = $comment;
                     $existingReview->save();
                 } else {
-                    // Buat review baru
+                    // Create new review
                     $reviewData = [
                         'user_id' => $userId,
                         'product_id' => $productToReview->id, // Associate review with the product
                         'rating' => $rating,
                         'comment' => $comment,
                     ];
-                    // Jika kolom 'order_id' ada, tambahkan ke data review
+                    // If 'order_id' column exists, add it to review data
                     if (Schema::hasColumn('product_reviews', 'order_id')) {
                         $reviewData['order_id'] = $orderId;
                     }
@@ -109,16 +109,19 @@ class ReviewController extends Controller
             $order->status = 'Completed';
             $order->save();
 
-            // Commit transaksi jika semua operasi berhasil
+            // Commit transaction if all operations are successful
             DB::commit();
 
+            // Prepare redirect URL: Always redirect to profile.index#order-history
+            $redirectUrl = route('profile.index', ['#order-history']);
+
             if (!$skipReview) {
-                return response()->json(['success' => true, 'message' => 'Review berhasil dikirim dan pesanan telah diselesaikan!']);
+                return response()->json(['success' => true, 'message' => 'Review berhasil dikirim dan pesanan telah diselesaikan!', 'redirect_url' => $redirectUrl]);
             } else {
-                return response()->json(['success' => true, 'message' => 'Pesanan telah diselesaikan tanpa review.']);
+                return response()->json(['success' => true, 'message' => 'Pesanan telah diselesaikan tanpa review.', 'redirect_url' => $redirectUrl]);
             }
 
-        } catch (ValidationException $e) { // Tangani ValidationException secara eksplisit
+        } catch (ValidationException $e) { // Handle ValidationException explicitly
             DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->validator->errors()->first()], 422);
         }

@@ -4,24 +4,24 @@ namespace App\Http\Controllers\User\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Password; // Untuk fitur reset password Laravel
-use Illuminate\Validation\ValidationException; // Untuk menangani validasi
-use App\Models\User; // Pastikan model User diimpor
+use Illuminate\Support\Facades\Password; // For Laravel's password reset feature
+use Illuminate\Validation\ValidationException; // For handling validation exceptions
+use App\Models\User; // Ensure the User model is imported
 
 class ForgotPasswordController extends Controller
 {
     /**
-     * Tampilkan form untuk meminta reset password.
+     * Display the form to request a password reset link.
      *
      * @return \Illuminate\View\View
      */
     public function showLinkRequestForm()
     {
-        return view('auth.passwords.email'); // View untuk form permintaan email
+        return view('auth.passwords.email'); // View for the email request form
     }
 
     /**
-     * Kirim tautan reset password ke alamat email yang diberikan.
+     * Send a password reset link to the given email address.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
@@ -31,30 +31,30 @@ class ForgotPasswordController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        // Dapatkan status dari proses pengiriman link reset password
+        // Get the status of the password reset link sending process
         $response = $this->broker()->sendResetLink(
             $request->only('email')
         );
 
         if ($response == Password::RESET_LINK_SENT) {
-            // Flash notifikasi sukses
+            // Flash success notification
             session()->flash('notification', [
                 'type' => 'success',
-                'title' => 'Link Reset Terkirim!',
-                'message' => 'Tautan reset password telah dikirim ke alamat email Anda.',
+                'title' => 'Reset Link Sent!',
+                'message' => 'A password reset link has been sent to your email address.',
                 'hasActions' => false
             ]);
             return back()->with('status', __($response));
         }
 
-        // Jika pengiriman gagal, kembalikan error
+        // If sending fails, return an error
         throw ValidationException::withMessages([
             'email' => [trans($response)],
         ]);
     }
 
     /**
-     * Dapatkan broker password yang digunakan oleh controller.
+     * Get the password broker used by the controller.
      *
      * @return \Illuminate\Contracts\Auth\Passwords\PasswordBroker
      */

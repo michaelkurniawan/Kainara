@@ -10,6 +10,10 @@ use App\Models\User;
 use App\Models\UserAddress;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class AdminOrderController extends Controller
 {
@@ -21,6 +25,7 @@ class AdminOrderController extends Controller
         'Returned',
     ];
 
+    // --- PERBAIKAN DI SINI: Tambahkan semua status refund ke ALL_STATUSES ---
     const ALL_STATUSES = [
         'Awaiting Payment',
         'Order Confirmed',
@@ -30,8 +35,13 @@ class AdminOrderController extends Controller
         'Canceled',
         'Returned',
         'Refunded',
-        'Completed'
+        'Completed',
+        'Refund Pending',    // Status dari user request
+        'Refund Failed',     // Status jika Stripe gagal
+        'Refund Rejected',   // Status jika admin menolak
+        'Refund Approved',   // Status jika admin menyetujui (sebelum Stripe berhasil/gagal)
     ];
+    // --- AKHIR PERBAIKAN ---
 
     private const STATUS_ORDER_MAP = [
         'Awaiting Payment' => 0,
@@ -40,6 +50,12 @@ class AdminOrderController extends Controller
         'Shipped' => 3,
         'Delivered' => 4,
         'Completed' => 5,
+        // Tambahkan mapping untuk status refund jika diperlukan untuk validasi hierarki
+        'Refund Pending' => 1,
+        'Refund Failed' => 1,
+        'Refund Rejected' => 1,
+        'Refunded' => 5,
+        'Refund Approved' => 2, // Approved bisa dianggap tahap setelah Order Confirmed
     ];
 
     public function index(Request $request)
@@ -77,7 +93,7 @@ class AdminOrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['user', 'address', 'orderItems.product', 'orderItems.productVariant']);
+        $order->load(['user', 'address', 'orderItems.product', 'orderItems.productVariant', 'payment.refunds']);
         $allStatuses = self::ALL_STATUSES;
 
         return view('admin.orders.show', compact('order', 'allStatuses'));

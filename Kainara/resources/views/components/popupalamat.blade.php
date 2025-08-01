@@ -95,29 +95,26 @@
             flex-grow: 1;
         }
 
-        /* --- START: Kunci perubahan di sini --- */
         #addressSelectionModal .modal-body .address-item .address-actions {
             display: flex;
-            flex-direction: column; /* Keep column for primary address tag below actions */
+            flex-direction: column;
             gap: 0.5rem;
             font-size: 0.9rem;
-            align-items: flex-end; /* Align items to the right */
+            align-items: flex-end;
             white-space: nowrap;
         }
 
         #addressSelectionModal .modal-body .address-item .address-actions .action-links {
-            display: flex; /* Already set, but good to confirm */
-            align-items: center; /* Vertically align items like text and buttons */
+            display: flex;
+            align-items: center;
             gap: 0.75rem;
-            /* No need for flex-direction: row; as it's default for flex containers */
         }
 
         /* Style for the separator if you choose to keep it */
         #addressSelectionModal .modal-body .address-item .address-actions .action-links > span {
-            color: #ccc; /* Or a darker shade if you prefer */
-            margin: 0 -0.25rem; /* Adjust to bring elements closer if needed */
+            color: #ccc;
+            margin: 0 -0.25rem;
         }
-        /* --- END: Kunci perubahan di sini --- */
 
         .btn-address-action-modal {
             background-color: transparent;
@@ -221,7 +218,7 @@
                 @forelse ($userAddresses as $userAddress)
                     <div class="address-item d-flex justify-content-between align-items-center mb-3 {{ ($userAddress->id == $selectedAddressId) ? 'selected-address' : '' }}" data-address-id="{{ $userAddress->id }}">
                         <div class="address-details">
-                            <h6 class="mb-0">{{ $userAddress->label ?? 'Alamat' }}</h6>
+                            <h6 class="mb-0">{{ $userAddress->label ?? 'Address' }}</h6>
                             <p class="address-name-phone fw-bold mb-0">{{ $userAddress->recipient_name ?? '' }} | {{ $userAddress->phone ?? '' }}</p>
                             <p class="text-muted mb-0" data-address-line="address">{{ $userAddress->address ?? '' }}{{ $userAddress->sub_district ? ', ' . $userAddress->sub_district : '' }}</p>
                             <p class="text-muted mb-0" data-address-line="city-province">{{ $userAddress->city ?? '' }}{{ ($userAddress->city && $userAddress->province) ? ', ' : '' }}{{ $userAddress->province ?? '' }}</p>
@@ -233,16 +230,16 @@
                                 <button type="button" class="btn btn-sm btn-address-action-modal edit-address-from-checkout" data-address-id="{{ $userAddress->id }}">
                                     Edit
                                 </button>
-                                <span>|</span> {{-- Moved the | separator into a span for better control --}}
+                                <span>|</span>
                                 {{-- Changed to button with new class and added data attributes for JS confirmation --}}
-                                {{-- This form is for the actual DELETE request --}}
-                                <form action="{{ route('addresses.destroy', $userAddress->id) }}" method="POST" class="d-inline" id="delete-address-form-{{ $userAddress->id }}-checkout">
+                                {{-- The form for the actual DELETE request --}}
+                                <form action="{{ route('addresses.destroy', ['address' => $userAddress->id, 'from_checkout' => 1]) }}" method="POST" class="d-inline" id="delete-address-form-{{ $userAddress->id }}-checkout">
                                     @csrf
                                     @method('DELETE')
                                     <button type="button"
-                                            class="btn btn-sm btn-address-action-modal trigger-delete-address-notification-checkout"
-                                            data-address-id="{{ $userAddress->id }}"
-                                            data-address-label="{{ $userAddress->label ?? 'alamat ini' }}">
+                                        class="btn btn-sm btn-address-action-modal trigger-delete-address-notification-checkout"
+                                        data-address-id="{{ $userAddress->id }}"
+                                        data-address-label="{{ $userAddress->label ?? 'this address' }}">
                                         Delete
                                     </button>
                                 </form>
@@ -273,172 +270,24 @@
     document.addEventListener('DOMContentLoaded', function() {
         const addressSelectionModal = document.getElementById('addressSelectionModal');
         const confirmAddressSelectionBtn = document.getElementById('confirmAddressSelection');
-        const addAddressModal = document.getElementById('addAddressModal'); // Get the add address modal element
-        const editAddressModal = document.getElementById('editAddressModal'); // Get the edit address modal element
+        const addAddressModal = document.getElementById('addAddressModal');
+        const editAddressModal = document.getElementById('editAddressModal');
 
-        // Use the prop directly for userAddressesData, ensuring it's always an array
         const userAddressesData = @json($userAddresses->toArray());
-
         let currentSelectedAddressId = {{ Js::from($selectedAddressId) }};
 
+        // Function to handle address item click for selection
         function handleAddressItemClick(event) {
             const clickedItem = event.currentTarget;
-
             document.querySelectorAll('#addressSelectionModal .address-item').forEach(item => {
                 item.classList.remove('selected-address');
             });
-
             clickedItem.classList.add('selected-address');
             currentSelectedAddressId = clickedItem.dataset.addressId;
             console.log('Selected Address ID in modal:', currentSelectedAddressId);
         }
 
-        addressSelectionModal.addEventListener('show.bs.modal', function () {
-            document.querySelectorAll('#addressSelectionModal .address-item').forEach(item => {
-                // Remove existing click listeners to prevent duplicates
-                item.removeEventListener('click', handleAddressItemClick);
-                item.addEventListener('click', handleAddressItemClick);
-
-                if (item.dataset.addressId == currentSelectedAddressId) {
-                    item.classList.add('selected-address');
-                } else {
-                    item.classList.remove('selected-address');
-                }
-            });
-
-            const selectedInModal = document.querySelector('#addressSelectionModal .address-item.selected-address');
-            if (!selectedInModal && userAddressesData.length > 0) {
-                const defaultSelect = userAddressesData.find(addr => addr.is_default) || userAddressesData[0];
-                if (defaultSelect) {
-                    document.querySelector(`.address-item[data-address-id="${defaultSelect.id}"]`)?.classList.add('selected-address');
-                    currentSelectedAddressId = defaultSelect.id;
-                }
-            }
-
-            // Re-attach listeners for Edit/Delete buttons each time modal is shown
-            document.querySelectorAll('#addressSelectionModal .edit-address-from-checkout').forEach(button => {
-                button.removeEventListener('click', handleEditButtonClick);
-                button.addEventListener('click', handleEditButtonClick);
-            });
-
-            document.querySelectorAll('#addressSelectionModal .trigger-delete-address-notification-checkout').forEach(button => {
-                button.removeEventListener('click', handleDeleteButtonClick);
-                button.addEventListener('click', handleDeleteButtonClick);
-            });
-        });
-
-
-        if (confirmAddressSelectionBtn) {
-            confirmAddressSelectionBtn.addEventListener('click', function() {
-                if (currentSelectedAddressId) {
-                    const selectedAddressData = userAddressesData.find(addr => addr.id == currentSelectedAddressId);
-
-                    if (selectedAddressData) {
-                        const event = new CustomEvent('addressSelected', {
-                            detail: {
-                                addressId: currentSelectedAddressId,
-                                addressData: selectedAddressData
-                            }
-                        });
-                        window.dispatchEvent(event);
-
-                        const bsModal = bootstrap.Modal.getInstance(addressSelectionModal);
-                        if (bsModal) {
-                            bsModal.hide();
-                        }
-                    }
-                } else {
-                    alert('Please select an address or add a new one.');
-                }
-            });
-        }
-
-        const addNewAddressBtn = document.getElementById('addNewAddressFromCheckout');
-        if (addNewAddressBtn) {
-            addNewAddressBtn.addEventListener('click', function() {
-                const addressSelectionModalInstance = bootstrap.Modal.getInstance(addressSelectionModal);
-                if (addressSelectionModalInstance) {
-                    // Hide the first modal completely before opening the second
-                    addressSelectionModalInstance.hide();
-                }
-
-                // Set the hidden input to indicate the request is from checkout
-                const addFromCheckoutInput = document.getElementById('add_from_checkout');
-                if (addFromCheckoutInput) {
-                    addFromCheckoutInput.value = '1';
-                }
-
-                // Show the add address modal
-                const addAddressModalInstance = new bootstrap.Modal(addAddressModal);
-                addAddressModalInstance.show();
-            });
-        }
-
-        // --- Functions for Edit and Delete buttons within the modal ---
-
-        function handleDeleteButtonClick(event) {
-            event.preventDefault(); // Prevent default button behavior (e.g., form submission)
-
-            const addressId = this.dataset.addressId;
-            const addressLabel = this.dataset.addressLabel;
-            const targetForm = document.getElementById(`delete-address-form-${addressId}-checkout`);
-
-            // Get instance of the address selection modal
-            const addressSelectionModalInstance = bootstrap.Modal.getInstance(addressSelectionModal);
-
-            // Hide the address selection modal immediately BEFORE showing the confirmation
-            if (addressSelectionModalInstance) {
-                addressSelectionModalInstance.hide();
-            }
-
-            if (typeof window.showNotificationCard === 'function') {
-                window.showNotificationCard({
-                    type: 'confirmation',
-                    title: 'Confirm Address Deletion',
-                    message: `Are you sure you want to delete "${addressLabel}"? This action cannot be undone.`,
-                    hasActions: true,
-                    onConfirm: () => {
-                        // THIS IS THE KEY PART: Submit the form here
-                        if (targetForm) {
-                            // Add hidden input to form to indicate origin from checkout
-                            const hiddenInput = document.createElement('input');
-                            hiddenInput.type = 'hidden';
-                            hiddenInput.name = 'from_checkout';
-                            hiddenInput.value = '1';
-                            targetForm.appendChild(hiddenInput);
-
-                            targetForm.submit(); // <--- Submit the form!
-                        }
-                    },
-                    onCancel: () => {
-                        // If canceled, re-open the address selection modal
-                        if (addressSelectionModalInstance) {
-                            addressSelectionModalInstance.show();
-                        }
-                    }
-                });
-            } else {
-                // Fallback for native confirm (less ideal, but functional)
-                console.warn('window.showNotificationCard function not found. Falling back to native confirm.');
-                if (confirm(`Are you sure you want to delete "${addressLabel}"?`)) {
-                    if (targetForm) {
-                        // Add hidden input to form
-                        const hiddenInput = document.createElement('input');
-                        hiddenInput.type = 'hidden';
-                        hiddenInput.name = 'from_checkout';
-                        hiddenInput.value = '1';
-                        targetForm.appendChild(hiddenInput);
-                        targetForm.submit(); // <--- Submit the form!
-                    }
-                } else {
-                    // If canceled, re-open the address selection modal
-                    if (addressSelectionModalInstance) {
-                        addressSelectionModalInstance.show();
-                    }
-                }
-            }
-        }
-
+        // Function to handle edit button click
         function handleEditButtonClick(event) {
             event.preventDefault(); // Prevent default button behavior
 
@@ -466,7 +315,7 @@
                     document.getElementById('edit_postal_code').value = address.postal_code || '';
                     document.getElementById('edit_is_default').checked = address.is_default;
 
-                    // Set the hidden input to indicate the request is from checkout
+                    // Set the hidden input to indicate the request is from checkout (or current context)
                     const editFromCheckoutInput = document.getElementById('edit_from_checkout');
                     if (editFromCheckoutInput) {
                         editFromCheckoutInput.value = '1';
@@ -475,40 +324,184 @@
                 } else {
                     console.error('Address data not found for ID:', addressId);
                     alert('Failed to load address data for editing. Please try again.');
-                    // If data not found, don't show the modal, or hide it if it somehow appeared
                     editAddressModalInstance.hide();
-                    return; // Exit the function
+                    return;
                 }
 
                 editAddressModalInstance.show(); // Show the edit address modal
             }
         }
 
+        // Function to handle delete button click
+        function handleDeleteButtonClick(event) {
+            event.preventDefault();
+
+            const addressId = this.dataset.addressId;
+            const addressLabel = this.dataset.addressLabel;
+            const targetForm = document.getElementById(`delete-address-form-${addressId}-checkout`);
+
+            const addressSelectionModalInstance = bootstrap.Modal.getInstance(addressSelectionModal);
+
+            // Hide the address selection modal immediately BEFORE showing the confirmation
+            if (addressSelectionModalInstance) {
+                addressSelectionModalInstance.hide();
+            }
+
+            if (typeof window.showNotificationCard === 'function') {
+                window.showNotificationCard({
+                    type: 'confirmation',
+                    title: 'Confirm Address Deletion',
+                    message: `Are you sure you want to delete "${addressLabel}"? This action cannot be undone.`,
+                    hasActions: true,
+                    onConfirm: () => {
+                        if (targetForm) {
+                            // Add hidden input to form to indicate origin from checkout
+                            const hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.name = 'from_checkout';
+                            hiddenInput.value = '1';
+                            targetForm.appendChild(hiddenInput);
+
+                            targetForm.submit(); // Submit the form!
+                        }
+                    },
+                    onCancel: () => {
+                        // If canceled, re-open the address selection modal
+                        if (addressSelectionModalInstance) {
+                            addressSelectionModalInstance.show();
+                        }
+                    }
+                });
+            } else {
+                console.warn('window.showNotificationCard function not found. Falling back to native confirm.');
+                if (confirm(`Are you sure you want to delete "${addressLabel}"?`)) {
+                    if (targetForm) {
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = 'from_checkout';
+                        hiddenInput.value = '1';
+                        targetForm.appendChild(hiddenInput);
+                        targetForm.submit();
+                    }
+                } else {
+                    if (addressSelectionModalInstance) {
+                        addressSelectionModalInstance.show();
+                    }
+                }
+            }
+        }
+
+        // Event listener for when the address selection modal is shown
+        addressSelectionModal.addEventListener('show.bs.modal', function () {
+            document.querySelectorAll('#addressSelectionModal .address-item').forEach(item => {
+                // Ensure unique listeners by removing them first
+                item.removeEventListener('click', handleAddressItemClick);
+                item.addEventListener('click', handleAddressItemClick);
+
+                // Set initial selection based on prop
+                if (item.dataset.addressId == currentSelectedAddressId) {
+                    item.classList.add('selected-address');
+                } else {
+                    item.classList.remove('selected-address');
+                }
+            });
+
+            // If no address is initially selected, try to select default or first
+            const selectedInModal = document.querySelector('#addressSelectionModal .address-item.selected-address');
+            if (!selectedInModal && userAddressesData.length > 0) {
+                const defaultSelect = userAddressesData.find(addr => addr.is_default) || userAddressesData[0];
+                if (defaultSelect) {
+                    document.querySelector(`.address-item[data-address-id="${defaultSelect.id}"]`)?.classList.add('selected-address');
+                    currentSelectedAddressId = defaultSelect.id;
+                }
+            }
+
+            // Attach listeners for Edit/Delete buttons each time modal is shown
+            document.querySelectorAll('#addressSelectionModal .edit-address-from-checkout').forEach(button => {
+                button.removeEventListener('click', handleEditButtonClick); // Prevent duplicate listeners
+                button.addEventListener('click', handleEditButtonClick);
+            });
+
+            document.querySelectorAll('#addressSelectionModal .trigger-delete-address-notification-checkout').forEach(button => {
+                button.removeEventListener('click', handleDeleteButtonClick); // Prevent duplicate listeners
+                button.addEventListener('click', handleDeleteButtonClick);
+            });
+        });
+
+        // Event listener for "Confirm" button in address selection modal
+        if (confirmAddressSelectionBtn) {
+            confirmAddressSelectionBtn.addEventListener('click', function() {
+                if (currentSelectedAddressId) {
+                    const selectedAddressData = userAddressesData.find(addr => addr.id == currentSelectedAddressId);
+
+                    if (selectedAddressData) {
+                        // Dispatch custom event to parent page (e.g., checkout.blade.php)
+                        const event = new CustomEvent('addressSelected', {
+                            detail: {
+                                addressId: currentSelectedAddressId,
+                                addressData: selectedAddressData
+                            }
+                        });
+                        window.dispatchEvent(event);
+
+                        const bsModal = bootstrap.Modal.getInstance(addressSelectionModal);
+                        if (bsModal) {
+                            bsModal.hide();
+                        }
+                    }
+                } else {
+                    alert('Please select an address or add a new one.');
+                }
+            });
+        }
+
+        // Event listener for "Add New Address" button in address selection modal
+        const addNewAddressBtn = document.getElementById('addNewAddressFromCheckout');
+        if (addNewAddressBtn) {
+            addNewAddressBtn.addEventListener('click', function() {
+                const addressSelectionModalInstance = bootstrap.Modal.getInstance(addressSelectionModal);
+                if (addressSelectionModalInstance) {
+                    addressSelectionModalInstance.hide(); // Hide the first modal completely
+                }
+
+                if (addAddressModal) {
+                    // Set the hidden input to indicate the request is from checkout context
+                    const addFromCheckoutInput = document.getElementById('add_from_checkout');
+                    if (addFromCheckoutInput) {
+                        addFromCheckoutInput.value = '1';
+                    }
+                    const addAddressModalInstance = new bootstrap.Modal(addAddressModal);
+                    addAddressModalInstance.show();
+                }
+            });
+        }
+
         // Listener for when 'addAddressModal' closes after adding a new address
-        // This will re-open the address selection modal
+        // This will re-open the address selection modal if 'add_from_checkout' was set
         if (addAddressModal) {
             addAddressModal.addEventListener('hidden.bs.modal', function () {
-                // Reset the hidden input value when the modal is closed
                 const addFromCheckoutInput = document.getElementById('add_from_checkout');
-                if (addFromCheckoutInput) {
+                // Only re-open selection modal if it originated from checkout flow
+                if (addFromCheckoutInput && addFromCheckoutInput.value === '1') {
+                    // Reset the hidden input value
                     addFromCheckoutInput.value = '0';
+                    const addressSelectionModalInstance = new bootstrap.Modal(addressSelectionModal);
+                    addressSelectionModalInstance.show();
                 }
-                const addressSelectionModalInstance = new bootstrap.Modal(addressSelectionModal);
-                addressSelectionModalInstance.show();
             });
         }
 
         // Listener for when 'editAddressModal' closes after editing an address
-        // This will re-open the address selection modal
+        // This will re-open the address selection modal if 'edit_from_checkout' was set
         if (editAddressModal) {
             editAddressModal.addEventListener('hidden.bs.modal', function () {
-                // Reset the hidden input value when the modal is closed
                 const editFromCheckoutInput = document.getElementById('edit_from_checkout');
-                if (editFromCheckoutInput) {
+                if (editFromCheckoutInput && editFromCheckoutInput.value === '1') {
+                    // Reset the hidden input value
                     editFromCheckoutInput.value = '0';
+                    const addressSelectionModalInstance = new bootstrap.Modal(addressSelectionModal);
+                    addressSelectionModalInstance.show();
                 }
-                const addressSelectionModalInstance = new bootstrap.Modal(addressSelectionModal);
-                addressSelectionModalInstance.show();
             });
         }
     });

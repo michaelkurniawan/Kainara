@@ -14,8 +14,8 @@ class ArtisanProfile extends Model
     // HAPUS relasi ke User
     // public function user(): BelongsTo { ... } // <-- HAPUS METHOD INI
 
-    public function portfolio(): HasOne
+    public function portfolios(): HasMany
     {
-        return $this->hasOne(Portfolio::class);
+        return $this->hasMany(Portfolio::class);
     }
 }

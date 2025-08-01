@@ -14,6 +14,7 @@ use App\Http\Controllers\User\StripePaymentController;
 use App\Http\Controllers\User\ProfileController;
 use App\Http\Controllers\User\AddressController;
 use App\Http\Controllers\User\ReviewController;
+use App\Http\Controllers\User\RefundController; // Import the RefundController
 use App\Http\Controllers\User\Auth\LoginController;
 use App\Http\Controllers\User\Auth\RegisterController;
 use App\Http\Controllers\User\Auth\EmailVerificationController;
@@ -63,6 +64,10 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/payment/stripe/{order}', [StripePaymentController::class, 'showPaymentForm'])->name('stripe.payment.form');
     Route::post('/payment/stripe/{order}/confirm', [StripePaymentController::class, 'confirmPayment'])->name('stripe.payment.confirm');
     Route::get('/order/{order}/continue-payment', [StripePaymentController::class, 'showPaymentForm'])->name('payment.continue');
+
+    Route::get('/order/{order}/refund/request', [RefundController::class, 'showRefundForm'])->name('refund.request');
+    Route::post('/order/{order}/refund', [RefundController::class, 'requestRefund'])->name('refund.request.submit');
+
 
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
