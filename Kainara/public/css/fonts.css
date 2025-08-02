@@ -110,6 +110,38 @@
     font-style: italic;
 }
 
+@font-face {
+    font-family: 'Ancizar Serif';
+    src: url('/fonts/AncizarSerif-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap; 
+}
+
+@font-face {
+    font-family: 'Ancizar Serif'; /* Nama keluarga font yang sama agar browser dapat memilih gaya */
+    src: url('/fonts/AncizarSerif-Italic-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic; /* Penting: Atur sebagai italic agar browser menggunakannya untuk gaya italic */
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ancizar Sans'; /* Nama keluarga font yang akan digunakan di CSS dan Tailwind */
+    src: url('/fonts/AncizarSans-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ancizar Sans'; /* Nama keluarga font yang sama agar browser dapat memilih gaya */
+    src: url('/fonts/AncizarSans-Italic-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+}
+
 /* Default font-family */
 body {
     font-family: 'Ancizar Serif', serif;

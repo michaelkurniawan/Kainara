@@ -12,6 +12,7 @@ class Payment extends Model
     protected $fillable = [
         'order_id',
         'stripe_payment_intent_id',
+        'stripe_charge_id',
         'status',
         'amount_paid',
         'paid_at',

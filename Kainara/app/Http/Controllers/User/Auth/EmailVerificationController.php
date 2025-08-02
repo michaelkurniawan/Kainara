@@ -8,11 +8,11 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use App\Providers\RouteServiceProvider;
-use App\Models\User; // Pastikan model User diimpor
-use Illuminate\Support\Facades\URL; // Untuk membuat URL yang ditandatangani
-use Illuminate\Auth\Notifications\VerifyEmail; // Notifikasi verifikasi email bawaan Laravel
+use App\Models\User; // Ensure the User model is imported
+use Illuminate\Support\Facades\URL; // For creating signed URLs
+use Illuminate\Auth\Notifications\VerifyEmail; // Laravel's built-in email verification notification
 
-class EmailVerificationController extends Controller // Nama kelas sesuai yang Anda gunakan
+class EmailVerificationController extends Controller
 {
     /**
      * Where to redirect users after verification.
@@ -34,14 +34,14 @@ class EmailVerificationController extends Controller // Nama kelas sesuai yang A
     }
 
     /**
-     * Tampilkan notifikasi verifikasi email.
+     * Show the email verification notice.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function show(Request $request)
     {
-        // Periksa apakah pengguna sudah terverifikasi secara manual
+        // Check if the user is already verified
         if (!is_null($request->user()->email_verified_at)) {
             return redirect($this->redirectPath());
         }
@@ -50,105 +50,104 @@ class EmailVerificationController extends Controller // Nama kelas sesuai yang A
     }
 
     /**
-     * Tandai email pengguna yang diberikan sebagai terverifikasi.
+     * Mark the given user's email as verified.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function verify(Request $request)
     {
-        // Temukan pengguna berdasarkan ID dari URL
+        // Find the user by ID from the URL
         $user = User::findOrFail($request->route('id'));
 
-        // Pastikan hash URL valid dan cocok dengan pengguna
-        $expectedHash = sha1($user->email); // Mengambil email langsung dari objek user
+        // Ensure the URL hash is valid and matches the user
+        $expectedHash = sha1($user->email); // Get email directly from the user object
         $providedHash = (string) $request->route('hash');
 
         if (! hash_equals($providedHash, $expectedHash)) {
             throw new \Illuminate\Auth\Access\AuthorizationException('Invalid verification hash.');
         }
 
-        // Periksa apakah pengguna sudah diverifikasi (hasVerifiedEmail() diimplementasikan di sini)
+        // Check if the user is already verified
         if (!is_null($user->email_verified_at)) {
-            // Jika sudah diverifikasi, sekalian flash notifikasi bahwa sudah diverifikasi
+            // If already verified, flash a notification that it's already verified
             session()->flash('notification', [
-                'type' => 'info', // Atau 'success'
-                'title' => 'Verifikasi Email',
-                'message' => 'Email Anda sudah diverifikasi sebelumnya.',
-                'hasActions' => true // Diubah menjadi TRUE untuk tombol OK
+                'type' => 'info',
+                'title' => 'Email Already Verified',
+                'message' => 'Your email has already been verified.',
+                'hasActions' => true // Changed to TRUE for an OK button
             ]);
             return redirect()->route('login');
         }
 
-        // Tandai email sebagai terverifikasi (markEmailAsVerified() diimplementasikan di sini)
+        // Mark the email as verified
         $user->email_verified_at = Carbon::now();
-        $verified = $user->save(); // Simpan perubahan ke database
+        $verified = $user->save(); // Save changes to the database
 
         if ($verified) {
-            event(new Verified($user)); // Pemicu event Verified
+            event(new Verified($user)); // Trigger the Verified event
 
-            // Flash notifikasi kustom setelah verifikasi berhasil
+            // Flash custom notification after successful verification
             session()->flash('notification', [
                 'type' => 'success',
-                'title' => 'Verifikasi Berhasil!',
-                'message' => 'Email Anda berhasil diverifikasi. Silakan masuk ke akun Anda.',
-                'hasActions' => true // Diubah menjadi TRUE untuk tombol OK
+                'title' => 'Verification Successful!',
+                'message' => 'Your email has been successfully verified. Please log in to your account.',
+                'hasActions' => true // Changed to TRUE for an OK button
             ]);
         } else {
-            // Flash notifikasi jika penyimpanan gagal
+            // Flash notification if saving fails
             session()->flash('notification', [
                 'type' => 'error',
-                'title' => 'Verifikasi Gagal',
-                'message' => 'Terjadi kesalahan saat memverifikasi email Anda. Silakan coba lagi.',
-                'hasActions' => true // Diubah menjadi TRUE untuk tombol OK
+                'title' => 'Verification Failed',
+                'message' => 'An error occurred while verifying your email. Please try again.',
+                'hasActions' => true // Changed to TRUE for an OK button
             ]);
         }
 
-        // PENTING: Logout pengguna jika mereka secara otomatis login oleh proses verifikasi.
-        // Ini untuk mencegah login otomatis setelah verifikasi.
+        // IMPORTANT: Log out the user if they were automatically logged in by the verification process.
+        // This is to prevent automatic login after verification.
         if (Auth::check()) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
         }
 
-        // Arahkan ke halaman login
+        // Redirect to the login page
         return redirect()->route('login');
     }
 
     /**
-     * Kirim ulang notifikasi verifikasi email.
+     * Resend the email verification notification.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function resend(Request $request)
     {
-        // Periksa apakah pengguna sudah diverifikasi
+        // Check if the user is already verified
         if (!is_null($request->user()->email_verified_at)) {
             return redirect($this->redirectPath());
         }
 
-        // Kirim notifikasi verifikasi email (sendEmailVerificationNotification() diimplementasikan di sini)
+        // Send the email verification notification
         $user = $request->user();
         $verificationUrl = URL::temporarySignedRoute(
             'verification.verify',
             Carbon::now()->addMinutes(config('auth.verification.expire', 60)),
             [
                 'id' => $user->getKey(),
-                'hash' => sha1($user->email), // Menggunakan email langsung dari objek user
+                'hash' => sha1($user->email), // Using email directly from the user object
             ]
         );
 
-        // Menggunakan notifikasi verifikasi email bawaan Laravel
-        // Metode notify() disediakan oleh trait Illuminate\Notifications\Notifiable di model User
-        $user->notify(new VerifyEmail($verificationUrl)); // Pastikan VerifyEmail menerima URL
+        // Using Laravel's built-in email verification notification
+        $user->notify(new VerifyEmail($verificationUrl));
 
         session()->flash('notification', [
             'type' => 'info',
-            'title' => 'Email Verifikasi Dikirim Ulang',
-            'message' => 'Tautan verifikasi baru telah dikirim ke alamat email Anda.',
-            'hasActions' => true // Diubah menjadi TRUE untuk tombol OK
+            'title' => 'Verification Email Resent',
+            'message' => 'A new verification link has been sent to your email address.',
+            'hasActions' => true // Changed to TRUE for an OK button
         ]);
 
         return back();

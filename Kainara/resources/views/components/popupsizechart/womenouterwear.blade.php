@@ -14,7 +14,7 @@
             <div class="modal-body">
                 <div class="d-flex justify-content-center align-items-center py-4 gap-5 flex-wrap text-center">
                     <img src="{{ asset('images/sizechart/Outer.png') }}" alt="Gambar Pakaian Luar Wanita" class="img-fluid me-3" style="max-width: 45%;">
-                    <img src="{{ asset('images/sizechart/SizeOuterwearWanita.png') }}" alt="Tabel Ukuran Pakaian Luar Wanita" class="img-fluid" style="max-width: 45%;">
+                    <img src="{{ asset('images/sizechart/SizeOuterWanita.png') }}" alt="Tabel Ukuran Pakaian Luar Wanita" class="img-fluid" style="max-width: 45%;">
                 </div>
             </div>
         </div>

@@ -10,7 +10,7 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                    {{-- Header Order dengan Nama Pelanggan dan Status --}}
+                    {{-- Header Order with Customer Name and Status --}}
                     <div class="flex justify-between items-start mb-4">
                         <div>
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
@@ -34,7 +34,12 @@
                                 @elseif($order->status == 'Delivered') bg-green-100 text-green-800
                                 @elseif($order->status == 'Canceled') bg-red-100 text-red-800
                                 @elseif($order->status == 'Returned') bg-red-100 text-red-800
-                                @elseif($order->status == 'Completed') bg-gray-200 text-gray-800
+                                @elseif($order->status == 'Refunded') bg-pink-100 text-pink-800
+                                @elseif($order->status == 'Completed') bg-teal-100 text-teal-800
+                                @elseif($order->status == 'Refund Pending') bg-yellow-100 text-yellow-800
+                                @elseif($order->status == 'Refund Failed') bg-red-100 text-red-800
+                                @elseif($order->status == 'Refund Rejected') bg-gray-400 text-gray-800
+                                @elseif($order->status == 'Refund Approved') bg-blue-100 text-blue-800
                                 @else bg-gray-100 text-gray-800 @endif">
                                 {{ $order->status }}
                             </span>
@@ -42,14 +47,12 @@
                     </div>
                     <hr class="mb-6 border-gray-200 dark:border-gray-700">
 
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         {{-- Order Costs & Completion --}}
                         <div>
                             <h4 class="text-lg font-semibold mb-2">{{ __('Cost Summary') }}</h4>
-                            <p class="mb-1"><strong>{{ __('Subtotal:') }}</strong> IDR {{ number_format($order->subtotal, 0, ',', '.') }}</p>
-                            <p class="mb-1"><strong>{{ __('Shipping Cost:') }}</strong> IDR {{ number_format($order->shipping_cost, 0, ',', '.') }}</p>
-                            <p class="mb-1 text-xl font-bold"><strong>{{ __('Total Amount:') }}</strong> IDR {{ number_format($order->total_amount, 0, ',', '.') }}</p>
+                            {{-- Removed Subtotal and Shipping Cost --}}
+                            <p class="mb-1 text-xl font-bold"><strong>{{ __('Total Amount:') }}</strong> IDR {{ number_format($order->grand_total, 0, ',', '.') }}</p> {{-- Use grand_total --}}
                             <p class="mb-1 mt-4"><strong>{{ __('Order Completed:') }}</strong> {{ $order->is_completed ? 'Yes' : 'No' }}</p>
                             @if($order->completed_at)
                                 <p class="mb-1"><strong>{{ __('Completed At:') }}</strong> {{ $order->completed_at->format('d M Y H:i') }}</p>
@@ -75,7 +78,7 @@
                                     </a>
                                 </p>
                             @endif
-                            {{-- Tampilkan detail pengiriman dari tabel deliveries --}}
+                            {{-- Display delivery details from the deliveries table --}}
                             @if($order->delivery)
                                 <p class="mb-1"><strong>{{ __('Courier:') }}</strong> {{ $order->delivery->courier_name ?? 'N/A' }}</p>
                                 <p class="mb-1"><strong>{{ __('Tracking Number:') }}</strong> {{ $order->delivery->tracking_number ?? 'N/A' }}</p>
@@ -176,14 +179,14 @@
                                 <div>
                                     <label for="courier_name" class="sr-only">Courier Name</label>
                                     <input type="text" name="courier_name" id="courier_name"
-                                           placeholder="Courier Name" value="{{ old('courier_name', $order->delivery->courier_name ?? '') }}"
-                                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">
+                                            placeholder="Courier Name" value="{{ old('courier_name', $order->delivery->courier_name ?? '') }}"
+                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">
                                 </div>
                                 <div>
                                     <label for="tracking_number" class="sr-only">Tracking Number</label>
                                     <input type="text" name="tracking_number" id="tracking_number"
-                                           placeholder="Tracking Number" value="{{ old('tracking_number', $order->delivery->tracking_number ?? '') }}"
-                                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">
+                                            placeholder="Tracking Number" value="{{ old('tracking_number', $order->delivery->tracking_number ?? '') }}"
+                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">
                                 </div>
                             </div>
                         </template>

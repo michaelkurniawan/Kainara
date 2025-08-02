@@ -55,9 +55,6 @@ class Product extends Model
         return $this->belongsTo(Gender::class);
     }
 
-    /**
-     * Get the product reviews for the product.
-     */
     public function reviews(): HasMany
     {
         return $this->hasMany(ProductReview::class);

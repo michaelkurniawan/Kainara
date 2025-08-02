@@ -19,7 +19,7 @@ class Order extends Model
      */
     protected $fillable = [
         'user_id',
-        'address_id', 
+        'address_id',
         'status',
         'shipping_cost',
         'subtotal',
@@ -85,8 +85,24 @@ class Order extends Model
         return $this->hasOne(Delivery::class);
     }
 
+    public function reviews()
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
     public function getGrandTotalAttribute(): float
     {
         return (float) ($this->subtotal ?? 0) + (float) ($this->shipping_cost ?? 0);
+    }
+
+    public function hasReview(): bool
+    {
+        return $this->reviews()->exists();
+    }
+
+    public function isRefundable(): bool
+    {
+        return $this->status === 'Delivered' &&
+               $this->payment()->where('status', 'succeeded')->exists();
     }
 }

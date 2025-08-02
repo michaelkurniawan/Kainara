@@ -10,31 +10,26 @@ class ProductReview extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'product_id',
         'user_id',
+        'order_id',
         'rating',
         'comment',
     ];
 
-    /**
-     * Get the product that the review belongs to.
-     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
 
-    /**
-     * Get the user that wrote the review.
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class, 'order_id');
     }
 }
