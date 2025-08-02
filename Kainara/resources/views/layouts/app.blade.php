@@ -69,7 +69,7 @@
     <script src="https://js.stripe.com/v3/"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    @include('notification.notif-components')
+    @include('components.notif-components')
 
     @stack('scripts')
 </body>
