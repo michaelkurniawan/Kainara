@@ -10,8 +10,6 @@ class ArtisanProfile extends Model
     use HasFactory;
     protected $guarded = []; // Izinkan semua kolom diisi secara massal
 
-    // HAPUS relasi ke User
-    // public function user(): BelongsTo { ... } // <-- HAPUS METHOD INI
 
     public function portfolios(): HasMany
     {

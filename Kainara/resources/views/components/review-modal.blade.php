@@ -49,7 +49,7 @@
                 </div>
                 <div class="modal-footer-epi d-flex justify-content-end align-items-center border-top-0 py-3 px-3 bg-white">
                     <button type="button" class="btn btn-outline-secondary font-serif-regular px-4 py-2 me-3" id="skipReviewButton">Skip</button>
-                    <button type="submit" class="btn btn-primary btn-submit-review font-serif-medium px-4 py-2 btn-custom-gold me-2">Submit Review</button>
+                    <button type="button" class="btn btn-primary btn-submit-review font-serif-medium px-4 py-2 btn-custom-gold me-2" id="submitReviewButton">Submit Review</button>
                 </div>
             </form>
         </div>
@@ -64,6 +64,7 @@
         const ratingInput = document.getElementById('review_rating_input');
         const ratingText = document.getElementById('rating-text');
         const skipReviewButton = document.getElementById('skipReviewButton');
+        const submitReviewButton = document.getElementById('submitReviewButton');
         let selectedRating = 0;
 
         // --- Star Rating Functionality ---
@@ -124,6 +125,13 @@
             skipInput.name = 'skip_review';
             skipInput.value = '1';
             reviewForm.appendChild(skipInput);
+            
+            reviewForm.submit();
+        });
+
+        submitReviewButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const submitInput = document.createElement('input');
             
             reviewForm.submit();
         });

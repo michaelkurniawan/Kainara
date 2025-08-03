@@ -48,7 +48,12 @@ class ReviewController extends Controller
                 $order->status = 'Completed';
                 $order->save();
                 DB::commit();
-                return response()->json(['success' => true, 'message' => 'Pesanan berhasil diselesaikan tanpa review.']);
+                return redirect()->route('profile.index', ['#order-history'])->with('notification', [
+                    'type' => 'info',
+                    'title' => 'Order Completed!',
+                    'message' => 'Your order has been completed without a review.',
+                    'hasActions' => false
+                ]);
             }
 
             // 4. Validasi Input untuk Review (Hanya jika tidak di-skip)
@@ -109,7 +114,12 @@ class ReviewController extends Controller
             // Commit transaksi jika semua operasi berhasil
             DB::commit();
 
-            return response()->json(['success' => true, 'message' => 'Review berhasil dikirim dan pesanan telah diselesaikan!']);
+            return redirect()->route('profile.index', ['#order-history'])->with('notification', [
+                'type' => 'success',
+                'title' => 'Review Completed!',
+                'message' => 'Thank you for your Review!',
+                'hasActions' => false
+            ]);
 
         } catch (ValidationException $e) {
             DB::rollBack();

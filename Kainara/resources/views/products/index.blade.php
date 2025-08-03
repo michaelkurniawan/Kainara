@@ -36,6 +36,13 @@
             height: 100%;
         }
 
+        .product-container img {
+            width: 100%;
+            height: 500px;
+            object-fit: cover;
+            object-position: center; 
+}
+
         h1.display-5 {
             font-size: 4.5rem;
             font-weight: bold;
