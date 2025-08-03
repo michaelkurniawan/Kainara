@@ -113,30 +113,24 @@ class CheckoutController extends Controller
         $price = $product->price;
         $productVariantId = null;
         $variantColor = null;
+        $availableStock = $product->stock; // Default to base product stock
 
         $productVariant = null;
         if ($selectedSize) {
             $productVariant = ProductVariant::where('product_id', $productId)
-                                            ->where('size', $selectedSize)
-                                            ->first();
+                ->where('size', $selectedSize)
+                ->first();
         } else {
             $productVariant = ProductVariant::where('product_id', $productId)
-                                            ->where('size', 'One Size')
-                                            ->first();
+                ->where('size', 'One Size')
+                ->first();
         }
 
         if ($productVariant) {
             $price = $productVariant->price ?: $product->price;
             $productVariantId = $productVariant->id;
             $variantColor = $productVariant->color;
-            if ($productVariant->stock < $quantity) {
-                return back()->with('notification', [
-                    'type' => 'error',
-                    'title' => 'Limited Stock!',
-                    'message' => 'Sorry, only ' . $productVariant->stock . ' items are available for the selected variant.',
-                    'hasActions' => false
-                ]);
-            }
+            $availableStock = $productVariant->stock; // Update stock to variant stock
         } else {
             if ($selectedSize && $selectedSize !== 'One Size') {
                 return back()->with('notification', [
@@ -146,9 +140,15 @@ class CheckoutController extends Controller
                     'hasActions' => false
                 ]);
             }
-            // If it's a product without specific size variants and no 'One Size' variant found,
-            // or if it's meant to be a simple product, continue without variant details.
-            // You might want to add a stock check for the base product here if applicable.
+        }
+
+        if ($availableStock < $quantity) {
+            return back()->with('notification', [
+                'type' => 'error',
+                'title' => 'Limited Stock!',
+                'message' => 'Sorry, only ' . $availableStock . ' items are available for the selected variant.',
+                'hasActions' => false
+            ]);
         }
 
         if ($action === 'buy_now') {
@@ -159,18 +159,27 @@ class CheckoutController extends Controller
         }
 
         $itemFound = false;
-        foreach ($cart as $key => $cartItem) {
+        foreach ($cart as $key => &$cartItem) { // Use reference to modify the item directly
             if ($cartItem['product_id'] == $productId &&
                 (
                     ($productVariantId && $cartItem['product_variant_id'] == $productVariantId) ||
                     (!$productVariantId && !$cartItem['product_variant_id'])
                 )
             ) {
-                if ($action === 'buy_now') {
-                    $cart[$key]['quantity'] = $quantity;
-                } else {
-                    $cart[$key]['quantity'] += $quantity;
+                // New logic starts here
+                $newTotalQuantity = $cartItem['quantity'] + $quantity;
+                if ($newTotalQuantity > $availableStock) {
+                    return back()->with('notification', [
+                        'type' => 'warning',
+                        'title' => 'Stock Limited!',
+                        'message' => "The total quantity for '{$product->name}' cannot exceed the available stock of {$availableStock}.",
+                        'hasActions' => false
+                    ]);
                 }
+                
+                $cartItem['quantity'] = $newTotalQuantity;
+                // New logic ends here
+                
                 $itemFound = true;
                 break;
             }

@@ -51,7 +51,6 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/checkout/add', [CheckoutController::class, 'addToCheckout'])->name('checkout.add');
 
     Route::post('/order/process', [OrderController::class, 'processCheckout'])->name('order.process');
-    Route::get('/order/{order}/details', [OrderController::class, 'showOrderDetails'])->name('order.details');
     Route::get('/order/{order}/success', [OrderController::class, 'showOrderSuccess'])->name('order.success');
     Route::get('/order/{order}/fail', [OrderController::class, 'showOrderFail'])->name('order.fail');
     Route::get('/order/{order}/awaiting-payment', [OrderController::class, 'showOrderAwaitingPayment'])->name('order.awaitingPayment');

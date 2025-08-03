@@ -11,9 +11,16 @@ use App\Mail\ArtisanRejectedNotification;
 
 class AdminAffiliateReqController extends Controller
 {
-    public function index(){
-        $pendingSubmissions = ArtisanProfile::where('status', 'pending')->get();
-        return view('admin.affiliations.index', ['submissions' => $pendingSubmissions]);
+    public function index(Request $request){
+        $status = $request->input('status', 'pending');
+
+        if ($status === 'all') {
+            $submissions = ArtisanProfile::all();
+        } else {
+            $submissions = ArtisanProfile::where('status', $status)->get();
+        }
+
+        return view('admin.affiliations.index', ['submissions' => $submissions]);
     }
 
     public function show(ArtisanProfile $profile){

@@ -27,13 +27,13 @@
                     <div>
                         @if ($previousStory)
                             <a href="{{ route('Stories.DetailStories', $previousStory->slug) }}" class="nav-link-custom">
-                                ← Previous Page</a>
+                                ← Previous Story</a>
                         @endif
                     </div>
                     <div>
                         @if ($nextStory)
                             <a href="{{ route('Stories.DetailStories', $nextStory->slug) }}" class="nav-link-custom">
-                                Next Page →</a>
+                                Next Story →</a>
                         @endif
                     </div>
                 </nav>

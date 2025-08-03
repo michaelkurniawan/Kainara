@@ -185,16 +185,6 @@ class OrderController extends Controller
         }
     }
 
-    public function showOrderDetails(Order $order)
-    {
-        if (Auth::id() !== $order->user_id) {
-            abort(403, 'Access Denied. You do not have permission to view this order.');
-        }
-
-        $order->load(['payment', 'orderItems.productVariant', 'orderItems.product']);
-        return view('order.details', compact('order'));
-    }
-
     public function showOrderSuccess(Order $order)
     {
         if (Auth::id() !== $order->user_id) {
