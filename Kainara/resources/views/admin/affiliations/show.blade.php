@@ -102,7 +102,7 @@
                                 @endif
 
                                 <div class="flex flex-wrap gap-3 mt-3">
-                                    @foreach((array) $portfolio->photo_paths as $photo)
+                                    @foreach(json_decode($portfolio->photo_paths) as $photo)
                                         <div>
                                             <a href="{{ asset('storage/' . $photo) }}" target="_blank">
                                                 <img src="{{ asset('storage/' . $photo) }}" alt="Portfolio Image"
