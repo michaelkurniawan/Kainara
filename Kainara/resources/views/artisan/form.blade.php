@@ -168,12 +168,14 @@
             border: none;
             border-bottom: 1px solid var(--color-border-form);
             border-radius: 0;
-            padding: 0.5rem 0;
+            padding: 0.5rem 0 0.5rem 0.5rem; 
             font-family: var(--font-secondary);
             font-size: 1rem;
             color: var(--color-text-dark);
             width: 100%;
         }
+        
+
         .form-group-custom .form-control-custom:focus,
         .form-group-custom .form-select-custom:focus {
             outline: none;
