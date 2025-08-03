@@ -167,7 +167,6 @@ class OrderController extends Controller
                 ]);
             }
 
-            // **LOGIKA PENTING: Hapus item yang sudah di checkout dari session**
             if ($isBuyNowCheckout) {
                 Session::forget('buy_now_item');
             } else {

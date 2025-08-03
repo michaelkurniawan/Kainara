@@ -343,7 +343,7 @@
                             @endphp
 
                             @if (!$hasAnyRefundRecord)
-                                <button type="button" class="btn btn-complete-order" data-bs-toggle="modal" data-bs-target="#reviewModal" data-order-id="{{ $order->id }}" {{ $order->hasReview() ? 'disabled' : '' }}>
+                                <button type="button" class="btn btn-complete-order" data-bs-toggle="modal" data-bs-target="#reviewModal" data-order-id="{{ $order->id }}" data-product-id="{{ $firstItem->product->id ?? null }}" {{ $order->hasReview() ? 'disabled' : '' }}>
                                     {{ $order->hasReview() ? 'Reviewed' : 'Complete Order' }}
                                 </button>
                             @endif
@@ -391,6 +391,7 @@
         const reviewModal = new bootstrap.Modal(reviewModalElement);
         const reviewForm = document.getElementById('reviewForm');
         const reviewOrderIdInput = document.getElementById('review_order_id');
+        const reviewProductIdInput = document.getElementById('review_product_id'); // Added this line
         const reviewRatingInput = document.getElementById('review_rating_input');
         const starIcons = reviewModalElement.querySelectorAll('#stars i.fa-star');
         const ratingText = document.getElementById('rating-text');
@@ -402,7 +403,9 @@
         reviewModalElement.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
             const orderId = button.dataset.orderId;
+            const productId = button.dataset.productId; // Added this line
             reviewOrderIdInput.value = orderId;
+            reviewProductIdInput.value = productId; // Added this line
             currentRating = 0;
             reviewRatingInput.value = 0;
             updateStarsDisplay(0);
