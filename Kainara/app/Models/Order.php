@@ -97,7 +97,9 @@ class Order extends Model
 
     public function hasReview(): bool
     {
-        return $this->reviews()->exists();
+        return $this->orderItems()->whereHas('product.reviews', function ($query) {
+            $query->where('user_id', $this->user_id);
+        })->exists();
     }
 
     public function isRefundable(): bool
