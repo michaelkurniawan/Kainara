@@ -18,10 +18,20 @@ class CheckoutController extends Controller
 
         $userAddresses = $user ? $user->addresses()->get() : collect();
 
-        $cartItems = Session::get('cart', []);
-        $subtotal = 0;
+        // **PERUBAHAN LOGIKA UTAMA DI SINI**
+        $checkoutItems = [];
+        // Periksa jika ada item 'buy_now' di session
+        if (Session::has('buy_now_item')) {
+            // Jika ada, hanya gunakan item tersebut dan buat arraynya
+            $checkoutItems = [Session::get('buy_now_item')];
+            // Catatan: Item di cart tidak dihapus, hanya tidak digunakan di halaman ini.
+        } else {
+            // Jika tidak ada item 'buy_now', gunakan semua item dari cart
+            $checkoutItems = Session::get('cart', []);
+        }
 
-        foreach ($cartItems as &$item) {
+        $subtotal = 0;
+        foreach ($checkoutItems as &$item) {
             $product = Product::find($item['product_id']);
             if ($product) {
                 $item['product_name'] = $product->name;
@@ -47,19 +57,12 @@ class CheckoutController extends Controller
                 $item['total_price'] = $item['price'] * $item['quantity'];
                 $subtotal += $item['total_price'];
             } else {
-                // If product not found, remove it from the cart to prevent issues
-                // Note: This modifies the array during iteration, which can be tricky.
-                // A safer approach might be to build a new $validCartItems array.
-                // For simplicity here, we're setting placeholders.
                 $item['product_name'] = 'Unknown Product';
-                $item['product_image'] = 'https://placehold.co/80x80/cccccc/333333?text=No+Image'; // Placeholder image
+                $item['product_image'] = 'https://placehold.co/80x80/cccccc/333333?text=No+Image';
                 $item['price'] = 0;
                 $item['total_price'] = 0;
             }
         }
-
-        // After the loop, if you removed items, you'd want to re-save the session.
-        // For now, let's just make sure the iteration safety note is there.
 
         $selectedAddressId = null;
         $address = null;
@@ -70,7 +73,6 @@ class CheckoutController extends Controller
                 $address = $userAddresses->firstWhere('id', $selectedAddressId);
                 if (!$address) {
                     $selectedAddressId = null;
-                    // Flash notification if previously selected address is no longer valid
                     session()->flash('notification', [
                         'type' => 'warning',
                         'title' => 'Address Not Found!',
@@ -92,11 +94,12 @@ class CheckoutController extends Controller
             }
         }
 
-        return view('products.checkout', compact('cartItems', 'subtotal', 'userAddresses', 'selectedAddressId', 'address'));
+        return view('products.checkout', compact('checkoutItems', 'subtotal', 'userAddresses', 'selectedAddressId', 'address'));
     }
 
     public function addToCheckout(Request $request)
     {
+        // Metode ini tidak perlu diubah karena sudah benar
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
@@ -113,30 +116,24 @@ class CheckoutController extends Controller
         $price = $product->price;
         $productVariantId = null;
         $variantColor = null;
+        $availableStock = $product->stock; // Default to base product stock
 
         $productVariant = null;
         if ($selectedSize) {
             $productVariant = ProductVariant::where('product_id', $productId)
-                                            ->where('size', $selectedSize)
-                                            ->first();
+                ->where('size', $selectedSize)
+                ->first();
         } else {
             $productVariant = ProductVariant::where('product_id', $productId)
-                                            ->where('size', 'One Size')
-                                            ->first();
+                ->where('size', 'One Size')
+                ->first();
         }
 
         if ($productVariant) {
             $price = $productVariant->price ?: $product->price;
             $productVariantId = $productVariant->id;
             $variantColor = $productVariant->color;
-            if ($productVariant->stock < $quantity) {
-                return back()->with('notification', [
-                    'type' => 'error',
-                    'title' => 'Limited Stock!',
-                    'message' => 'Sorry, only ' . $productVariant->stock . ' items are available for the selected variant.',
-                    'hasActions' => false
-                ]);
-            }
+            $availableStock = $productVariant->stock; // Update stock to variant stock
         } else {
             if ($selectedSize && $selectedSize !== 'One Size') {
                 return back()->with('notification', [
@@ -146,10 +143,27 @@ class CheckoutController extends Controller
                     'hasActions' => false
                 ]);
             }
-            // If it's a product without specific size variants and no 'One Size' variant found,
-            // or if it's meant to be a simple product, continue without variant details.
-            // You might want to add a stock check for the base product here if applicable.
         }
+
+        if ($availableStock < $quantity) {
+            return back()->with('notification', [
+                'type' => 'error',
+                'title' => 'Limited Stock!',
+                'message' => 'Sorry, only ' . $availableStock . ' items are available for the selected variant.',
+                'hasActions' => false
+            ]);
+        }
+
+        $newItem = [
+            'product_id' => $productId,
+            'product_variant_id' => $productVariantId,
+            'price' => $price,
+            'quantity' => $quantity,
+            'variant_size' => $selectedSize,
+            'variant_color' => $variantColor,
+            'product_name' => $product->name,
+            'product_image' => $product->image,
+        ];
 
         if ($action === 'buy_now') {
             Session::forget('cart');
@@ -159,18 +173,27 @@ class CheckoutController extends Controller
         }
 
         $itemFound = false;
-        foreach ($cart as $key => $cartItem) {
+        foreach ($cart as $key => &$cartItem) { // Use reference to modify the item directly
             if ($cartItem['product_id'] == $productId &&
                 (
                     ($productVariantId && $cartItem['product_variant_id'] == $productVariantId) ||
                     (!$productVariantId && !$cartItem['product_variant_id'])
                 )
             ) {
-                if ($action === 'buy_now') {
-                    $cart[$key]['quantity'] = $quantity;
-                } else {
-                    $cart[$key]['quantity'] += $quantity;
+                // New logic starts here
+                $newTotalQuantity = $cartItem['quantity'] + $quantity;
+                if ($newTotalQuantity > $availableStock) {
+                    return back()->with('notification', [
+                        'type' => 'warning',
+                        'title' => 'Stock Limited!',
+                        'message' => "The total quantity for '{$product->name}' cannot exceed the available stock of {$availableStock}.",
+                        'hasActions' => false
+                    ]);
                 }
+                
+                $cartItem['quantity'] = $newTotalQuantity;
+                // New logic ends here
+                
                 $itemFound = true;
                 break;
             }
@@ -198,7 +221,28 @@ class CheckoutController extends Controller
                 'message' => 'Your selected item is ready for checkout. Please review your order.',
                 'hasActions' => false
             ]);
-        } else {
+        } else { // action === 'add_to_cart'
+            $cart = Session::get('cart', []);
+            $itemFound = false;
+            foreach ($cart as $key => $cartItem) {
+                if ($cartItem['product_id'] == $productId &&
+                    (
+                        ($productVariantId && $cartItem['product_variant_id'] == $productVariantId) ||
+                        (!$productVariantId && !$cartItem['product_variant_id'])
+                    )
+                ) {
+                    $cart[$key]['quantity'] += $quantity;
+                    $itemFound = true;
+                    break;
+                }
+            }
+
+            if (!$itemFound) {
+                $cart[] = $newItem;
+            }
+
+            Session::put('cart', $cart);
+
             return back()->with('notification', [
                 'type' => 'success',
                 'title' => 'Added to Cart!',

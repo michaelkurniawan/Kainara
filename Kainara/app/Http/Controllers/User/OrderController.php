@@ -20,6 +20,7 @@ class OrderController extends Controller
     public function processCheckout(Request $request)
     {
         $validatedData = $request->validate([
+            // ... (validation rules remain the same)
             'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
             'first_name' => 'required|string|max:255',
@@ -36,35 +37,47 @@ class OrderController extends Controller
             'shipping_province' => 'required|string',
             'shipping_postal_code' => 'required|string|max:10',
             'shipping_country' => 'required|string',
+
+            // Tambahkan validasi untuk item yang diproses dari form
+            'checkout_items' => 'required|array|min:1',
+            'checkout_items.*.product_id' => 'required|exists:products,id',
+            'checkout_items.*.product_variant_id' => 'nullable|exists:product_variants,id',
+            'checkout_items.*.quantity' => 'required|integer|min:1',
+            'checkout_items.*.price' => 'required|numeric|min:0',
         ]);
 
-        $cartItems = Session::get('cart', []);
-        if (empty($cartItems)) {
-            return redirect()->route('checkout.show')->with('error', 'Your cart is empty. Please add items before checking out.');
+        // Tentukan apakah checkout ini berasal dari "Buy Now" atau dari Cart biasa
+        $isBuyNowCheckout = Session::has('buy_now_item');
+
+        // Gunakan $validatedData['checkout_items'] karena sudah melewati validasi
+        $checkoutItems = $validatedData['checkout_items'];
+
+        if (empty($checkoutItems)) {
+            return redirect()->route('checkout.show')->with('error', 'There are no items to checkout.');
         }
 
         DB::beginTransaction();
         try {
             $shippingCost = 0;
-
             $calculatedSubtotal = 0;
-            foreach ($cartItems as $item) {
+
+            // Periksa ketersediaan stok dan kurangi stok
+            foreach ($checkoutItems as $item) {
                 $product = Product::find($item['product_id']);
                 if (!$product) {
                     DB::rollBack();
-                    return redirect()->back()->with('error', 'One or more products in your cart were not found.')->withInput();
+                    return redirect()->back()->with('error', 'One or more products were not found.')->withInput();
                 }
 
-                $itemPrice = $product->price;
+                $itemPrice = $item['price']; // Ambil harga dari form (sudah dihitung di frontend)
                 $stockAvailable = $product->stock;
 
                 if (isset($item['product_variant_id']) && $item['product_variant_id']) {
                     $variant = ProductVariant::find($item['product_variant_id']);
                     if (!$variant) {
                         DB::rollBack();
-                        return redirect()->back()->with('error', 'One or more product variants in your cart were not found.')->withInput();
+                        return redirect()->back()->with('error', 'One or more product variants were not found.')->withInput();
                     }
-                    $itemPrice = $variant->price ?: $product->price;
                     $stockAvailable = $variant->stock;
 
                     if ($stockAvailable < $item['quantity']) {
@@ -79,12 +92,13 @@ class OrderController extends Controller
                     }
                     $product->decrement('stock', $item['quantity']);
                 }
-
+                
                 $calculatedSubtotal += $itemPrice * $item['quantity'];
             }
-
+            
             $grandTotalCalculated = $calculatedSubtotal + $shippingCost;
 
+            // Periksa total amount dari frontend vs. backend
             if (abs($validatedData['total_amount'] - $grandTotalCalculated) > 0.01) {
                 DB::rollBack();
                 Log::warning('Frontend total amount does not match backend calculation.', [
@@ -95,6 +109,7 @@ class OrderController extends Controller
                 return redirect()->back()->with('error', 'There was a price discrepancy. Please try again or refresh the page.')->withInput();
             }
 
+            // Simpan data order
             $shippingAddressData = [
                 'recipient_name' => $validatedData['shipping_recipient_name'],
                 'phone' => $validatedData['shipping_phone'],
@@ -133,38 +148,32 @@ class OrderController extends Controller
                 'shipping_postal_code' => $shippingAddressData['postal_code'],
             ]);
 
-            foreach ($cartItems as $itemData) {
+            // Simpan order items
+            foreach ($checkoutItems as $itemData) {
                 $product = Product::find($itemData['product_id']);
                 $productName = $product ? $product->name : 'Unknown Product';
                 $productImage = $product ? asset('storage/' . $product->image) : 'https://placehold.co/80x80/cccccc/333333?text=No+Image';
-
-                $actualPrice = $product->price;
-                $variantSize = $itemData['variant_size'] ?? null;
-                $variantColor = $itemData['variant_color'] ?? null;
-
-                if (isset($itemData['product_variant_id']) && $itemData['product_variant_id']) {
-                    $variant = ProductVariant::find($itemData['product_variant_id']);
-                    if ($variant) {
-                        $actualPrice = $variant->price ?: $product->price;
-                        $variantSize = $variant->size;
-                        $variantColor = $variant->color;
-                    }
-                }
 
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $itemData['product_id'],
                     'product_variant_id' => $itemData['product_variant_id'] ?? null,
                     'quantity' => $itemData['quantity'],
-                    'price' => $actualPrice,
+                    'price' => $itemData['price'],
                     'product_name' => $productName,
                     'product_image' => $productImage,
-                    'variant_size' => $variantSize,
-                    'variant_color' => $variantColor,
+                    'variant_size' => $itemData['variant_size'] ?? null,
+                    'variant_color' => $itemData['variant_color'] ?? null,
                 ]);
             }
 
-            Session::forget('cart');
+            // **LOGIKA PENTING: Hapus item yang sudah di checkout dari session**
+            if ($isBuyNowCheckout) {
+                Session::forget('buy_now_item');
+            } else {
+                Session::forget('cart');
+            }
+
             DB::commit();
 
             if ($validatedData['payment_method'] === 'credit_card') {
@@ -183,16 +192,6 @@ class OrderController extends Controller
             Log::error('Order processing failed: ' . $e->getMessage(), ['request' => $request->all()]);
             return redirect()->back()->with('error', 'An error occurred while processing your order. Please try again. ' . $e->getMessage())->withInput();
         }
-    }
-
-    public function showOrderDetails(Order $order)
-    {
-        if (Auth::id() !== $order->user_id) {
-            abort(403, 'Access Denied. You do not have permission to view this order.');
-        }
-
-        $order->load(['payment', 'orderItems.productVariant', 'orderItems.product']);
-        return view('order.details', compact('order'));
     }
 
     public function showOrderSuccess(Order $order)
@@ -307,7 +306,12 @@ class OrderController extends Controller
             $order->save();
 
             DB::commit();
-            return redirect()->route('profile.index', ['#order-history'])->with('success', 'Order has been successfully canceled and product stock returned.');
+            return redirect()->route('profile.index', ['#order-history'])->with('notification', [
+                'type' => 'success',
+                'title' => 'Order Cancellation!',
+                'message' => 'Order has been successfully canceled.',
+                'hasActions' => false
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Order cancellation failed: ' . $e->getMessage(), ['order_id' => $order->id, 'user_id' => Auth::id()]);

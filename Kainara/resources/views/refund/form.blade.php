@@ -4,6 +4,10 @@
 
 @push('styles')
 <style>
+    :root {
+        --font-primary: 'Ancizar Serif', serif;
+        --font-secondary: 'Ancizar Serif', serif;
+    }
     .form-container {
         max-width: 600px;
         margin: 50px auto;
@@ -71,27 +75,7 @@
 @section('content')
 <div class="container py-5 px-5">
     <div class="form-container">
-        <h2>Confirm Full Refund for Order #{{ $order->id }}</h2>
-
-        @if (session('error'))
-            <div class="alert alert-danger" role="alert">
-                {{ session('error') }}
-            </div>
-        @endif
-        @if (session('info'))
-            <div class="alert alert-info" role="alert">
-                {{ session('info') }}
-            </div>
-        @endif
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+        <h2 class="fs-4">Confirm Full Refund for Order #{{ $order->id }}</h2>
 
         <p class="alert-info-custom">
             Total Paid: <strong>IDR {{ number_format($payment->amount_paid, 0, ',', '.') }}</strong>
@@ -99,7 +83,6 @@
             Amount available for refund: <strong>IDR {{ number_format($availableForRefund, 0, ',', '.') }}</strong>
         </p>
 
-        {{-- IMPORTANT: Ensure enctype="multipart/form-data" for file uploads --}}
         <form id="refundForm" method="POST" action="{{ route('refund.request.submit', $order->id) }}" enctype="multipart/form-data">
             @csrf
 
@@ -110,8 +93,8 @@
             </div>
 
             <div class="mb-3">
-                <label for="refund_image" class="form-label">Upload Image (Optional)</label>
-                <input type="file" class="form-control" id="refund_image" name="refund_image" accept="image/*">
+                <label for="refund_image" class="form-label">Upload Image <span class="text-danger">*</span></label>
+                <input type="file" class="form-control" id="refund_image" name="refund_image" accept="image/*" required>
                 <small class="form-text text-muted">Upload an image as proof (e.g., product damage). Max 2MB.</small>
                 <div class="image-preview-container" id="imagePreview">
                     <p>No Image Selected</p>
@@ -126,6 +109,31 @@
 
 @push('scripts')
 <script>
+    // Global function to display Toast notifications
+    function showToast(type, title, message) {
+        const toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            console.error('Toast container not found. Cannot show toast.');
+            return;
+        }
+        const toastElement = document.createElement('div');
+        toastElement.className = `toast align-items-center text-white bg-${type} border-0`;
+        toastElement.setAttribute('role', 'alert');
+        toastElement.setAttribute('aria-live', 'assertive');
+        toastElement.setAttribute('aria-atomic', 'true');
+        toastElement.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>${title}</strong><br>${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        toastContainer.appendChild(toastElement);
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const refundForm = document.getElementById('refundForm');
         const submitButton = refundForm.querySelector('.btn-submit-refund');
@@ -133,7 +141,6 @@
         const refundImageInput = document.getElementById('refund_image');
         const imagePreviewContainer = document.getElementById('imagePreview');
 
-        // Function to display image preview
         refundImageInput.addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
@@ -147,67 +154,105 @@
             }
         });
 
-        refundForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+        // Add a click event listener to the submit button
+        submitButton.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent the form from submitting immediately
 
+            // Client-side validation
             if (!reasonInput.value.trim()) {
-                alert('Please provide a reason for the refund.');
+                showToast('warning', 'Validation Failed', 'Please provide a reason for the refund.');
                 reasonInput.focus();
                 return;
             }
+            if (refundImageInput.files.length === 0) {
+                showToast('warning', 'Validation Failed', 'Please upload an image as proof for the refund.');
+                return;
+            }
 
+            // Show the confirmation dialog
+            // NOTE: This assumes `window.showNotificationCard` is defined globally as in your example.
+            if (typeof window.showNotificationCard === 'function') {
+                window.showNotificationCard({
+                    type: 'confirmation',
+                    title: 'Confirm Full Refund',
+                    message: 'Are you sure you want to submit this full refund request?',
+                    hasActions: true,
+                    onConfirm: () => {
+                        // If confirmed, proceed with the refund submission
+                        submitRefundRequest();
+                    },
+                    onCancel: () => {
+                        console.log('Refund request cancelled by user.');
+                    }
+                });
+            } else {
+                // Fallback to a simple confirm dialog if the custom one is not available
+                if (confirm('Are you sure you want to submit this full refund request?')) {
+                    submitRefundRequest();
+                }
+            }
+
+            if ($action === 'buy_now') {
+
+            return redirect()->route('profile.index', ['#order-history'])->with('notification', [
+                'type' => 'success',
+                'title' => 'Fully Request Refund',
+                'message' => 'Your refund request has been submitted and is awaiting admin review.',
+                'hasActions' => false
+            ]);
+        });
+
+        // Function to handle the actual refund submission via Fetch API
+        function submitRefundRequest() {
             submitButton.disabled = true;
             submitButton.textContent = 'Processing Refund...';
 
-            const formData = new FormData(this);
+            const formData = new FormData(refundForm);
 
-            fetch(this.action, {
+            fetch(refundForm.action, {
                 method: 'POST',
-                body: formData, // FormData automatically sets Content-Type for file uploads
+                body: formData,
                 headers: {
                     'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest' // Important for Laravel to receive JSON response
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => response.json().then(data => {
-                if (!response.ok) {
-                    if (response.status === 422 && data.errors) {
-                        let errorMessage = 'Validation Failed:\n';
+            .then(response => {
+                if (response.status === 422) {
+                    return response.json().then(data => {
+                        let errorMessage = '';
                         for (const key in data.errors) {
-                            if (Array.isArray(data.errors[key])) {
-                                errorMessage += `- ${data.errors[key].join(', ')}\n`;
-                            } else {
-                                errorMessage += `- ${data.errors[key]}\n`;
-                            }
+                            errorMessage += `${data.errors[key].join(', ')}\n`;
                         }
-                        throw new Error(errorMessage);
-                    } else {
-                        throw new Error(data.message || `Server error occurred during refund request (Status: ${response.status}).`);
-                    }
+                        return Promise.reject(new Error(errorMessage));
+                    });
                 }
-                return data;
-            }))
+                if (!response.ok) {
+                    return response.json().then(data => Promise.reject(new Error(data.message)));
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
+                    showToast('success', 'Refund Submitted', data.message);
                     if (data.redirect_url) {
-                        window.location.href = data.redirect_url;
-                    } else {
-                        window.location.reload();
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 2000);
                     }
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('error', 'Request Failed', data.message);
                 }
             })
             .catch(error => {
                 console.error('Refund request failed:', error);
-                alert('An error occurred: ' + error.message);
+                showToast('error', 'Request Failed', error.message);
             })
             .finally(() => {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Confirm Full Refund';
             });
-        });
+        }
     });
 </script>
 @endpush

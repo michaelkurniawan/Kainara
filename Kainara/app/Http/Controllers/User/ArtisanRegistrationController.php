@@ -115,7 +115,8 @@ class ArtisanRegistrationController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Gagal menyimpan pendaftaran artisan: ' . $e->getMessage());
+            // Jika terjadi error saat menyimpan, log error dan redirect kembali
+            // Log::error('Gagal menyimpan pendaftaran artisan: ' . $e->getMessage());
             return back()->withInput()->with('error', 'Something went wrong. Please try again.');
         }
 
@@ -123,4 +124,3 @@ class ArtisanRegistrationController extends Controller
     }
 
 }
-

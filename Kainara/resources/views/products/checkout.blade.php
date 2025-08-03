@@ -182,7 +182,7 @@
             margin-bottom: 0 !important;
         }
         .btn-checkout:hover {
-            background-color: #9a9a9a;
+            background-color: #9e957c;
         }
 
         .fixed-payment-method {
@@ -226,7 +226,7 @@
                             </div>
                             <div class="vr mx-3"></div>
                             <div class="text-start flex-grow-1" id="currentAddressDetails">
-                                @if ($address) 
+                                @if ($address)
                                     <p class="text-muted mb-0" data-address-line="address">{{ $address['address'] ?? '' }}{{ $address['sub_district'] ? ', ' . $address['sub_district'] : '' }}</p>
                                     <p class="text-muted mb-0" data-address-line="city-province">{{ $address['city'] ?? '' }}{{ $address['city'] && $address['province'] ? ', ' : '' }}{{ $address['province'] ?? '' }}</p>
                                     <p class="text-muted mb-0" data-address-line="country-postal">{{ $address['country'] ?? '' }} {{ $address['postal_code'] ?? '' }}</p>
@@ -247,10 +247,10 @@
                         <form action="{{ route('order.process') }}" method="POST">
                             @csrf
                             <input type="hidden" name="address_id" id="address_id_input" value="{{ $address['id'] ?? '' }}">
-                            <input type="hidden" name="address_type_input" id="address_type_input" value="{{ $address['label'] ?? ($address['type'] ?? '') }}"> {{-- Updated type input --}}
+                            <input type="hidden" name="address_type_input" id="address_type_input" value="{{ $address['label'] ?? ($address['type'] ?? '') }}">
                             <input type="hidden" name="shipping_recipient_name" id="recipient_name_input" value="{{ $address['recipient_name'] ?? '' }}">
                             <input type="hidden" name="shipping_phone" id="phone_input_shipping" value="{{ $address['phone'] ?? '' }}">
-                            <input type="hidden" name="shipping_address_line" id="address_input" value="{{ $address['address'] ?? '' }}"> {{-- Gunakan nama yang lebih spesifik jika 'address' adalah hanya baris jalan --}}
+                            <input type="hidden" name="shipping_address_line" id="address_input" value="{{ $address['address'] ?? '' }}">
                             <input type="hidden" name="shipping_sub_district" id="sub_district_input" value="{{ $address['sub_district'] ?? '' }}">
                             <input type="hidden" name="shipping_district" id="district_input" value="{{ $address['district'] ?? '' }}">
                             <input type="hidden" name="shipping_city" id="city_input" value="{{ $address['city'] ?? '' }}">
@@ -275,7 +275,6 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="first_name" class="form-label">First Name</label>
-                                    {{-- Safely access $address['recipient_name'] --}}
                                     <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="first_name" name="first_name" placeholder="John" value="{{ old('first_name', Auth::user()->first_name ?? ($address && $address['recipient_name'] ? explode(' ', $address['recipient_name'])[0] : '')) }}">
                                     @error('first_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -283,7 +282,6 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="last_name" class="form-label">Last Name</label>
-                                    {{-- Safely access $address['recipient_name'] --}}
                                     <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="last_name" name="last_name" placeholder="Doe" value="{{ old('last_name', Auth::user()->last_name ?? ($address && isset(explode(' ', $address['recipient_name'])[1]) ? explode(' ', $address['recipient_name'])[1] : '')) }}">
                                     @error('last_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -303,14 +301,15 @@
 
                             <input type="hidden" name="total_amount" value="{{ $grandTotal }}">
 
-                            @foreach ($cartItems as $index => $item)
-                                <input type="hidden" name="cart_items[{{ $index }}][product_id]" value="{{ $item['product_id'] }}">
-                                <input type="hidden" name="cart_items[{{ $index }}][product_variant_id]" value="{{ $item['product_variant_id'] ?? '' }}">
-                                <input type="hidden" name="cart_items[{{ $index }}][quantity]" value="{{ $item['quantity'] }}">
-                                <input type="hidden" name="cart_items[{{ $index }}][price]" value="{{ $item['price'] }}">
-                                <input type="hidden" name="cart_items[{{ $index }}][product_name]" value="{{ $item['product_name'] }}">
-                                <input type="hidden" name="cart_items[{{ $index }}][product_image]" value="{{ $item['product_image'] }}">
-                                <input type="hidden" name="cart_items[{{ $index }}][variant_size]" value="{{ $item['variant_size'] ?? '' }}">
+                            {{-- UBAH INI: Gunakan $checkoutItems sebagai variabel loop --}}
+                            @foreach ($checkoutItems as $index => $item)
+                                <input type="hidden" name="checkout_items[{{ $index }}][product_id]" value="{{ $item['product_id'] }}">
+                                <input type="hidden" name="checkout_items[{{ $index }}][product_variant_id]" value="{{ $item['product_variant_id'] ?? '' }}">
+                                <input type="hidden" name="checkout_items[{{ $index }}][quantity]" value="{{ $item['quantity'] }}">
+                                <input type="hidden" name="checkout_items[{{ $index }}][price]" value="{{ $item['price'] }}">
+                                <input type="hidden" name="checkout_items[{{ $index }}][product_name]" value="{{ $item['product_name'] }}">
+                                <input type="hidden" name="checkout_items[{{ $index }}][product_image]" value="{{ $item['product_image'] }}">
+                                <input type="hidden" name="checkout_items[{{ $index }}][variant_size]" value="{{ $item['variant_size'] ?? '' }}">
                             @endforeach
 
                             <button type="submit" class="btn btn-checkout mt-3">CHECK OUT</button>
@@ -325,7 +324,8 @@
 
                     <div class="order-items-scroll-container">
                         <div class="order-items">
-                            @forelse ($cartItems as $item)
+                            {{-- UBAH INI: Gunakan $checkoutItems sebagai variabel loop --}}
+                            @forelse ($checkoutItems as $item)
                             <div class="order-item">
                                 <img src="{{ asset('storage/' . $item['product_image']) }}" alt="{{ $item['product_name'] }}" class="img-fluid object-fit-contain" />
                                 <div class="order-item-details">

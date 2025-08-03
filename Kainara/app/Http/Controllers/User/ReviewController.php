@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
+use App\Models\Product; // Add this line to use the Product model
 use App\Models\ProductReview;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -18,123 +19,139 @@ class ReviewController extends Controller
      * Store a new product review and complete the order, or just complete the order.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
         DB::beginTransaction();
         try {
-            // Check if the request is to skip the review entirely
-            $skipReview = $request->input('skip_review', false); // Default to false
+            $skipReview = $request->boolean('skip_review');
 
+            // 1. Validate Input
             if (!$skipReview) {
-                // 1. Validate Input only if a review is being submitted
                 $request->validate([
                     'order_id' => 'required|exists:orders,id',
-                    'rating' => 'required|integer|min:1|max:5', // Rating is required if not skipping
+                    'product_id' => 'required|exists:products,id', // Added validation for product_id
+                    'rating' => 'required|integer|min:1|max:5',
                     'comment' => 'nullable|string|max:1000',
                 ]);
             } else {
-                // If skipping, only order_id is strictly required
                 $request->validate([
                     'order_id' => 'required|exists:orders,id',
                 ]);
             }
-
 
             $orderId = $request->input('order_id');
             $userId = Auth::id();
 
-            $order = Order::with('orderItems.product')->find($orderId); // Eager load orderItems and their products
+            $order = Order::find($orderId); // No need to load orderItems yet
 
-            // 2. Authorization: Ensure the user is the owner of the order
+            // 2. Otorisasi: Pastikan pengguna adalah pemilik pesanan
             if (!$order || $order->user_id !== $userId) {
                 DB::rollBack();
                 Log::warning('Unauthorized review submission attempt or order not found.', ['order_id' => $orderId, 'user_id' => $userId]);
-                return response()->json(['success' => false, 'message' => 'Tindakan tidak diizinkan. Pesanan tidak ditemukan atau Anda tidak memiliki akses ke pesanan ini.'], 403);
+                return back()->with('notification', [
+                    'type' => 'error',
+                    'title' => 'Unauthorized!',
+                    'message' => 'The order was not found or you do not have access to it.',
+                    'hasActions' => false
+                ]);
             }
 
-            // 3. Order Status: Ensure the order is 'Delivered'
+            // 3. Status Pesanan: Pastikan pesanan sudah berstatus 'Delivered'
             if ($order->status !== 'Delivered') {
                 DB::rollBack();
-                return response()->json(['success' => false, 'message' => 'Pesanan tidak dapat diproses. Hanya pesanan yang sudah Delivered yang bisa diselesaikan.'], 400);
+                return back()->with('notification', [
+                    'type' => 'error',
+                    'title' => 'Cannot Complete Order!',
+                    'message' => 'The order status must be "Delivered" to complete.',
+                    'hasActions' => false
+                ]);
             }
 
-            // If not skipping, proceed with review creation/update
             if (!$skipReview) {
                 $rating = $request->input('rating');
                 $comment = $request->input('comment');
+                $productId = $request->input('product_id'); // Get the product_id from the request
 
-                // 4. Determine which product to review (assuming one review per order for the first product)
-                $productToReview = $order->orderItems->first()->product ?? null;
-
-                if (is_null($productToReview)) {
+                // 4. Periksa apakah produk ada dalam pesanan ini
+                $isProductInOrder = $order->orderItems()->where('product_id', $productId)->exists();
+                if (!$isProductInOrder) {
                     DB::rollBack();
-                    return response()->json(['success' => false, 'message' => 'Tidak ada produk yang ditemukan dalam pesanan ini untuk direview.'], 400);
+                    return back()->with('notification', [
+                        'type' => 'error',
+                        'title' => 'Error!',
+                        'message' => 'The product you are trying to review is not part of this order.',
+                        'hasActions' => false
+                    ]);
                 }
+                
+                // 5. Check for an existing review for this user, order, and product combination
+                $existingReview = ProductReview::where('user_id', $userId)
+                                              ->where('order_id', $orderId) // Link review to order
+                                              ->where('product_id', $productId)
+                                              ->first();
 
-                // Check if a review already exists for this user and product (and potentially order)
-                $existingReviewQuery = ProductReview::where('user_id', $userId)
-                                                    ->where('product_id', $productToReview->id);
-
-                // If product_reviews table has 'order_id' column, use it for stricter check
-                if (Schema::hasColumn('product_reviews', 'order_id')) {
-                    $existingReviewQuery->where('order_id', $orderId);
-                }
-                $existingReview = $existingReviewQuery->first();
-
-                // 5. Save or Update Review
+                // 6. Simpan atau Perbarui Review
                 if ($existingReview) {
-                    // Update existing review
                     $existingReview->rating = $rating;
                     $existingReview->comment = $comment;
                     $existingReview->save();
                 } else {
-                    // Create new review
                     $reviewData = [
                         'user_id' => $userId,
-                        'product_id' => $productToReview->id, // Associate review with the product
+                        'product_id' => $productId,
+                        'order_id' => $orderId,
                         'rating' => $rating,
                         'comment' => $comment,
                     ];
-                    // If 'order_id' column exists, add it to review data
-                    if (Schema::hasColumn('product_reviews', 'order_id')) {
-                        $reviewData['order_id'] = $orderId;
-                    }
                     ProductReview::create($reviewData);
                 }
             }
 
-            // 6. Update Order Status to 'Completed' always, regardless of review submission
+            // 7. Update Order Status to 'Completed'
             $order->status = 'Completed';
             $order->save();
-
-            // Commit transaction if all operations are successful
             DB::commit();
 
-            // Prepare redirect URL: Always redirect to profile.index#order-history
-            $redirectUrl = route('profile.index', ['#order-history']);
-
+            // Berikan respons redirect dengan notifikasi
             if (!$skipReview) {
-                return response()->json(['success' => true, 'message' => 'Review berhasil dikirim dan pesanan telah diselesaikan!', 'redirect_url' => $redirectUrl]);
+                return redirect()->route('profile.index', ['#order-history'])->with('notification', [
+                    'type' => 'success',
+                    'title' => 'Review Submitted!',
+                    'message' => 'Thank you for your review! Your order has been completed.',
+                    'hasActions' => false
+                ]);
             } else {
-                return response()->json(['success' => true, 'message' => 'Pesanan telah diselesaikan tanpa review.', 'redirect_url' => $redirectUrl]);
+                return redirect()->route('profile.index', ['#order-history'])->with('notification', [
+                    'type' => 'info',
+                    'title' => 'Order Completed!',
+                    'message' => 'Your order has been completed without a review.',
+                    'hasActions' => false
+                ]);
             }
 
-        } catch (ValidationException $e) { // Handle ValidationException explicitly
+        } catch (ValidationException $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => $e->validator->errors()->first()], 422);
-        }
-        catch (\Exception $e) {
+            return back()->withErrors($e->errors())->with('notification', [
+                'type' => 'error',
+                'title' => 'Validation Failed!',
+                'message' => $e->validator->errors()->first(),
+                'hasActions' => false
+            ]);
+        } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Order completion/review submission failed: ' . $e->getMessage(), [
-                'order_id' => $orderId,
-                'user_id' => $userId,
+                'order_id' => $request->input('order_id'),
+                'user_id' => Auth::id(),
                 'error_message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
             ]);
-            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan internal. Silakan coba lagi. Mohon hubungi administrator jika masalah berlanjut.'], 500);
+            return back()->with('notification', [
+                'type' => 'error',
+                'title' => 'Error!',
+                'message' => 'An unexpected error occurred. Please try again.',
+                'hasActions' => false
+            ]);
         }
     }
 }
