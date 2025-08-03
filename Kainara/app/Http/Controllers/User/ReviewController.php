@@ -5,7 +5,6 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
-use App\Models\Product; // Add this line to use the Product model
 use App\Models\ProductReview;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -16,113 +15,59 @@ use Illuminate\Validation\ValidationException;
 class ReviewController extends Controller
 {
     /**
-     * Store a new product review and complete the order, or just complete the order.
+     * Store a new product review and complete the order.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
+        // Mendapatkan order_id dari request
+        $orderId = $request->input('order_id');
+        $userId = Auth::id();
+
         DB::beginTransaction();
         try {
-            $skipReview = $request->boolean('skip_review');
+            // 1. Ambil pesanan
+            $order = Order::find($orderId);
 
-            // 1. Validate Input
-            if (!$skipReview) {
-                $request->validate([
-                    'order_id' => 'required|exists:orders,id',
-                    'product_id' => 'required|exists:products,id', // Added validation for product_id
-                    'rating' => 'required|integer|min:1|max:5',
-                    'comment' => 'nullable|string|max:1000',
-                ]);
-            } else {
-                $request->validate([
-                    'order_id' => 'required|exists:orders,id',
-                ]);
-            }
-
-            $orderId = $request->input('order_id');
-            $userId = Auth::id();
-
-            $order = Order::find($orderId); // No need to load orderItems yet
-
-            // 2. Otorisasi: Pastikan pengguna adalah pemilik pesanan
+            // 2. Otorisasi dan validasi awal
             if (!$order || $order->user_id !== $userId) {
                 DB::rollBack();
-                Log::warning('Unauthorized review submission attempt or order not found.', ['order_id' => $orderId, 'user_id' => $userId]);
-                return back()->with('notification', [
-                    'type' => 'error',
-                    'title' => 'Unauthorized!',
-                    'message' => 'The order was not found or you do not have access to it.',
-                    'hasActions' => false
-                ]);
+                Log::warning('Unauthorized action attempt or order not found.', ['order_id' => $orderId, 'user_id' => $userId]);
+                return response()->json(['success' => false, 'message' => 'Tindakan tidak diizinkan. Pesanan tidak ditemukan atau Anda tidak memiliki akses ke pesanan ini.'], 403);
             }
 
-            // 3. Status Pesanan: Pastikan pesanan sudah berstatus 'Delivered'
             if ($order->status !== 'Delivered') {
                 DB::rollBack();
-                return back()->with('notification', [
-                    'type' => 'error',
-                    'title' => 'Cannot Complete Order!',
-                    'message' => 'The order status must be "Delivered" to complete.',
-                    'hasActions' => false
-                ]);
+                return response()->json(['success' => false, 'message' => 'Pesanan tidak dapat direview. Hanya pesanan yang sudah Delivered yang bisa direview.'], 400);
             }
 
-            if (!$skipReview) {
-                $rating = $request->input('rating');
-                $comment = $request->input('comment');
-                $productId = $request->input('product_id'); // Get the product_id from the request
-
-                // 4. Periksa apakah produk ada dalam pesanan ini
-                $isProductInOrder = $order->orderItems()->where('product_id', $productId)->exists();
-                if (!$isProductInOrder) {
-                    DB::rollBack();
-                    return back()->with('notification', [
-                        'type' => 'error',
-                        'title' => 'Error!',
-                        'message' => 'The product you are trying to review is not part of this order.',
-                        'hasActions' => false
-                    ]);
-                }
-                
-                // 5. Check for an existing review for this user, order, and product combination
-                $existingReview = ProductReview::where('user_id', $userId)
-                                              ->where('order_id', $orderId) // Link review to order
-                                              ->where('product_id', $productId)
-                                              ->first();
-
-                // 6. Simpan atau Perbarui Review
-                if ($existingReview) {
-                    $existingReview->rating = $rating;
-                    $existingReview->comment = $comment;
-                    $existingReview->save();
-                } else {
-                    $reviewData = [
-                        'user_id' => $userId,
-                        'product_id' => $productId,
-                        'order_id' => $orderId,
-                        'rating' => $rating,
-                        'comment' => $comment,
-                    ];
-                    ProductReview::create($reviewData);
-                }
+            // 3. Tambahan Logika: Cek apakah permintaan adalah untuk SKIP review
+            if ($request->has('skip_review') && $request->input('skip_review') == '1') {
+                $order->status = 'Completed';
+                $order->save();
+                DB::commit();
+                return response()->json(['success' => true, 'message' => 'Pesanan berhasil diselesaikan tanpa review.']);
             }
 
-            // 7. Update Order Status to 'Completed'
-            $order->status = 'Completed';
-            $order->save();
-            DB::commit();
+            // 4. Validasi Input untuk Review (Hanya jika tidak di-skip)
+            $request->validate([
+                'order_id' => 'required|exists:orders,id',
+                'rating' => 'required|integer|min:1|max:5',
+                'comment' => 'nullable|string|max:1000',
+            ]);
 
-            // Berikan respons redirect dengan notifikasi
-            if (!$skipReview) {
-                return redirect()->route('profile.index', ['#order-history'])->with('notification', [
-                    'type' => 'success',
-                    'title' => 'Review Submitted!',
-                    'message' => 'Thank you for your review! Your order has been completed.',
-                    'hasActions' => false
-                ]);
-            } else {
+            $rating = $request->input('rating');
+            $comment = $request->input('comment');
+
+            // 5. Eager load orderItems dan product setelah validasi
+            $order->load('orderItems.product');
+
+            $productToReview = $order->orderItems->first()->product ?? null;
+
+            if (is_null($productToReview)) {
+                DB::rollBack();
                 return redirect()->route('profile.index', ['#order-history'])->with('notification', [
                     'type' => 'info',
                     'title' => 'Order Completed!',
@@ -131,27 +76,54 @@ class ReviewController extends Controller
                 ]);
             }
 
+            // Check if a review already exists for this user and product
+            $existingReviewQuery = ProductReview::where('user_id', $userId)->where('product_id', $productToReview->id);
+
+            if (Schema::hasColumn('product_reviews', 'order_id')) {
+                $existingReviewQuery->where('order_id', $orderId);
+            }
+            $existingReview = $existingReviewQuery->first();
+
+            // 6. Simpan atau Perbarui Review
+            if ($existingReview) {
+                $existingReview->rating = $rating;
+                $existingReview->comment = $comment;
+                $existingReview->save();
+            } else {
+                $reviewData = [
+                    'user_id' => $userId,
+                    'product_id' => $productToReview->id,
+                    'rating' => $rating,
+                    'comment' => $comment,
+                ];
+                if (Schema::hasColumn('product_reviews', 'order_id')) {
+                    $reviewData['order_id'] = $orderId;
+                }
+                ProductReview::create($reviewData);
+            }
+
+            // 7. Update Order Status to 'Completed' AFTER review is successfully saved
+            $order->status = 'Completed';
+            $order->save();
+
+            // Commit transaksi jika semua operasi berhasil
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Review berhasil dikirim dan pesanan telah diselesaikan!']);
+
         } catch (ValidationException $e) {
             DB::rollBack();
-            return back()->withErrors($e->errors())->with('notification', [
-                'type' => 'error',
-                'title' => 'Validation Failed!',
-                'message' => $e->validator->errors()->first(),
-                'hasActions' => false
-            ]);
+            return response()->json(['success' => false, 'message' => $e->validator->errors()->first()], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Order completion/review submission failed: ' . $e->getMessage(), [
-                'order_id' => $request->input('order_id'),
-                'user_id' => Auth::id(),
+            Log::error('Review submission failed: ' . $e->getMessage(), [
+                'order_id' => $orderId,
+                'user_id' => $userId,
                 'error_message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
             ]);
-            return back()->with('notification', [
-                'type' => 'error',
-                'title' => 'Error!',
-                'message' => 'An unexpected error occurred. Please try again.',
-                'hasActions' => false
-            ]);
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan internal. Silakan coba lagi. Mohon hubungi administrator jika masalah berlanjut.'], 500);
         }
     }
 }

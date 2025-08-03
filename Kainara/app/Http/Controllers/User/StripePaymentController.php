@@ -36,10 +36,7 @@ class StripePaymentController extends Controller
      */
     public function showPaymentForm(Order $order)
     {
-        // First, check if the order is actually awaiting payment
-        if ($order->status !== 'Awaiting Payment') {
-            return redirect()->route('order.details', $order->id)->with('error', 'This order is not awaiting payment or has already been processed.');
-        }
+        
 
         // Try to find an existing payment record for this order to see if a PaymentIntent was already created
         $payment = Payment::where('order_id', $order->id)->first();

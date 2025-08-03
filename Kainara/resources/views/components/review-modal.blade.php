@@ -49,7 +49,7 @@
                 </div>
                 <div class="modal-footer-epi d-flex justify-content-end align-items-center border-top-0 py-3 px-3 bg-white">
                     <button type="button" class="btn btn-outline-secondary font-serif-regular px-4 py-2 me-3" id="skipReviewButton">Skip</button>
-                    <button type="submit" class="btn btn-primary font-serif-medium px-4 py-2 btn-custom-gold me-2">Submit Review</button>
+                    <button type="submit" class="btn btn-primary btn-submit-review font-serif-medium px-4 py-2 btn-custom-gold me-2">Submit Review</button>
                 </div>
             </form>
         </div>
@@ -105,7 +105,6 @@
             }
         });
 
-        // --- Modal Initialization and Reset ---
         reviewModal.addEventListener('show.bs.modal', function(event) {
             const button = event.relatedTarget;
             const orderId = button ? button.getAttribute('data-bs-order-id') : null;
@@ -127,15 +126,6 @@
             reviewForm.appendChild(skipInput);
             
             reviewForm.submit();
-        });
-
-        reviewForm.addEventListener('submit', function(e) {
-            const isSubmitReviewButton = e.submitter && e.submitter.id !== 'skipReviewButton';
-
-            if (isSubmitReviewButton && selectedRating === 0) {
-                e.preventDefault(); 
-                alert('Please provide a rating (1-5 stars) or click "Skip".');
-            }
         });
     });
 </script>

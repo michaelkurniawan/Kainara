@@ -61,7 +61,7 @@
                                     </p>
                                 </div>
                                 <div class="flex items-center">
-                                    <p class="w-1/3 font-medium text-gray-700 dark:text-gray-300">**{{ __('Customer Name:') }}**</p>
+                                    <p class="w-1/3 font-medium text-gray-700 dark:text-gray-300">{{ __('Customer Name:') }}</p>
                                     <p class="w-2/3 text-gray-900 dark:text-gray-100">
                                         @if($refund->payment && $refund->payment->order && $refund->payment->order->user)
                                             {{ $refund->payment->order->user->first_name . ' ' . $refund->payment->order->user->last_name }}
@@ -117,7 +117,7 @@
                                 </div>
                                 {{-- Admin Notes display --}}
                                 <div class="flex items-start">
-                                    <p class="w-1/3 font-medium text-gray-700 dark:text-gray-300">**{{ __('Admin Notes:') }}**</p>
+                                    <p class="w-1/3 font-medium text-gray-700 dark:text-gray-300">{{ __('Admin Notes:') }}</p>
                                     <p class="w-2/3 text-gray-900 dark:text-gray-100">{{ $refund->admin_notes ?? 'N/A' }}</p>
                                 </div>
                             </div>
